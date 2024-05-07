@@ -9,7 +9,7 @@
  ************************************************************************/
 #pragma once
 #include <string>
-#include "mediasession/MediaSession.h"
+#include "stream/mediasession/MediaSession.h"
 
 class MediaInfo {
 public:

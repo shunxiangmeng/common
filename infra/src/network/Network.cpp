@@ -1,5 +1,5 @@
-#include "Network.h"
-#include "Defines.h"
+#include "infra/include/network/Network.h"
+#include "infra/include/network/Defines.h"
 
 namespace infra {
 

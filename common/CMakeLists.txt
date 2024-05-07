@@ -1,0 +1,10 @@
+
+remove_definitions(-DLOG_LIB_MODULE)
+
+file(GLOB_RECURSE INFRA_SOURCE_FILES mediafiles/*.cpp mediafiles/*.c mediaframe/*.cpp)
+file(GLOB_RECURSE INFRA_SOURCE_HEADER_FILES mediafiles/*.h mediaframe/*.h)
+
+set(APP_SOURCE_FILES ${APP_SOURCE_FILES} ${INFRA_SOURCE_FILES} PARENT_SCOPE)
+set(APP_SOURCE_HEADER_FILES ${APP_SOURCE_HEADER_FILES} ${INFRA_SOURCE_HEADER_FILES} PARENT_SCOPE)
+
+add_definitions(-DLOG_LIB_MODULE="common")

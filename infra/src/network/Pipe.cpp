@@ -7,9 +7,9 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
-#include "Pipe.h"
-#include "AcceptSocket.h"
-#include "../Logger.h"
+#include "infra/include/network/Pipe.h"
+#include "infra/include/network/AcceptSocket.h"
+#include "infra/include/Logger.h"
 
 namespace infra {
 

@@ -7,8 +7,8 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
-#include "NetworkThreadPool.h"
-#include "../Logger.h"
+#include "infra/include/network/NetworkThreadPool.h"
+#include "infra/include/Logger.h"
 
 namespace infra {
 

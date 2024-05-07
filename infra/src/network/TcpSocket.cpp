@@ -7,10 +7,10 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
-#include "TcpSocket.h"
-#include "../Logger.h"
+#include "infra/include/network/TcpSocket.h"
+#include "infra/include/Logger.h"
 #include "../Errno.h"
-#include "Defines.h"
+#include "infra/include/network/Defines.h"
 
 namespace infra {
 

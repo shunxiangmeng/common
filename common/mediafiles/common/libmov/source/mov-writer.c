@@ -15,7 +15,7 @@ struct mov_writer_t
 
 static int mov_write_tail(struct mov_t* mov)
 {
-	mov_buffer_w32(&mov->io, 8 + strlen(MOV_APP)); /* size */
+	mov_buffer_w32(&mov->io, 8 + (uint32_t)strlen(MOV_APP)); /* size */
 	mov_buffer_write(&mov->io, "free", 4);
 	mov_buffer_write(&mov->io, MOV_APP, strlen(MOV_APP));
 	return 0;

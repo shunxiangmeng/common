@@ -9,8 +9,8 @@
  ************************************************************************/
 #pragma once
 #include <functional>
-#include "TcpSocket.h"
-#include "SocketHandler.h"
+#include "infra/include/network/TcpSocket.h"
+#include "infra/include/network/SocketHandler.h"
 
 namespace infra {
 using AsyncReadCallback = std::function<void(int32_t)>;

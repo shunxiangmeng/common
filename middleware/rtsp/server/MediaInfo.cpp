@@ -9,7 +9,7 @@
  ************************************************************************/
 #include "MediaInfo.h"
 #include "infra/include/Logger.h"
-#include "mediasession/MediaSession.h"
+#include "stream/mediasession/MediaSession.h"
 
 bool MediaInfo::getVideoCodecInfo(std::shared_ptr<MediaSession> &session, int32_t &payload, std::string &name, int32_t &rate) {
     media::VideoEncodeParams videoparams;

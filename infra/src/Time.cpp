@@ -19,7 +19,7 @@ int64_t getCurrentTimeMs() {
 
 NtpTime convertTimestampToNtpTime(Timestamp timestamp) {
     int64_t now_us = timestamp.micros();
-    uint32_t seconds = (now_us / 1000000) + kNtpJan1970;
+    uint32_t seconds = (uint32_t)(now_us / 1000000) + kNtpJan1970;
     uint32_t fractions = static_cast<uint32_t>((now_us % 1000000) * kMagicNtpFractionalUnit / 1000000);
     return NtpTime(seconds, fractions);
 }
