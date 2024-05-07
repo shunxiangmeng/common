@@ -1,0 +1,48 @@
+/************************************************************************
+ * Copyright(c) 2024 shanghai ulucu technology
+ * 
+ * File        :  Defs.h
+ * Author      :  mengshunxiang 
+ * Data        :  2024-04-13 18:32:58
+ * Description :  None
+ * Note        : 
+ ************************************************************************/
+#pragma once
+#include <string>
+#include <stdio.h>
+#include "jsoncpp/include/json.h"
+
+#define GenCode(code) ({char buf[9]; snprintf(buf, sizeof(buf), "%08d", code); buf;})
+
+#pragma pack (1)
+typedef struct{
+    uint8_t     tag[4];
+    uint8_t     version;
+    uint8_t     flag;
+    uint8_t     type;          ///0-信令，1-媒体数据
+    uint8_t     encrypt;       ///加密类型
+    uint16_t    sequence;
+    uint16_t    res;
+    uint32_t    sessionId;
+    uint32_t    bodyLen;
+    char        buf[0];
+} PrivateDataHead;
+
+struct Message {
+    bool            isResponse;       ///true表示应答，false是请求
+    bool            isMediaData;
+    uint32_t        sessionId;
+    uint32_t        sequence;
+    uint32_t        code;             ///只有应答才有此字段
+    std::string     message;
+    std::string     method;           ///请求才有method
+    Json::Value     data;
+    char*           mediaData;
+    uint32_t        mediaDataLen;
+
+    Message():isResponse(false),isMediaData(false),
+                sessionId(0), sequence(0), data(Json::nullValue), mediaData(nullptr), mediaDataLen(0){
+    }
+};
+
+#pragma pack ()
