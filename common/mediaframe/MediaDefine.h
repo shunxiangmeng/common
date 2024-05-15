@@ -17,6 +17,12 @@ typedef enum {
 } MediaFrameType;
 
 typedef enum {
+    VideoCBR = 0,      // 定码率
+    VideoVBR,          // 变码率
+    VideoAVBR
+} VideoEncodeRCMode;
+
+typedef enum {
     Annexb = 0,
     AvccHvcc,
 } PlacementType;
