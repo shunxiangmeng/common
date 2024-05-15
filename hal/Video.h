@@ -8,10 +8,13 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <vector>
 #include "common/mediaframe/MediaDefine.h"
 #include "common/mediaframe/MediaFrame.h"
 #include "infra/include/Optional.h"
 #include "infra/include/Signal.h"
+
+namespace hal {
 
 typedef struct {
     infra::optional<VideoCodecType> codec;  // 编码格式
@@ -26,12 +29,13 @@ typedef struct {
 class IVideo {
 public:
 
+    typedef infra::TSignal<void, MediaFrame&> MediaStreamSignal;
+    typedef MediaStreamSignal::Proc MediaStreamProc;
+
     static IVideo* instance();
 
     virtual bool initial(int32_t channel, std::vector<VideoEncodeParams> &video_encode_params) = 0;
     virtual bool deInitial(int32_t channel = 0) = 0;
-
-    virtual bool 
 
     /*
     channel: sensor 通道号，目前只支持一个sensor，只能是0
@@ -42,12 +46,9 @@ public:
     // 强制 I 帧
     virtual bool requestIFrame(int32_t channel, int32_t sub_channel) = 0;
 
-
-
-    virtual bool createVideoDecoder() = 0;
-    virtual bool deleteVideoDecoder() = 0;
-    virtual bool startVideoDecoder() = 0;
-    virtual bool stopVideoDecoder() = 0;
-    virtual bool sendDecoderPacket() = 0;
+    virtual bool startVideoStream(int32_t channel, int32_t sub_channel, MediaStreamProc proc) = 0;
+    virtual bool stopVideoStream(int32_t channel, int32_t sub_channel, MediaStreamProc proc) = 0;
 
 };
+
+}

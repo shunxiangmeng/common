@@ -8,6 +8,7 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <stdint.h>
 
 typedef enum {
     InvalidFrameType = -1,

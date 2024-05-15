@@ -29,15 +29,15 @@ bool MediaSession::start(OnFrameProc onframe) {
         errorf("start error, attach ret:%d\n", ret);
         return false;
     }
-    media::IMediaPlatform::instance().startVideoStream(channel_, sub_channel_, media::IMediaPlatform::MediaStreamProc(&MediaSession::onVideoFrame, this));
-    media::IMediaPlatform::instance().startAudioStream(media::IMediaPlatform::MediaStreamProc(&MediaSession::onAudioFrame, this));
-    media::IMediaPlatform::instance().requestIFrame(channel_, sub_channel_);
+    hal::IVideo::instance()->startVideoStream(channel_, sub_channel_, hal::IVideo::MediaStreamProc(&MediaSession::onVideoFrame, this));
+    //media::IMediaPlatform::instance().startAudioStream(media::IMediaPlatform::MediaStreamProc(&MediaSession::onAudioFrame, this));
+    //media::IMediaPlatform::instance().requestIFrame(channel_, sub_channel_);
     return true;
 }
 
 bool MediaSession::stop(OnFrameProc onframe) {
-    media::IMediaPlatform::instance().stopVideoStream(channel_, sub_channel_, media::IMediaPlatform::MediaStreamProc(&MediaSession::onVideoFrame, this));
-    media::IMediaPlatform::instance().stopAudioStream(media::IMediaPlatform::MediaStreamProc(&MediaSession::onAudioFrame, this));
+    //media::IMediaPlatform::instance().stopVideoStream(channel_, sub_channel_, media::IMediaPlatform::MediaStreamProc(&MediaSession::onVideoFrame, this));
+    //media::IMediaPlatform::instance().stopAudioStream(media::IMediaPlatform::MediaStreamProc(&MediaSession::onAudioFrame, this));
     int32_t ret = mediasession_signal_.detach(onframe);
     if (ret < 0) {
         errorf("stop error, detach ret:%d\n", ret);
@@ -47,12 +47,13 @@ bool MediaSession::stop(OnFrameProc onframe) {
     return true;
 }
 
-bool MediaSession::getVideoEncoderParams(media::VideoEncodeParams& params) {
-    return media::IMediaPlatform::instance().getVideoEncoderParams(channel_, sub_channel_, params);
+bool MediaSession::getVideoEncoderParams(hal::VideoEncodeParams& params) {
+    return hal::IVideo::instance()->getEncodeParams(channel_, sub_channel_, params);
 }
 
-bool MediaSession::getAudioEncoderParams(media::AudioEncodeParams& params) {
-    return media::IMediaPlatform::instance().getAudioEncoderParams(channel_, params);
+bool MediaSession::getAudioEncoderParams(hal::AudioEncodeParams& params) {
+    //return media::IMediaPlatform::instance().getAudioEncoderParams(channel_, params);
+    return false;
 }
 
 void MediaSession::onVideoFrame(MediaFrame &frame) {

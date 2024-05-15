@@ -11,7 +11,8 @@
 #include "infra/include/Signal.h"
 #include "common/mediaframe/MediaFrame.h"
 #include "MediaSource.h"
-#include "media/mediaPlatform.h"
+#include "hal/Video.h"
+#include "hal/Audio.h"
 
 class MediaSession {
 public:
@@ -33,9 +34,9 @@ public:
 
     bool stop(OnFrameProc onframe);
 
-    bool getVideoEncoderParams(media::VideoEncodeParams& params);
+    bool getVideoEncoderParams(hal::VideoEncodeParams& params);
 
-    bool getAudioEncoderParams(media::AudioEncodeParams& params);
+    bool getAudioEncoderParams(hal::AudioEncodeParams& params);
 private:
     void onVideoFrame(MediaFrame &frame);
     void onAudioFrame(MediaFrame &frame);

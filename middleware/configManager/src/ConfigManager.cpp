@@ -124,7 +124,7 @@ bool ConfigManager::setConfig(const char* name, const Json::Value& table, ApplyR
 
 bool ConfigManager::attachApply(const char* name, ConfigProc proc) {
     std::lock_guard<std::mutex> guard(mutex_);
-    auto &it = config_apply_map_.find(name);
+    auto it = config_apply_map_.find(name);
     if (it == config_apply_map_.end()) {
         auto signal_ptr = std::make_shared<ConfigSignal>(64);
         it = config_apply_map_.insert(ConfigSignalMap::value_type(name, signal_ptr)).first;
@@ -161,7 +161,7 @@ bool ConfigManager::attachVerify(const char* name, ConfigProc proc) {
 
 bool ConfigManager::detachVerify(const char* name, ConfigProc proc, bool wait) {
     std::lock_guard<std::mutex> guard(mutex_);
-    auto &it = config_verify_map_.find(name);
+    auto it = config_verify_map_.find(name);
     if (it == config_verify_map_.end()) {
         return false;
     }
