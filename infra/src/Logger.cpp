@@ -54,7 +54,7 @@ void ConsoleLogChannel::setConsoleColour(LogLevel level) {
     SetConsoleTextAttribute(handle, LOG_CONST_TABLE[int(level)][1]);
 #else
 #define CLEAR_COLOR "\033[0m"
-    static const char* LOG_CONST_TABLE[] = {"\033[31;1m", "\033[36;1m", "\033[32;1m", "\033[0m", "\033[0m"};
+    static const char* LOG_CONST_TABLE[] = {"\033[31;1m", "\033[36;1m", "\033[32m", "\033[0m", "\033[0m"};
     std::cout << LOG_CONST_TABLE[int(level)];
 #endif
 }

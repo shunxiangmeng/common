@@ -33,7 +33,7 @@ public:
 
     optional(const optional& other) : has_init_(false) {
         if (other.init()) {
-            assing(other);
+            assign(other);
         }
     }
     optional(optional&& other) : has_init_(false) {

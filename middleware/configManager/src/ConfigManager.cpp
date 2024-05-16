@@ -15,8 +15,8 @@
 #include "jsoncpp/include/reader.h"
 #include "jsoncpp/include/writer.h"
 
-#define CONFIG_FILE "config.cfg"
-#define DEFAULT_CONFIG_FILE "default_config.cfg"
+#define CONFIG_FILE "config.json"
+#define DEFAULT_CONFIG_FILE "default_config.json"
 
 IConfigManager* IConfigManager::instance() {
     static ConfigManager s_config_manager;
