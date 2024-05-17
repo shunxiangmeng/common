@@ -38,8 +38,11 @@ public:
         return thread_.get_id();
     }
 
+    int32_t tid() const;
+
 protected:
     bool setPriority(Priority priority = PRIORITY_NORMAL, std::thread::native_handle_type threadId = 0);
+    void setTid(int32_t tid);
 
 private:
     virtual void run() = 0;
@@ -53,6 +56,7 @@ protected:
 private:
     bool affinity_;
     std::thread thread_;
+    int32_t tid_;
 };
 
 }

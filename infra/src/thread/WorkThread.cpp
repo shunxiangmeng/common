@@ -10,6 +10,7 @@
 #include "infra/include/thread/WorkThread.h"
 #include "infra/include/Logger.h"
 #include "infra/include/Timestamp.h"
+#include "infra/include/Utils.h"
 
 namespace infra {
 
@@ -26,6 +27,7 @@ void WorkThread::wakeUp() {
 
 bool WorkThread::postTask(Task &&task) {
     std::lock_guard<decltype(task_queue_mutex_)> guard(task_queue_mutex_);
+    tracef("push task to %d, queue_size:%d\n", tid(), task_queue_.size());
     task_queue_.push(std::move(task));
     wakeUp();
     return true;
@@ -39,6 +41,7 @@ int64_t WorkThread::postDelayedTask(Task &&task, int64_t delay_time_ms) {
 
 void WorkThread::run() {
     //infof("thread:%s start\n", name_.c_str());
+    setTid(getCurrentThreadId());
     if (!setPriority(priority_)) {
         errorf("setPriority error\n");
     } else {
@@ -54,8 +57,14 @@ void WorkThread::run() {
             task_queue_.pop();
             task_queue_mutex_.unlock();
             
-            //infof("thread {} exec task, size:{}", index, (int)task_queue_size);
-            task();  //执行任务
+            //printf("000thread %d exec task, size:%d\n", tid(), (int)task_queue_size);
+            //try {
+                task();
+            //} catch (std::exception &ex) {
+            //    errorf("exception %s\n", ex.what());
+            //}
+            //printf("111thread %d exec task, size:%d\n", tid(), (int)task_queue_size);
+
         } else {
             task_queue_mutex_.unlock();
         }

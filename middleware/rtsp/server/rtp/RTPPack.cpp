@@ -131,7 +131,7 @@ void RTPPack::makeFrame(TrackIndex mediaIndex, MediaFrame &originalFrame) {
 
     MediaFrame frame(totalLength);
     if (frame.empty()) {
-        errorf("get frame error\n");
+        errorf("assign mediaframe size %d failed\n", totalLength);
         /**清空vector*/
         mRtpPack[mediaIndex].mRtpPackNum = 0;
         mRtpPack[mediaIndex].mRtpPackVector.clear();

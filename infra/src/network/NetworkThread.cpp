@@ -11,6 +11,7 @@
 #include "infra/include/Logger.h"
 #include "infra/include/Timestamp.h"
 #include "infra/include/network/Defines.h"
+#include "infra/include/Utils.h"
 #if defined(HAS_EPOLL)
 #include <sys/epoll.h>
 #define toEpoll(event)      (((event) & SocketHandler::read)  ? EPOLLIN : 0) \
@@ -129,6 +130,7 @@ bool NetworkThread::delEvent(int32_t fd, std::shared_ptr<SocketHandler> &handler
 
 void NetworkThread::run() {
     //infof("thread:%s start\n", name_.c_str());
+    setTid(getCurrentThreadId());
     if (!setPriority(priority_)) {
         errorf("setPriority error\n");
     } else {

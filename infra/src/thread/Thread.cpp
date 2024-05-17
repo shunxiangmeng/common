@@ -18,7 +18,7 @@
 namespace infra {
 
 Thread::Thread(Priority priority, const std::string &name, bool affinity) :
-    priority_(priority), name_(name), running_(false) {
+    priority_(priority), name_(name), running_(false), tid_(-1) {
 }
 
 Thread::~Thread() {
@@ -64,6 +64,14 @@ bool Thread::setPriority(Priority priority, std::thread::native_handle_type thre
     params.sched_priority = Priorities[priority];
     return pthread_setschedparam(threadId, SCHED_OTHER, &params) == 0;
 #endif
+}
+
+void Thread::setTid(int32_t tid) {
+    tid_ = tid;
+}
+
+int32_t Thread::tid() const {
+    return tid_;
 }
 
 }

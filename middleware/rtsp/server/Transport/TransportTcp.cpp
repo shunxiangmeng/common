@@ -57,9 +57,11 @@ bool TransportTcp::startReceive() {
 }
 
 bool TransportTcp::stopReceive() {
+    tracef("stopReceive\n");
     if (!start_) {
         return true;
     }
+    tracef("stopReceive\n");
     if (!infra::NetworkThreadPool::instance()->delSocketEvent(sock_->getHandle(), shared_from_this())) {
         errorf("delSocketEvent error\n");
     }    
