@@ -19,6 +19,7 @@ extern "C" const IMAGE_DOS_HEADER __ImageBase;
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <sys/syscall.h>        //gettid
 #endif // _WIN32
 
 namespace infra {
@@ -44,7 +45,7 @@ int32_t getCurrentThreadId() {
     return  GetCurrentProcessId();
     //#define getCurrentThreadId() std::this_thread::get_id()
 #else
-    return getpid();
+    return (int32_t)syscall(SYS_gettid);
 #endif
 }
 
