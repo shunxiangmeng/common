@@ -27,7 +27,7 @@ void WorkThread::wakeUp() {
 
 bool WorkThread::postTask(Task &&task) {
     std::lock_guard<decltype(task_queue_mutex_)> guard(task_queue_mutex_);
-    tracef("push task to %d, queue_size:%d\n", tid(), task_queue_.size());
+    //tracef("push task to %d, queue_size:%d\n", tid(), task_queue_.size());
     task_queue_.push(std::move(task));
     wakeUp();
     return true;

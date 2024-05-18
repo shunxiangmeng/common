@@ -139,24 +139,8 @@ void RtspSessionManager::dumpSessions() {
 }
 
 int32_t RtspSessionManager::remove(std::shared_ptr<RtspSession> session) {
-    tracef("remove rtspsession\n");
     session_list_mutex_.lock();
     session_list_.remove(session);
     session_list_mutex_.unlock();
-
-    /*std::shared_ptr<RtspSession> toRemove;
-    to_close_session_list_mutex_.lock();
-    to_close_session_list_.push_back(toRemove);
-    to_close_session_list_mutex_.unlock();
-
-    infra::Timer timer("test");
-    timer.start(10, [&]() {
-        to_close_session_list_mutex_.lock();
-        to_close_session_list_.clear();
-        to_close_session_list_mutex_.unlock();
-        timer.stop();
-        return false;
-    });*/
-
     return 0;
 }

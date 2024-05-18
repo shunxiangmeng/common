@@ -85,7 +85,7 @@ int32_t rtpCutH264(RtpPackInfo &packInfo, uint8_t *buffer, uint32_t size, uint32
     int32_t pos = -1;
     uint8_t *slice = nullptr;
     int32_t sliceLen = 0;
-    for (auto index = 0; index < (size - NALU_DELIMITER_LEN); index++) {
+    for (auto index = 0; index < int32_t(size - NALU_DELIMITER_LEN); index++) {
         if (buffer[index + 0] == 0x00 && buffer[index + 1] == 0x00 && buffer[index + 2] == 0x00 && buffer[index + 3] == 0x01) {
             uint8_t nalu_type = buffer[index + NALU_DELIMITER_LEN] & 0x1f;  // low 5 bit
             if (pos > 0) {

@@ -88,7 +88,7 @@ int32_t RtspSession::stopStreaming() {
 }
 
 void RtspSession::onMediaData(MediaFrameType type, MediaFrame &frame) {
-    tracef("onMediaData index:%d, size:%d\n", int32_t(type), frame.size());
+    //tracef("onMediaData index:%d, size:%d\n", int32_t(type), frame.size());
     if (send_exception_) {
         return;
     }
@@ -194,7 +194,6 @@ void RtspSession::destroySession() {
     stopStreaming();
     RtspSessionBase::destroySession();
     infra::WorkThreadPool::instance()->async([&] () {
-        tracef("async destroySession\n");
         if (cmd_transport_) {
             if (!cmd_transport_->stop()) {
                 errorf("stop failed\n");
@@ -204,7 +203,6 @@ void RtspSession::destroySession() {
             udp_transport_->stop();
         }
         session_manager_->remove(shared_from_this());
-        tracef("async destroySession end\n");
     });
 }
 

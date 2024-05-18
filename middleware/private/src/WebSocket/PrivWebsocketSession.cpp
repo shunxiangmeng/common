@@ -76,7 +76,7 @@ int32_t PrivWebsocketSession::getUpgradeResponse(const char *request, int32_t le
                                 "Access-Control-Allow-Origin: *\r\n"
                                 "Sec-WebSocket-Accept: %s\r\n\r\n", websocketaccept.c_str());
     tracef("response:\n%s\n", buf);
-    sendCommand(buf, strlen(buf));
+    sendCommand(buf, (int32_t)strlen(buf));
     return len;
 }
 
@@ -165,10 +165,10 @@ int32_t PrivWebsocketSession::parse(char* buffer, int32_t size, char* &outBuf, i
         tracef("not enough one frame\n");
         return 0;
     }
-    unMask(maskKey, &buffer[pos], dataLen);
+    unMask(maskKey, &buffer[pos], (int32_t)dataLen);
     outBuf = buffer + pos;
-    outSize = dataLen;
-    return (pos + dataLen);
+    outSize = (int32_t)dataLen;
+    return int32_t(pos + dataLen);
 }
 
 int32_t PrivWebsocketSession::process(char* buffer, int32_t size){
@@ -211,10 +211,10 @@ int32_t PrivWebsocketSession::process(char* buffer, int32_t size){
         tracef("not enough one frame\n");
         return 0;
     }
-    unMask(maskKey, &buffer[pos], dataLen);
+    unMask(maskKey, &buffer[pos], (int32_t)dataLen);
 
     int32_t used = 0;
-    std::shared_ptr<Message> msg = PrivSessionBase::parse(&buffer[pos], dataLen, used);
+    std::shared_ptr<Message> msg = PrivSessionBase::parse(&buffer[pos], (int32_t)dataLen, used);
     if (msg.get()){
         if (msg->isMediaData){
             onMediaData(msg, msg->mediaData, msg->mediaDataLen);
@@ -227,7 +227,7 @@ int32_t PrivWebsocketSession::process(char* buffer, int32_t size){
             }
         }
     }
-    return (pos + dataLen);
+    return int32_t(pos + dataLen);
 }
 
 ///内部函数，由调用者保证参数的有效性
@@ -243,7 +243,7 @@ void PrivWebsocketSession::closeSession(){
 
 int32_t PrivWebsocketSession::sendData(const char* buffer, int32_t size){
     uint64_t len = size;
-    char head[32] = {0};
+    uint8_t head[32] = {0};
     uint32_t pos = 0;
     head[pos++] = 0x80 + 0x02;
     if (len < 126){
@@ -251,21 +251,21 @@ int32_t PrivWebsocketSession::sendData(const char* buffer, int32_t size){
     }
     else if (len <= 0xFFFF){
         head[pos++] = 126;
-        head[pos++] = (len >> 8);
-        head[pos++] = len;
+        head[pos++] = uint8_t(len >> 8);
+        head[pos++] = uint8_t(len);
     }
     else{
         head[pos++] = 127;
-        head[pos++] = (len >> 56);
-        head[pos++] = (len >> 48);
-        head[pos++] = (len >> 40);
-        head[pos++] = (len >> 32);
-        head[pos++] = (len >> 24);
-        head[pos++] = (len >> 16);
-        head[pos++] = (len >> 8);
-        head[pos++] = (len >> 0);
+        head[pos++] = uint8_t(len >> 56);
+        head[pos++] = uint8_t(len >> 48);
+        head[pos++] = uint8_t(len >> 40);
+        head[pos++] = uint8_t(len >> 32);
+        head[pos++] = uint8_t(len >> 24);
+        head[pos++] = uint8_t(len >> 16);
+        head[pos++] = uint8_t(len >> 8);
+        head[pos++] = uint8_t(len >> 0);
     }
-    int32_t ret = sendCommand(head, pos);
+    int32_t ret = sendCommand((char*)head, pos);
     if (ret < 0) {
         return ret;
     }

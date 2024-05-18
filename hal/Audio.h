@@ -23,4 +23,27 @@ typedef struct {
     infra::optional<int32_t> bit_per_sample;
 } AudioEncodeParams;
 
+class IAudio {
+public:
+
+    typedef infra::TSignal<void, MediaFrame&> AudioStreamSignal;
+    typedef AudioStreamSignal::Proc AudioStreamProc;
+
+    static IAudio* instance();
+
+    virtual bool initial(AudioEncodeParams &video_encode_params) = 0;
+    virtual bool deInitial() = 0;
+
+    /*
+    channel: sensor 通道号，目前只支持一个sensor，只能是0
+    stream_type: 0-主码流， 1-子码流，2-3码流
+    */
+    virtual bool setEncodeParams(AudioEncodeParams &encode_params) = 0;
+    virtual bool getEncodeParams(AudioEncodeParams &encode_params) = 0;
+
+    virtual bool startStream(AudioStreamProc proc) = 0;
+    virtual bool stopStream(AudioStreamProc proc) = 0;
+
+};
+
 }

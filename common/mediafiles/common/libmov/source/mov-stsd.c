@@ -520,14 +520,14 @@ static int mov_write_subtitle(const struct mov_t* mov, const struct mov_sample_e
 
 	if (MOV_TAG('t', 'x', '3', 'g') == mov->track->tag)
 	{
-		size += mov_write_tx3g(mov);
+		size += (int)mov_write_tx3g(mov);
 	}
 	else if (entry->extra_data_size > 0) // unknown type
 	{
 		mov_buffer_write(&mov->io, entry->extra_data, entry->extra_data_size);
 		size += entry->extra_data_size;
 
-		size += mov_write_btrt(mov, entry);
+		size += (int)mov_write_btrt(mov, entry);
 	}
 
 	mov_write_size(mov, offset, size); /* update size */

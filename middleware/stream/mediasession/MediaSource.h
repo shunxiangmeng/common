@@ -36,7 +36,7 @@ public:
 
 private:
     void onLiveVideoFrame(int32_t channel, int32_t sub_channel, MediaFrame &frame);
-    void onLiveAudioFrame(int32_t channel, int32_t sub_channel, MediaFrame &frame);
+    void onLiveAudioFrame(MediaFrame &frame);
 
 private:
     std::vector<MediaSignal> live_media_signal_;

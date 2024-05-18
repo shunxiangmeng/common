@@ -39,6 +39,6 @@ bool MediaSession::getVideoEncoderParams(hal::VideoEncodeParams& params) {
 }
 
 bool MediaSession::getAudioEncoderParams(hal::AudioEncodeParams& params) {
-    //return media::IMediaPlatform::instance().getAudioEncoderParams(channel_, params);
+    return hal::IAudio::instance()->getEncodeParams(params);
     return false;
 }

@@ -35,7 +35,9 @@ bool MediaSource::start(int32_t channel, int32_t sub_channel, OnFrameProc onfram
         return false;
     }
     if (ret == 1) {
-        return hal::IVideo::instance()->startVideoStream(channel, sub_channel, hal::IVideo::MediaStreamProc(&MediaSource::onLiveVideoFrame, this));
+        bool v = hal::IVideo::instance()->startStream(channel, sub_channel, hal::IVideo::VideoStreamProc(&MediaSource::onLiveVideoFrame, this));
+        bool a = hal::IAudio::instance()->startStream(hal::IAudio::AudioStreamProc(&MediaSource::onLiveAudioFrame, this));
+        return v && a;
     }
     return true;
 }
@@ -47,7 +49,9 @@ bool MediaSource::stop(int32_t channel, int32_t sub_channel, OnFrameProc onframe
         return false;
     }
     if (ret == 0) {
-        return hal::IVideo::instance()->stopVideoStream(channel, sub_channel, hal::IVideo::MediaStreamProc(&MediaSource::onLiveVideoFrame, this));
+        bool v = hal::IVideo::instance()->stopStream(channel, sub_channel, hal::IVideo::VideoStreamProc(&MediaSource::onLiveVideoFrame, this));
+        bool a = hal::IAudio::instance()->stopStream(hal::IAudio::AudioStreamProc(&MediaSource::onLiveAudioFrame, this));
+        return v && a;
     }
     return true;
 }
@@ -58,8 +62,10 @@ void MediaSource::onLiveVideoFrame(int32_t channel, int32_t sub_channel, MediaFr
     });
 }
 
-void MediaSource::onLiveAudioFrame(int32_t channel, int32_t sub_channel, MediaFrame &frame) {
-    infra::WorkThreadPool::instance()->async([&, sub_channel, frame] () mutable {
-        live_media_signal_[sub_channel](Audio, frame);
+void MediaSource::onLiveAudioFrame(MediaFrame &frame) {
+    infra::WorkThreadPool::instance()->async([&, frame] () mutable {
+        for (auto &signal : live_media_signal_) {
+            signal(Audio, frame);
+        }
     });
 }

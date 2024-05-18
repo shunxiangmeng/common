@@ -29,8 +29,8 @@ typedef struct {
 class IVideo {
 public:
 
-    typedef infra::TSignal<void, int32_t, int32_t, MediaFrame&> MediaStreamSignal;
-    typedef MediaStreamSignal::Proc MediaStreamProc;
+    typedef infra::TSignal<void, int32_t, int32_t, MediaFrame&> VideoStreamSignal;
+    typedef VideoStreamSignal::Proc VideoStreamProc;
 
     static IVideo* instance();
 
@@ -46,8 +46,8 @@ public:
     // 强制 I 帧
     virtual bool requestIFrame(int32_t channel, int32_t sub_channel) = 0;
 
-    virtual bool startVideoStream(int32_t channel, int32_t sub_channel, MediaStreamProc proc) = 0;
-    virtual bool stopVideoStream(int32_t channel, int32_t sub_channel, MediaStreamProc proc) = 0;
+    virtual bool startStream(int32_t channel, int32_t sub_channel, VideoStreamProc proc) = 0;
+    virtual bool stopStream(int32_t channel, int32_t sub_channel, VideoStreamProc proc) = 0;
 
 };
 
