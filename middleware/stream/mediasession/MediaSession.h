@@ -26,7 +26,7 @@ public:
      * @return
      */
     MediaSession(int32_t channel, int32_t sub_channel, StreamType type = LiveStream);
-    ~MediaSession() = default;
+    ~MediaSession();
 
     bool create();
 
@@ -37,9 +37,7 @@ public:
     bool getVideoEncoderParams(hal::VideoEncodeParams& params);
 
     bool getAudioEncoderParams(hal::AudioEncodeParams& params);
-private:
-    void onVideoFrame(MediaFrame &frame);
-    void onAudioFrame(MediaFrame &frame);
+
 public:
     int32_t channel_;
     int32_t sub_channel_;

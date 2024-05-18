@@ -8,6 +8,12 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <map>
+#include <mutex>
+#include <vector>
+#include "common/mediaframe/MediaFrame.h"
+#include "hal/Video.h"
+#include "hal/Audio.h"
 
 typedef enum {
     LiveStream,
@@ -17,8 +23,23 @@ typedef enum {
 } StreamType;
 
 class MediaSource {
-    MediaSource() = default;
-    ~MediaSource() = default;
+    MediaSource();
+    ~MediaSource();
 public:
     static MediaSource* instance();
+
+    typedef infra::TSignal<void, MediaFrameType, MediaFrame&> MediaSignal;
+    typedef MediaSignal::Proc OnFrameProc;
+
+    bool start(int32_t channel, int32_t sub_channel, OnFrameProc onframe, StreamType type = LiveStream);
+    bool stop(int32_t channel, int32_t sub_channel, OnFrameProc onframe, StreamType type = LiveStream);
+
+private:
+    void onLiveVideoFrame(int32_t channel, int32_t sub_channel, MediaFrame &frame);
+    void onLiveAudioFrame(int32_t channel, int32_t sub_channel, MediaFrame &frame);
+
+private:
+    std::vector<MediaSignal> live_media_signal_;
+    std::mutex mutex_;
+
 };

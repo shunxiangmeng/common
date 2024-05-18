@@ -483,7 +483,7 @@ int32_t RtspSessionBase::tryOpenUdpRtpRtcpSocket(std::shared_ptr<infra::Socket>&
 
 void RtspSessionBase::destroySession() {
     if (rtcp_timer_) {
-        rtcp_timer_->reset();
+        rtcp_timer_->stop();
     }
 }
 

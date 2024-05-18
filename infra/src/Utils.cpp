@@ -42,7 +42,7 @@ uint16_t ntohs(uint16_t value) {
 
 int32_t getCurrentThreadId() {
 #ifdef _WIN32
-    return  GetCurrentProcessId();
+    return  GetCurrentThreadId();
     //#define getCurrentThreadId() std::this_thread::get_id()
 #else
     return (int32_t)syscall(SYS_gettid);

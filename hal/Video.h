@@ -29,7 +29,7 @@ typedef struct {
 class IVideo {
 public:
 
-    typedef infra::TSignal<void, MediaFrame&> MediaStreamSignal;
+    typedef infra::TSignal<void, int32_t, int32_t, MediaFrame&> MediaStreamSignal;
     typedef MediaStreamSignal::Proc MediaStreamProc;
 
     static IVideo* instance();

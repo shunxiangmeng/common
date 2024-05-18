@@ -57,13 +57,11 @@ void WorkThread::run() {
             task_queue_.pop();
             task_queue_mutex_.unlock();
             
-            //printf("000thread %d exec task, size:%d\n", tid(), (int)task_queue_size);
             //try {
                 task();
             //} catch (std::exception &ex) {
-            //    errorf("exception %s\n", ex.what());
+            //    errorf("exception %s...............\n", ex.what());
             //}
-            //printf("111thread %d exec task, size:%d\n", tid(), (int)task_queue_size);
 
         } else {
             task_queue_mutex_.unlock();

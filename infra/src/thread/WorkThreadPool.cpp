@@ -78,7 +78,7 @@ std::shared_ptr<TaskExecutor> WorkThreadPool::getExecutor() {
     std::shared_ptr<WorkThread> executor_min_load = threads_[thread_pos];
     auto min_load = executor_min_load->load();
 
-    /*for (size_t i = 0; i < threads_.size(); ++i) {
+    for (size_t i = 0; i < threads_.size(); ++i) {
         auto th = threads_[thread_pos];
         auto load = th->load();
 
@@ -94,11 +94,9 @@ std::shared_ptr<TaskExecutor> WorkThreadPool::getExecutor() {
         if (thread_pos >= threads_.size()) {
             thread_pos = 0;
         }
-    }*/
-    thread_pos_ = thread_pos;
-    thread_pos_++;
+    }
 
-#if 1
+#if 0
     std::string loads = "[";
     for (auto &it : threads_) {
         loads += std::to_string(it->load()) + ",";

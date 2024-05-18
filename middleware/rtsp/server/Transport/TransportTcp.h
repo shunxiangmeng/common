@@ -51,5 +51,5 @@ private:
     int32_t                              mCmdSendBufferLen;
     int32_t                              mRecvBufferLen;
     int32_t                              mRecvBufferDataLen;            /** 已接收数据长度 */
-    std::mutex                           mutex_;
+    std::recursive_mutex                 mutex_;
 };
