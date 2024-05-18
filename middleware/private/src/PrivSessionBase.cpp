@@ -195,7 +195,7 @@ bool PrivSessionBase::response(MessagePtr &msg) {
     head->bodyLen    = infra::htonl((uint32_t)body.size());
     head->encrypt = 0;
 
-    int32_t copyLen = body.size() < (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead)) ? body.size() : (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead));
+    int32_t copyLen = body.size() < (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead)) ? (int32_t)body.size() : (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead));
     memcpy(head->buf, body.c_str(), copyLen);
 
     tracef("to response len:%d\n%s", body.size(), body.c_str());
