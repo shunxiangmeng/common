@@ -41,7 +41,7 @@ UlucuFrame& UlucuFrame::setDtsPts(uint64_t dts, uint64_t pts) {
     }
     UlucuFrameHead *head = reinterpret_cast<UlucuFrameHead*>(mBuffer);
     head->dts = dts;
-    head->pts = pts - dts;
+    head->pts = uint16_t(pts - dts);
     return *this;
 }
 
@@ -118,7 +118,7 @@ UlucuFrame& UlucuFrame::setVideoInfo(const VFrameInfo &info) {
     videoEx->type = videoFrame;
     videoEx->encode = info.encode;
     if (info.rate < 1 && info.rate > 0) {
-        int32_t den = 1 / info.rate;
+        int32_t den = int32_t(1.0f / info.rate);
         videoEx->rateNum = 1;
         videoEx->rateDen = uint8_t(den);
     } else {
