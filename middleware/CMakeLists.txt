@@ -6,7 +6,8 @@ file(GLOB_RECURSE LIVE_SOURCE_FILES
     http/*.cpp 
     http/*.c 
     api/*.cpp
-    configManager/*.cpp)
+    configManager/*.cpp
+    oac/*.cpp)
 
 file(GLOB_RECURSE LIVE_SOURCE_HEADER_FILES 
     application/*.h 
@@ -15,7 +16,8 @@ file(GLOB_RECURSE LIVE_SOURCE_HEADER_FILES
     private/*.h 
     http/*.h 
     api/*.h
-    configManager/*.h)
+    configManager/*.h
+    oac/*.h)
 
 set(APP_SOURCE_FILES ${APP_SOURCE_FILES} ${LIVE_SOURCE_FILES} PARENT_SCOPE)
 set(APP_SOURCE_HEADER_FILES ${APP_SOURCE_HEADER_FILES} ${LIVE_SOURCE_HEADER_FILES} PARENT_SCOPE)

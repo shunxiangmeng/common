@@ -179,12 +179,16 @@ std::string Logger::printTime() {
 }
 
 void Logger::writeLog(LogLevel level, const std::string &content) {
+#if 1
     std::shared_ptr<LogContent> log(new LogContent(level, content));
     {
         std::lock_guard<std::mutex> guard(mutex_);
         content_.push_back(log);
     }
     semaphore_.post();
+#else
+    std::cout << content;
+#endif
 }
 
 static const char* sLogLevelString[] = {"[error]", "[warn]", "[info]", "[debug]", "[trace]"};

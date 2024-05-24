@@ -25,6 +25,7 @@ SharedMemory::SharedMemory(const std::string& path, int64_t size, bool create) n
     : create_(create), path_(path), size_(size) {
 #ifndef _WIN32
     int page_size = sysconf(_SC_PAGESIZE);
+    tracef("memory page_size:%d\n", page_size);
     size_ = (size + page_size - 1) / page_size * page_size;
 #endif
     infof("shared_memory %s, size:%lld(%d)\n", path_.data(), size_, size);
@@ -97,7 +98,7 @@ bool SharedMemory::createOrOpen() noexcept {
     fd_ = shm_open(path_.c_str(), flags, 0666);
     if (fd_ < 0) {
         int err = errno;
-        errorf("Veigar: Error: %s shared memory failed, err: %d\n", create_ ? "Create" : "Open", err);
+        errorf("%s shared memory failed, err: %d\n", create_ ? "Create" : "Open", err);
         return false;
     }
 
@@ -107,7 +108,7 @@ bool SharedMemory::createOrOpen() noexcept {
         int ret = ftruncate(fd_, size_);
         if (ret != 0) {
             int err = errno;
-            errorf("Veigar: Error: ftruncate shm failed, size: %lld, err: %d\n", size_, err);
+            errorf("ftruncate shm failed, size: %lld, err: %d\n", size_, err);
             ::close(fd_);
             fd_ = -1;
             if (create_) {
@@ -126,7 +127,7 @@ bool SharedMemory::createOrOpen() noexcept {
     );
     if (memory == MAP_FAILED) {
         int err = errno;
-        errorf("Veigar: Error: mmap shm failed, size: %lld, err: %d.\n", size_, err);
+        errorf("mmap shm failed, size: %lld, err: %d.\n", size_, err);
         ::close(fd_);
         fd_ = -1;
         if (create_) {
@@ -144,7 +145,7 @@ bool SharedMemory::createOrOpen() noexcept {
         return false;
     }
 
-    infof("Veigar: %s shared memory success, fd: %d\n", create_ ? "Create" : "Open", fd_);
+    infof("%s shared memory %s success, fd: %d\n", create_ ? "Create" : "Open", path_.c_str(), fd_);
     return true;
 }
 
