@@ -44,6 +44,8 @@ public:
      */
     bool connect(const std::string& remote_ip, uint16_t remote_port, bool noblock = true, const std::string& local_ip = "", uint16_t local_port = 0);
 
+    bool isConnected();
+
     void setConnectState(TcpSocket::ConnectState state);
 
     TcpSocket::ConnectState getConnectState() const;

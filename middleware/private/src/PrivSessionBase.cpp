@@ -245,7 +245,7 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
         return nullptr;
     }
 
-    ///查找消息头BINU
+    ///查找消息头@@@@
     int32_t i = 0U;
     for (; i < len - 3; i++) {
         if (buffer[i+0] == '@' && buffer[i+1] == '@' && buffer[i+2] == '@' && buffer[i+3] == '@') {
@@ -301,11 +301,11 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
 
         infof("recv data content:\n%s", root.toStyledString().c_str());
         msg->isResponse = root.isMember("code");
-        msg->method     = root.isMember("method")? root["method"].asString():"";
-        msg->data       = root.isMember("data")? root["data"]:Json::nullValue;
+        msg->method     = root.isMember("method") ? root["method"].asString() : "";
+        msg->data       = root.isMember("data") ? root["data"] : Json::nullValue;
     }
 
-    return msg;   
+    return msg;
 }
 
 void PrivSessionBase::process(MessagePtr &request){
@@ -380,10 +380,10 @@ int32_t PrivSessionBase::sendRequest(Json::Value &body) {
         return -1;
     }
     PrivateDataHead *head = reinterpret_cast<PrivateDataHead*>((char*)buffer.get());
-    head->tag[0] = 'B';
-    head->tag[1] = 'I';
-    head->tag[2] = 'U';
-    head->tag[3] = 'N';
+    head->tag[0] = '@';
+    head->tag[1] = '@';
+    head->tag[2] = '@';
+    head->tag[3] = '@';
     head->version = 0x10;
     head->flag = 0x80;
     head->type = 0x00;                         ///信令数据

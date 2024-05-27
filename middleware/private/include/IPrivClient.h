@@ -1,10 +1,19 @@
 /************************************************************************
  * Copyright(c) 2024 shanghai ulucu technology
  * 
- * File        :  PrivClient.h
+ * File        :  IPrivClient.h
  * Author      :  mengshunxiang 
  * Data        :  2024-05-26 22:57:52
  * Description :  None
  * Note        : 
  ************************************************************************/
 #pragma once
+
+class IPrivClient {
+public:
+    IPrivClient() = default;
+    virtual ~IPrivClient() = default;
+
+    virtual bool connect(const char* server_ip, uint16_t server_port) = 0;
+
+};

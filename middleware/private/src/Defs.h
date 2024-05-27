@@ -14,12 +14,16 @@
 
 #define GenCode(code) ({char buf[9]; snprintf(buf, sizeof(buf), "%08d", code); buf;})
 
+#define MESSAGE_TYPE_CMD    0
+#define MESSAGE_TYPE_MEDIA  1
+#define MESSAGE_TYPE_RPC    2
+
 #pragma pack (1)
-typedef struct{
+typedef struct {
     uint8_t     tag[4];
     uint8_t     version;
     uint8_t     flag;
-    uint8_t     type;          ///0-信令，1-媒体数据
+    uint8_t     type;          ///0-信令，1-媒体数据, 2-rpc
     uint8_t     encrypt;       ///加密类型
     uint16_t    sequence;
     uint16_t    res;
