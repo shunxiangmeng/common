@@ -7,6 +7,8 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
+#include <thread>
+#include <chrono>
 #include "OacClient.h"
 
 namespace oac {
@@ -41,7 +43,7 @@ bool OacClient::stop() {
 bool OacClient::getImageFrame(ImageFrame& image) {
     std::shared_ptr<SharedImage> shared_image = image_manager_.getReadSharedImage();
     while (shared_image->shared_picture->empty) {
-        usleep(1000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     shared_image->wait();
 

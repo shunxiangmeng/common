@@ -40,7 +40,6 @@ private:
     std::string shared_memory_path_;
     std::shared_ptr<infra::SharedMemory> shared_memory_;
     SharedMemoryHead* shared_memory_data_;
-    sem_t* shared_memory_head_sem_;
 
     std::vector<std::shared_ptr<SharedImage>> shared_images_;
 

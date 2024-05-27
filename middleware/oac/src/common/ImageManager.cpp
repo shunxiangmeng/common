@@ -44,7 +44,7 @@ bool ImageManager::init(int32_t width, int32_t height, IMAGE_PIXEL_FORMAT format
         shared_memory_data_->tag[1] = '@';
         shared_memory_data_->tag[2] = '@';
         shared_memory_data_->tag[3] = '@';
-        shared_memory_data_->total_size = shared_memory_->size();
+        shared_memory_data_->total_size = (int32_t)shared_memory_->size();
         shared_memory_data_->picture_sum = picture_count;
         shared_memory_data_->picture_count = 0;
         shared_memory_data_->write_index = 0;
