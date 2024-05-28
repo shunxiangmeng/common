@@ -13,7 +13,7 @@
 #include "PrivSessionBase.h"
 #include "stream/mediasession/MediaSession.h"
 #include "infra/include/Signal.h"
-#include "ulucuframe/UlucuPack.h"
+#include "../ulucuframe/UlucuPack.h"
 
 class PrivSubSession {
     friend class PrivSession;

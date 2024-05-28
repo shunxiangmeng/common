@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
-#include "Defs.h"
+#include "../Defs.h"
 #include "jsoncpp/include/json.h"
 #include "PrivSubSession.h"
 #include "PrivSessionBase.h"

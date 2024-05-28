@@ -10,46 +10,43 @@
 #pragma once
 #include "jsoncpp/include/value.h"
 
-class PrivServer {
+class IPrivServer {
+public:
     /**
      * @brief 构造
      */
-    PrivServer();
+    IPrivServer() = default;
     /**
      * @brief 析构
      */
-    ~PrivServer();
-public:
+    virtual ~IPrivServer() = default;
     /**
      * @brief 单例
      */
-    static PrivServer* instance();
-public:
+    static IPrivServer* instance();
     /**
      * @brief 启动私有服务
      * @param[in] port 服务监听端口号
      */
-    bool start(int32_t port = 7000);
+    virtual bool start(uint16_t port = 7000) = 0;
     /**
      * @brief 停止私有服务
      */
-    bool stop();
+    virtual bool stop() = 0;
     /**
      * @brief 重启私有服务
      * @param[in] port 服务监听端口号
      */
-    bool restart(int32_t port = 7000);
+    virtual bool restart(uint16_t port = 7000) = 0;
     /**
      * @brief 增加可订阅事件
      * @param[in] name  事件名
      */
-    bool addSubscribeEvent(const char* name);
+    virtual bool addSubscribeEvent(const char* name) = 0;
     /**
      * @brief 发送事件
      * @param[in] name  事件名
      * @param[in] event  json格式的事件
      */
-    bool sendEvent(const char* name, const Json::Value &event);
-private:
-    void* internal_;
+    virtual bool sendEvent(const char* name, const Json::Value &event) = 0;
 };

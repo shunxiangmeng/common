@@ -11,7 +11,7 @@
 #include <string>
 #include <memory>
 #include <mutex>
-#include "Defs.h"
+#include "../Defs.h"
 #include "jsoncpp/include/json.h"
 #include "PrivSessionProxy.h"
 #include "infra/include/network/SocketHandler.h"
