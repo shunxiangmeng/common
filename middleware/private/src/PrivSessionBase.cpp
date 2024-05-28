@@ -282,7 +282,7 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
     usedLen += frameLen;
     MessagePtr msg(new Message());
     msg->isResponse = head->flag & 0x40 ? true : false;
-    msg->sequence  = infra::ntohs(head->sequence);
+    msg->sequence  = infra::ntohl(head->sequence);
     msg->sessionId = infra::ntohl(head->sessionId);
 
     ///媒体数据
