@@ -74,6 +74,9 @@ bool PrivSessionBase::initial(std::shared_ptr<infra::TcpSocket>& newsock, const 
     }
 
     memset(mBuffer, 0x00, mBufferLen);
+    memcpy(mBuffer, buffer, len);
+    mBufferDataLen = len;
+
     mSock = newsock;
     setSendBufferLen(1024 * 1024);
 
@@ -190,7 +193,7 @@ bool PrivSessionBase::response(MessagePtr &msg) {
     }
 
     head->flag = 0x80;
-    head->sequence   = infra::htons(msg->sequence);   ///应答透传sequence
+    head->sequence   = infra::htonl(msg->sequence);   ///应答透传sequence
     head->sessionId  = infra::htonl(msg->sessionId);
     head->bodyLen    = infra::htonl((uint32_t)body.size());
     head->encrypt = 0;
