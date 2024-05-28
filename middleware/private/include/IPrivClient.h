@@ -8,11 +8,14 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <memory>
 
 class IPrivClient {
 public:
     IPrivClient() = default;
     virtual ~IPrivClient() = default;
+
+    static std::shared_ptr<IPrivClient> create();
 
     virtual bool connect(const char* server_ip, uint16_t server_port) = 0;
 

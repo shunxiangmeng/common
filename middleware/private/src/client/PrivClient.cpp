@@ -12,6 +12,11 @@
 #include "../PrivMessage.h"
 #include "infra/include/network/NetworkThreadPool.h"
 
+std::shared_ptr<IPrivClient> IPrivClient::create() {
+    auto ptr = std::make_shared<PrivClient>();
+    return ptr;
+}
+
 PrivClient::PrivClient() : buffer_(8 * 1024) {
     sock_ = std::make_shared<infra::TcpSocket>();
 }

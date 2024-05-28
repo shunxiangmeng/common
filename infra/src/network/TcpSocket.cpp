@@ -83,7 +83,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
 }
 
 bool TcpSocket::isConnected() {
-    return conncect_state_ == unconnected;
+    return conncect_state_ == connected;
 }
 
 TcpSocket::ConnectState TcpSocket::getConnectState() const {
