@@ -53,7 +53,7 @@ std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &u
     used_len += frameLen;
     std::shared_ptr<Message> message = std::make_shared<Message>();
     message->isResponse = head->flag & 0x40 ? true : false;
-    message->sequence  = infra::ntohs(head->sequence);
+    message->sequence  = infra::ntohl(head->sequence);
     message->sessionId = infra::ntohl(head->sessionId);
 
     ///媒体数据
