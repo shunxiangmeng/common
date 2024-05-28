@@ -59,6 +59,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
     remote_addr.sin_addr.s_addr = inet_addr(remote_ip.data());
     if (::connect(fd_, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr)) == 0) {
         //同步连接成功
+        setConnectState(ConnectState::connected);
         return true;
     }
 

@@ -25,8 +25,7 @@ typedef struct {
     uint8_t     flag;
     uint8_t     type;          ///0-信令，1-媒体数据, 2-rpc
     uint8_t     encrypt;       ///加密类型
-    uint16_t    sequence;
-    uint16_t    res;
+    uint32_t    sequence;
     uint32_t    sessionId;
     uint32_t    bodyLen;
     char        buf[0];
