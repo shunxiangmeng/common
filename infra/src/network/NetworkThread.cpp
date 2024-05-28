@@ -78,14 +78,14 @@ bool NetworkThread::addEvent(int32_t fd, SocketHandler::EventType event, std::sh
     record->fd = fd;
     record->event = event;
     record->handler = handler;
-    std::lock_guard<std::mutex> lock(event_record_map_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(event_record_map_mutex_);
     event_record_map_.emplace(fd, record);
     wakeUp();
     return true;
 }
 
 bool NetworkThread::modifyEvent(int32_t fd, SocketHandler::EventType event, std::shared_ptr<SocketHandler> &handler) {
-    std::lock_guard<std::mutex> lock(event_record_map_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(event_record_map_mutex_);
     auto it = event_record_map_.find(fd);
     if (it == event_record_map_.end()) {
         errorf("modifyEvent not found fd:%d\n", fd);
@@ -109,7 +109,7 @@ bool NetworkThread::modifyEvent(int32_t fd, SocketHandler::EventType event, std:
 }
 
 bool NetworkThread::delEvent(int32_t fd, std::shared_ptr<SocketHandler> &handler) {
-    std::lock_guard<std::mutex> lock(event_record_map_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(event_record_map_mutex_);
     auto it = event_record_map_.find(fd);
     if (it == event_record_map_.end()) {
         return false;

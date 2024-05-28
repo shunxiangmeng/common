@@ -52,7 +52,7 @@ private:
 #endif
     Pipe pipe_;
     std::map<int32_t, std::shared_ptr<EventRecord>> event_record_map_;
-    std::mutex event_record_map_mutex_;
+    std::recursive_mutex event_record_map_mutex_;
 };
 
 }
