@@ -17,10 +17,13 @@
 #include <map>
 #include <unordered_map>
 #include "../Defs.h"
+#include "private/include/MsgpackCodec.h"
 #include "private/include/IPrivClient.h"
+#include "private/include/Defs.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
 #include "infra/include/Buffer.h"
+#include "infra/include/MD5.h"
 #include "jsoncpp/include/json.h"
 
 enum class CallModel { future, callback };
@@ -122,10 +125,21 @@ public:
             fu_id = sequence_;
             future_map_.emplace(fu_id, std::move(p));
         }
-        sendKeepAlive();
-        //rpc_service::msgpack_codec codec;
-        //auto ret = codec.pack_args(std::forward<Args>(args)...);
+
+        msgpack_codec codec;
+        auto ret = codec.pack_args(std::forward<Args>(args)...);
+
+        uint32_t message_size = sizeof(rpc_header) + ret.size();
+        infra::Buffer buffer(message_size);
+
         //write(fu_id, request_type::req_res, std::move(ret), MD5::MD5Hash32(rpc_name.data()));
+        uint32_t func_id = infra::MD5Hash32(rpc_name.data());
+        rpc_header header = { "***", request_type::req_res, message_size, 0, func_id};;
+
+        buffer.putData((char*)&header, sizeof(header));
+        buffer.putData((char*)ret.release(), ret.size());
+
+        sendRpcData(buffer);
 
         return future_result<req_result>{fu_id, std::move(future)};
     }
@@ -150,6 +164,8 @@ private:
     void process(std::shared_ptr<Message> &request);
 
     int32_t sendRequest(Json::Value &body);
+
+    int32_t sendRpcData(infra::Buffer &buffer);
 
     infra::Buffer makeRequest(Json::Value &body);
 

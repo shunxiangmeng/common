@@ -131,6 +131,32 @@ infra::Buffer PrivClient::makeRequest(Json::Value &body) {
     return buffer;
 }
 
+int32_t PrivClient::sendRpcData(infra::Buffer& data) {
+    uint32_t sequence = 0;
+    {
+        std::lock_guard<std::mutex> guard(sequence_mutex_);
+        sequence = sequence_++;
+    }
+
+    uint32_t data_len = (uint32_t)data.size();
+    uint32_t buffer_len = (uint32_t)data.size() + sizeof(PrivateDataHead);
+    infra::Buffer buffer(buffer_len);
+    PrivateDataHead* head = reinterpret_cast<PrivateDataHead*>((char*)buffer.data());
+    head->tag[0] = '@';
+    head->tag[1] = '@';
+    head->tag[2] = '@';
+    head->tag[3] = '@';
+    head->version = 0x10;
+    head->flag = 0x80;
+    head->type = MESSAGE_TYPE_RPC;              ///rpc
+    head->encrypt = 0x00;
+    head->sequence = infra::htonl(sequence);    ///转网络字节序
+    head->sessionId = infra::htonl(session_id_);
+    head->bodyLen = infra::htonl(data_len);
+    memcpy(head->buf, data.data(), data.size());
+    buffer.setSize(buffer_len);
+    return sock_->send((const char*)buffer.data(), buffer.size());
+}
 
 void PrivClient::sendKeepAlive() {
     Json::Value root;
