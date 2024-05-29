@@ -17,6 +17,6 @@ RPCServer::~RPCServer() {
 
 route_result_t RPCServer::route(infra::Buffer &buffer) {
     rpc_header* header = (rpc_header*)buffer.data();
-    route_result_t ret = router_.route(header->func_id, buffer);
+    route_result_t ret = router_.route(header->func_id, buffer, 0);
     return ret;
 }
