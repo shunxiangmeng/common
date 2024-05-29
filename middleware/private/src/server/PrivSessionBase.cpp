@@ -272,7 +272,7 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
     auto *head = reinterpret_cast<PrivateDataHead*>((char*)pBuffer);
     uint32_t bodyLen = infra::ntohl(head->bodyLen);
     int32_t frameLen = bodyLen + sizeof(PrivateDataHead);
-    char *body = (char*)buffer + bodyLen;
+    char *body = (char*)buffer + sizeof(PrivateDataHead);
 
     ///不满一帧数据
     if ((int32_t)len < frameLen) {
