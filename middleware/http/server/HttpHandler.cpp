@@ -13,17 +13,17 @@
 #include "MimeTypes.h"
 #include "jsoncpp/include/value.h"
 
-std::string HttpMethodToString(HttpMethod method) {
+std::string HttpMethodToString(IHttpServer::HttpMethod method) {
     switch (method) {
-        case HttpMethod::GET:     return {"GET"};
-        case HttpMethod::POST:    return {"POST"};
-        case HttpMethod::PUT:     return {"PUT"};
-        case HttpMethod::DELETE:  return {"DELETE"};
-        case HttpMethod::PATCH:   return {"PATCH"};
-        case HttpMethod::HEAD:    return {"HEAD"};
-        case HttpMethod::OPTIONS: return {"OPTIONS"};
-        case HttpMethod::TRACE:   return {"TRACE"};
-        case HttpMethod::CONNECT: return {"CONNECT"};
+        case IHttpServer::HttpMethod::GET:     return {"GET"};
+        case IHttpServer::HttpMethod::POST:    return {"POST"};
+        case IHttpServer::HttpMethod::PUT:     return {"PUT"};
+        case IHttpServer::HttpMethod::DELETE_: return {"DELETE"};
+        case IHttpServer::HttpMethod::PATCH:   return {"PATCH"};
+        case IHttpServer::HttpMethod::HEAD:    return {"HEAD"};
+        case IHttpServer::HttpMethod::OPTIONS: return {"OPTIONS"};
+        case IHttpServer::HttpMethod::TRACE:   return {"TRACE"};
+        case IHttpServer::HttpMethod::CONNECT: return {"CONNECT"};
         default: return {"GET"};
     }
 }
@@ -33,7 +33,7 @@ void HttpHandler::config(IHttpServer::Config& config) {
     default_index_file_ = config.default_index_file;
 }
 
-bool HttpHandler::registerHandler(HttpMethod method, const char* url, httpHandler&& handler) {
+bool HttpHandler::registerHandler(IHttpServer::HttpMethod method, const char* url, httpHandler&& handler) {
     std::string method_str = HttpMethodToString(method);
     std::string key = method_str + std::string(url);
     std::lock_guard<std::mutex> guard(router_map_mutex_);
@@ -46,7 +46,7 @@ bool HttpHandler::registerHandler(HttpMethod method, const char* url, httpHandle
     return true;
 }
 
-bool HttpHandler::unRegisterHandler(HttpMethod method, const char* url, httpHandler&& handler) {
+bool HttpHandler::unRegisterHandler(IHttpServer::HttpMethod method, const char* url, httpHandler&& handler) {
     std::string method_str = HttpMethodToString(method);
     std::string key = method_str + std::string(url);
     std::lock_guard<std::mutex> guard(router_map_mutex_);

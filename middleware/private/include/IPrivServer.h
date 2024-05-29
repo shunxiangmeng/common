@@ -9,6 +9,7 @@
  ************************************************************************/
 #pragma once
 #include "jsoncpp/include/value.h"
+#include "RpcServer.h"
 
 class IPrivServer {
 public:
@@ -49,4 +50,6 @@ public:
      * @param[in] event  json格式的事件
      */
     virtual bool sendEvent(const char* name, const Json::Value &event) = 0;
+
+    virtual RPCServer& rpcServer() = 0;
 };

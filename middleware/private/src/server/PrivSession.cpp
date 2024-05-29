@@ -12,8 +12,8 @@
 #include "infra/include/Timestamp.h"
 #include "infra/include/Logger.h"
 
-PrivSession::PrivSession(IPrivSessionManager *manager, const char* name, uint32_t sessionId):
-    PrivSessionBase(nullptr, name, sessionId), mSessionManager(manager), mStreamAlive(false), mSmartEventTimer("test") {
+PrivSession::PrivSession(IPrivSessionManager *manager, const char* name, uint32_t sessionId, RPCServer *rpc_server):
+    PrivSessionBase(nullptr, name, sessionId, rpc_server), mSessionManager(manager), mStreamAlive(false), mSmartEventTimer("test") {
     std::lock_guard<std::mutex> guard(mSubscribedEventsMtx);
     mSubscribedEvents.clear();
 }

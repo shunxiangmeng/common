@@ -16,9 +16,10 @@
 
 ///主要是接收信令，buffer可以开小一点
 #define SessionBaseBufferSize (16*1024)
-PrivSessionBase::PrivSessionBase(PrivSessionBase *master,const char* name, uint32_t sessionId):
+PrivSessionBase::PrivSessionBase(PrivSessionBase *master,const char* name, uint32_t sessionId, RPCServer *rpc_server):
     mBuffer(nullptr), mBufferLen(0), mBufferDataLen(0), mName(name), 
-    mSessionId(sessionId), mMaster(master), mProxy(nullptr), mSock(nullptr) {
+    mSessionId(sessionId), mMaster(master), mProxy(nullptr), mSock(nullptr),
+    rpc_server_(rpc_server) {
 }
 
 PrivSessionBase::~PrivSessionBase() {
@@ -271,6 +272,7 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
     auto *head = reinterpret_cast<PrivateDataHead*>((char*)pBuffer);
     uint32_t bodyLen = infra::ntohl(head->bodyLen);
     int32_t frameLen = bodyLen + sizeof(PrivateDataHead);
+    char *body = (char*)buffer + bodyLen;
 
     ///不满一帧数据
     if ((int32_t)len < frameLen) {
@@ -286,11 +288,16 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
     msg->sessionId = infra::ntohl(head->sessionId);
 
     ///媒体数据
-    if (head->type == 0x01) {
+    if (head->type == MESSAGE_TYPE_MEDIA) {
         msg->isMediaData = true;
         msg->mediaData = head->buf;
         msg->mediaDataLen = bodyLen;
         return msg;
+    } else if (head->type == MESSAGE_TYPE_RPC) {
+        infra::Buffer buffer(bodyLen);
+        buffer.putData(body, bodyLen);
+        rpc_server_->route(buffer);
+        return nullptr;
     } else {
         ///信令数据
         Json::Value root = Json::nullValue;

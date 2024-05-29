@@ -22,8 +22,8 @@ public:
     ~HttpHandler() = default;
 
     void handleRequest(Request& request, Reply& reply);
-    bool registerHandler(HttpMethod method, const char* url, httpHandler&& handler);
-    bool unRegisterHandler(HttpMethod method, const char* url, httpHandler&& handler);
+    bool registerHandler(IHttpServer::HttpMethod method, const char* url, httpHandler&& handler);
+    bool unRegisterHandler(IHttpServer::HttpMethod method, const char* url, httpHandler&& handler);
 
     void config(IHttpServer::Config& config);
 

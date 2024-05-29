@@ -13,7 +13,7 @@
 #include "WebSocket/PrivWebsocketSession.h"
 #include "infra/include/Timestamp.h"
 
-PrivSessionManager::PrivSessionManager() : max_connect_(16), mCloseSessionTimer(0) {
+PrivSessionManager::PrivSessionManager(RPCServer* rpc_server) : max_connect_(16), mCloseSessionTimer(0), rpc_server_(rpc_server) {
 }
 
 PrivSessionManager::~PrivSessionManager() {
@@ -59,7 +59,7 @@ std::shared_ptr<PrivSession> PrivSessionManager::addNewSession(const char* name,
         } while (true);
     }
 
-    auto session = std::make_shared<PrivSession>(this, name, id);
+    auto session = std::make_shared<PrivSession>(this, name, id, rpc_server_);
     mMainSessionMap[id] = session;
     return session;
 }
@@ -119,7 +119,7 @@ int32_t PrivSessionManager::onRead(int32_t fd) {
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 } while (true);
-                session = std::make_shared<PrivSession>(this, "mainSession", id);
+                session = std::make_shared<PrivSession>(this, "mainSession", id, rpc_server_);
                 session_map_[id] = session;
             }
             (void)session->initial(sock, request, ret);
@@ -140,7 +140,7 @@ int32_t PrivSessionManager::onRead(int32_t fd) {
                         }
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     }  while (true);
-                    session = std::make_shared<PrivWebsocketSession>(this, id);
+                    session = std::make_shared<PrivWebsocketSession>(this, id, rpc_server_);
                     session_map_[id] = session;
                     infof("new websocket session id:%d\n", id);
                 }

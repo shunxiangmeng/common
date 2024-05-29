@@ -36,5 +36,5 @@ bool apiInit() {
     //test_reflection();
     //test_dynamic_reflection();
 
-    return IHttpServer::instance()->registerHandler(HttpMethod::GET, "/api/device", std::move(apiHandler));
+    return IHttpServer::instance()->registerHandler(IHttpServer::HttpMethod::GET, "/api/device", std::move(apiHandler));
 }

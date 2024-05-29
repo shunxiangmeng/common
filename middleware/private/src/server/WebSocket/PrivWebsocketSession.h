@@ -17,7 +17,7 @@
 
 class PrivWebsocketSession : public IPrivSessionProxy, public PrivSession {
 public:
-    PrivWebsocketSession(IPrivSessionManager *manager, uint32_t sessionId);
+    PrivWebsocketSession(IPrivSessionManager *manager, uint32_t sessionId, RPCServer *rpc_server);
     PrivWebsocketSession(PrivWebsocketSession &) = delete;
     ~PrivWebsocketSession();
 

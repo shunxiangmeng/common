@@ -16,6 +16,7 @@
 #include "PrivSessionProxy.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
+#include "private/include/RpcServer.h"
 
 typedef std::shared_ptr<Message> MessagePtr;
 class PrivSessionBase : public infra::SocketHandler {
@@ -26,7 +27,7 @@ public:
      * @param name
      * @param sessionId
      */
-    PrivSessionBase(PrivSessionBase *master, const char* name, uint32_t sessionId);
+    PrivSessionBase(PrivSessionBase *master, const char* name, uint32_t sessionId, RPCServer *rpc_server);
     /**
      * @brief 析构
      */
@@ -112,7 +113,7 @@ public:
      * @param usedLen
      * @return
      */
-    static MessagePtr parse(const char* buffer, int32_t len, int32_t &usedLen);
+    MessagePtr parse(const char* buffer, int32_t len, int32_t &usedLen);
     /**
      * @brief 获取socket
      * @return
@@ -188,5 +189,8 @@ private:
     IPrivSessionProxy                   *mProxy;                  ///代理
 
     std::shared_ptr<infra::TcpSocket>   mSock;
-    std::mutex                       mSendMutex;               ///发送锁，防止多线程发送给，导致协议错乱              
+    std::mutex                       mSendMutex;               ///发送锁，防止多线程发送给，导致协议错乱   
+
+protected:
+    RPCServer *const rpc_server_;         
 };

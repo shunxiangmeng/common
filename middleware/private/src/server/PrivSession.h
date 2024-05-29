@@ -43,7 +43,7 @@ public:
      * @param name
      * @param sessionId
      */
-    PrivSession(IPrivSessionManager *manager, const char* name, uint32_t session_id);
+    PrivSession(IPrivSessionManager *manager, const char* name, uint32_t session_id, RPCServer *rpc_server);
     /**
      * @brief 析构
      */

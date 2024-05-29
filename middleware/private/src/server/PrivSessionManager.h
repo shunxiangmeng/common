@@ -16,6 +16,7 @@
 #include "infra/include/network/AcceptSocket.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
+#include "private/include/RpcServer.h"
 
 class PrivSessionManager :  public IPrivSessionManager, public infra::SocketHandler {
 
@@ -37,7 +38,7 @@ public:
     /**
      * @brief 构造
      */
-    PrivSessionManager();
+    PrivSessionManager(RPCServer *rpc_server);
     /**
      * @brief 析构
      */
@@ -110,5 +111,7 @@ private:
 
     std::map<uint32_t, std::shared_ptr<PrivSession>> session_map_;
     std::mutex session_map_mutex_;
+
+    RPCServer *const rpc_server_;
 
 };

@@ -12,24 +12,24 @@
 #include <string>
 #include <map>
 
-typedef enum {
-    GET,
-    POST,
-    PUT,
-    DELETE,
-    PATCH,
-    HEAD,
-    OPTIONS,
-    TRACE,
-    CONNECT
-} HttpMethod;
-
 typedef std::map<std::string, std::string> queryMap;
 
 typedef std::function<bool(const queryMap&, const std::string& body, std::string& response)> httpHandler;
 
 class IHttpServer {
 public:
+    typedef enum {
+        GET,
+        POST,
+        PUT,
+        DELETE_,
+        PATCH,
+        HEAD,
+        OPTIONS,
+        TRACE,
+        CONNECT
+    } HttpMethod;
+
     IHttpServer() = default;
     ~IHttpServer() = default;
 

@@ -140,6 +140,6 @@ void PrivClient::sendKeepAlive() {
 
 
 bool PrivClient::testSyncCall() {
-    call("keep_alive", 1, 2);
+    call("echo", 1, 2);
     return true;
 }

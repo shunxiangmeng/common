@@ -18,7 +18,7 @@ IPrivServer* IPrivServer::instance() {
 }
 
 PrivServer::PrivServer() : port_(0), session_manager_(nullptr) {
-    session_manager_ = std::make_shared<PrivSessionManager>();
+    session_manager_ = std::make_shared<PrivSessionManager>(&rpc_server_);
 }
 
 PrivServer::~PrivServer() {
@@ -77,4 +77,9 @@ bool PrivServer::sendEvent(const char* name, const Json::Value &event) {
         return false;
     }
     return true;
+}
+
+
+RPCServer& PrivServer::rpcServer() {
+    return rpc_server_;
 }

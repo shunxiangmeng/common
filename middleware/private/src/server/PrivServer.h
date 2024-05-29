@@ -50,6 +50,8 @@ public:
      * @param[in] event  json格式的事件
      */
     virtual bool sendEvent(const char* name, const Json::Value &event) override;
+
+    virtual RPCServer& rpcServer() override;
 private:
     /**
      * @brief 数据输入
@@ -67,5 +69,8 @@ private:
 private:
     uint16_t              port_;
     infra::AcceptSocket   acceptor_;
+    RPCServer rpc_server_;
     std::shared_ptr<PrivSessionManager> session_manager_;
+
+    
 };

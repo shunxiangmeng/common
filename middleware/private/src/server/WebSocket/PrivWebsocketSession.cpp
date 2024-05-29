@@ -16,7 +16,8 @@
 #include "infra/include/Logger.h"
 #include "infra/include/thread/WorkThreadPool.h"
 
-PrivWebsocketSession::PrivWebsocketSession(IPrivSessionManager *manager,uint32_t sessionId) : PrivSession(manager, "PrivWebsocket", sessionId), 
+PrivWebsocketSession::PrivWebsocketSession(IPrivSessionManager *manager,uint32_t sessionId, RPCServer *rpc_server)
+     : PrivSession(manager, "PrivWebsocket", sessionId, rpc_server), 
     mSock(nullptr), mSessionId(sessionId){
     mRecvBufferDataLen = 0;
     mRecvBufferLen = 16 * 1024;

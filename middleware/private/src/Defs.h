@@ -20,7 +20,7 @@
 
 #pragma pack (1)
 typedef struct {
-    uint8_t     tag[4];
+    uint8_t     tag[4];    //@@@@
     uint8_t     version;
     uint8_t     flag;
     uint8_t     type;          ///0-信令，1-媒体数据, 2-rpc
