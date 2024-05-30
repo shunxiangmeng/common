@@ -174,7 +174,9 @@ void PrivClient::sendKeepAlive() {
 
 
 bool PrivClient::testSyncCall() {
-    rpc_client_.call("echo", 1, 2);
+    for (int i = 0; i < 5; i++) {
+        auto result = rpc_client_.call<std::vector<int32_t>>("echo", 1 + i, 2);
+    }
     return true;
 }
 

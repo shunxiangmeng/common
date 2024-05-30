@@ -12,6 +12,12 @@
 #include <unordered_map>
 #include "Router.h"
 
+template <typename T> inline T get_result(std::string result) {
+    msgpack_codec codec;
+    auto tp = codec.unpack<std::tuple<int, T>>(result.data(), result.size());
+    return std::get<1>(tp);
+}
+
 class PrivClient;
 class RPCClient {
 public:
@@ -32,6 +38,17 @@ public:
         return call<DEFAULT_TIMEOUT, T>(rpc_name, std::forward<Args>(args)...);
     }
 
+    template <size_t TIMEOUT, typename T, typename... Args>
+    typename std::enable_if<!std::is_void<T>::value, T>::type
+        call(const std::string& rpc_name, Args &&...args) {
+        auto future_result = async_call<FUTURE>(rpc_name, std::forward<Args>(args)...);
+        auto status = future_result.wait_for(std::chrono::milliseconds(TIMEOUT));
+        if (status == std::future_status::timeout || status == std::future_status::deferred) {
+            throw std::out_of_range("timeout or deferred");
+        }
+        return future_result.get().template as<T>();
+    }
+
 
     template <CallModel model, typename... Args>
     future_result<req_result> async_call(const std::string &rpc_name, Args &&...args) {
@@ -48,12 +65,14 @@ public:
         msgpack_codec codec;
         auto ret = codec.pack_args(std::forward<Args>(args)...);
 
-        uint32_t message_size = sizeof(rpc_header) + (uint32_t)ret.size();
+        uint32_t body_size = (uint32_t)ret.size();
+        uint32_t message_size = sizeof(rpc_header) + body_size;
+
         infra::Buffer buffer(message_size);
 
         //write(fu_id, request_type::req_res, std::move(ret), MD5::MD5Hash32(rpc_name.data()));
         uint32_t func_id = infra::MD5Hash32(rpc_name.data());
-        rpc_header header = { MAGIC_RPC, message_size, request_type::req_res, fu_id, func_id};;
+        rpc_header header = { MAGIC_RPC, body_size, request_type::req_res, fu_id, func_id};;
 
         buffer.putData((char*)&header, sizeof(header));
         buffer.putData((char*)ret.release(), (int32_t)ret.size());
@@ -72,7 +91,7 @@ private:
 
 private:
     PrivClient *const priv_client_;
-    uint32_t sequence_ = 0;
+    uint32_t sequence_ = 1;
     std::mutex cb_mtx_;
     std::unordered_map<std::uint32_t, std::shared_ptr<std::promise<req_result>>> future_map_;
 

@@ -161,9 +161,16 @@ int32_t TcpSocket::recv(char* buffer, int32_t length) {
         return -1;
     }
     int32_t ret = ::recv(fd_, buffer, length, 0);
-    if (ret < 0 && (lastErrno(true) == EWOULDBLOCK || lastErrno(true) == EINTR)) {
-        return 0;
-    } else if (ret < 0) {
+    if (ret < 0) {
+        int32_t last_errno = lastErrno(true);
+        if (last_errno == EWOULDBLOCK || last_errno == EINTR) {
+            return 0;
+        }
+#ifdef _WIN32
+        if (last_errno == WSAEWOULDBLOCK) {
+            return 0;
+        }
+#endif
         errorf("recv failed, error:%d\n", lastErrno(true));
         return -1;
     } else if (ret == 0) {
