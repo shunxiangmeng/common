@@ -20,7 +20,6 @@ public:
 
     virtual bool connect(const char* server_ip, uint16_t server_port) = 0;
 
-
     virtual bool testSyncCall() = 0;
 
     virtual RPCClient& rpcClient() = 0;

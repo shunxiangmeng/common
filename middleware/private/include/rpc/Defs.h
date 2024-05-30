@@ -29,7 +29,7 @@ static const uint8_t MAGIC_NUM = 39;
 
 #pragma pack(1)
 struct rpc_header {
-    uint32_t magic;     //"****"
+    uint32_t magic;     //MAGIC_RPC
     uint32_t body_len;
     request_type req_type;
     uint32_t req_id;
@@ -51,7 +51,7 @@ inline bool has_error(std::string result) {
         return true;
     }
 
-    //rpc_service::msgpack_codec codec;
+    //msgpack_codec codec;
     //auto tp = codec.unpack<std::tuple<int>>(result.data(), result.size());
 
     //return std::get<0>(tp) != 0;
@@ -59,7 +59,7 @@ inline bool has_error(std::string result) {
 }
 
 inline std::string get_error_msg(std::string result) {
-    //rpc_service::msgpack_codec codec;
+    //msgpack_codec codec;
     //auto tp = codec.unpack<std::tuple<int, std::string>>(result.data(), result.size());
     //return std::get<1>(tp);
     return result;

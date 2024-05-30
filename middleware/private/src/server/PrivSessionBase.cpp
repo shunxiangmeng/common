@@ -126,7 +126,7 @@ int32_t PrivSessionBase::onRead(int32_t socketFd) {
     }
 
     if (ret > 0) {
-        tracef("recv data len:%d............\n", ret);
+        //tracef("recv data len:%d............\n", ret);
         #if 0
         unsigned char *p = (unsigned char*)recvBuffer;
         for (auto i = 0; i < (ret > 32 ? 32 : ret); i++){

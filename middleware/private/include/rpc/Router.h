@@ -145,6 +145,47 @@ private:
         };
     }
 
+
+    template <typename F, typename Self, size_t... Indexes, typename... Args>
+    static typename std::result_of<F(Self, std::weak_ptr<infra::TcpSocket>, Args...)>::type
+        call_member_helper(const F &f, Self *self, 
+                            const std::index_sequence<Indexes...> &,
+                            std::tuple<Args...> tup,
+                            std::weak_ptr<infra::TcpSocket> sock = std::shared_ptr<infra::TcpSocket>{nullptr}) {
+        return (*self.*f)(sock, std::move(std::get<Indexes>(tup))...);
+    }
+
+    template <typename F, typename Self, typename... Args>
+    static typename std::enable_if<std::is_void<typename std::result_of<F(Self, std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
+    call_member(const F &f, Self *self, std::weak_ptr<infra::TcpSocket> sock, std::string &result, std::tuple<Args...> tp) {
+        call_member_helper(f, self, typename std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
+        result = msgpack_codec::pack_args_str(result_code::OK);
+    }
+
+    template <typename F, typename Self, typename... Args>
+    static typename std::enable_if<!std::is_void<typename std::result_of<F(Self, std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
+    call_member(const F &f, Self *self, std::weak_ptr<infra::TcpSocket> sock, std::string &result, std::tuple<Args...> tp) {
+        auto r = call_member_helper(f, self, typename std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
+        result = msgpack_codec::pack_args_str(result_code::OK, r);
+    }
+
+    template <bool is_pub, typename Function, typename Self>
+    void register_member_func(uint32_t key, const Function &f, Self *self) {
+        this->map_invokers_[key] = [f, self](std::weak_ptr<infra::TcpSocket> sock, infra::Buffer &data, std::string &result) {
+            using args_tuple = typename function_traits<Function>::bare_tuple_type;
+            msgpack_codec codec;
+            try {
+                auto tp = codec.unpack<args_tuple>(data.data(), data.size());
+                helper_t<args_tuple, is_pub>{tp}();
+                call_member(f, self, sock, result, std::move(tp));
+            } catch (std::invalid_argument &e) {
+                result = codec.pack_args_str(result_code::FAIL, e.what());
+            } catch (const std::exception &e) {
+                result = codec.pack_args_str(result_code::FAIL, e.what());
+            }
+        };
+    }
+
 private:
     std::unordered_map<uint32_t, std::function<void(std::weak_ptr<infra::TcpSocket> &, infra::Buffer &, std::string &)>> map_invokers_;
     std::unordered_map<uint32_t, std::string> key2func_name_;

@@ -143,7 +143,6 @@ infra::Buffer PrivClient::makeRequest(Json::Value &body) {
         std::lock_guard<std::mutex> guard(sequence_mutex_);
         sequence = sequence_++;
     }
-
     std::string data = body.toStyledString();
     uint32_t data_len = (uint32_t)data.length();
     uint32_t buffer_len = (uint32_t)data.length() + sizeof(PrivateDataHead);

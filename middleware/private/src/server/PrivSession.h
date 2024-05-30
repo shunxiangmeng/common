@@ -9,6 +9,7 @@
  ************************************************************************/
 #pragma once
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -52,6 +53,9 @@ public:
      * @brief 关闭会话
      */
     void closeSession();
+
+    virtual bool initial(std::shared_ptr<infra::TcpSocket>& newSock, int32_t bufferLen, bool bRecv = true) override;
+    virtual bool initial(std::shared_ptr<infra::TcpSocket>& newSock, const char *buffer, int32_t len) override;
     /**
      * @brief 消息进入
      * @param message
@@ -83,68 +87,18 @@ public:
      */
     bool sendEvent(const char* name, const Json::Value &event);
 private:
-    /**
-     * @brief 开始预览
-     * @param msg
-     * @return
-     */
-    bool startPreview(MessagePtr &msg);
-    /**
-     * @brief 停止预览
-     * @param msg
-     * @return
-     */
-    bool stopPreview(MessagePtr &msg);
-    /**
-     * @brief 处理视频能力级别
-     * @param msg
-     * @return
-     */
+    void initMethodList();
+    bool login(MessagePtr &msg);
+    bool start_preview(MessagePtr &msg);
+    bool stop_preview(MessagePtr &msg);
     bool dealVideoCapability(MessagePtr &msg);
-    /**
-     * @brief 处理视频配置
-     * @param msg
-     * @return
-     */
     bool dealVideoConfig(MessagePtr &msg);
-    /**
-     * @brief 开始语音对讲
-     * @param msg
-     * @return
-     */
     bool startTalkBack(MessagePtr &msg);
-    /**
-     * @brief 停止对讲
-     * @param msg
-     * @return
-     */
     bool stopTalkBack(MessagePtr &msg);
-    /**
-     * @brief 订阅智能事件
-     * @param msg
-     * @return
-     */
     bool subscribeSmartEvent(MessagePtr &msg);
-    /**
-     * @brief 推送智能事件
-     * @param
-     * @return
-     */
     bool pushSmartEvent();
-    /**
-     * @brief 获取通道流信息
-     * @param msg
-     * @param channel
-     * @param streamType
-     * @return
-     */
     bool getChannelStreamType(MessagePtr &msg, int32_t &channel, int32_t &streamType);
-    /**
-     * @brief 添加子会话
-     * @param[in] channel
-     * @param[in] stream
-     * @return
-     */
+
     PrivSubSessionPtr addNewSubSession(int32_t channel, int32_t stream);
     /**
      * @brief 获取子会话
@@ -161,6 +115,14 @@ private:
     void subSessionSendFailed(std::string error);
 
 private:
+    bool call(std::string key, MessagePtr &message);
+
+    template <typename Function, typename Self>
+    void registerMethodFunc(std::string&& key, const Function &f, Self *self) {
+        this->map_invokers_[key] = [f, self](MessagePtr &message) {
+            return (*self.*f)(message);
+        };
+    }
 
 protected:
 
@@ -183,4 +145,5 @@ private:
     infra::Timer       mSmartEventTimer;        ///推送事件定时器
     void sendSmartEventProc(uint64_t arg);
 
+    std::unordered_map<std::string, std::function<bool(MessagePtr &)>> map_invokers_;
 };

@@ -25,60 +25,61 @@ PrivSession::~PrivSession() {
     closeSession();
 }
 
+bool PrivSession::initial(std::shared_ptr<infra::TcpSocket>& newSock, int32_t bufferLen, bool bRecv) {
+    if (!PrivSessionBase::initial(newSock, bufferLen, bRecv)) {
+        return false;
+    }
+    initMethodList();
+    return true;
+}
+
+bool PrivSession::initial(std::shared_ptr<infra::TcpSocket>& newSock, const char *buffer, int32_t len) {
+    if (!PrivSessionBase::initial(newSock, buffer, len)) {
+        return false;
+    }
+    initMethodList();
+    return true;
+}
+
+#define REGISTER_METHOND_FUNC(x) registerMethodFunc(#x, &PrivSession::x, this)
+void PrivSession::initMethodList() {
+    REGISTER_METHOND_FUNC(login);
+    REGISTER_METHOND_FUNC(start_preview);
+    REGISTER_METHOND_FUNC(stop_preview);
+}
+
+bool PrivSession::call(std::string key, MessagePtr &message) {
+    auto it = map_invokers_.find(key);
+    if (it == map_invokers_.end()) {
+        message->code = 1;
+        message->message = "not support this method";
+        errorf("not support method:%s\n", message->method.c_str());
+    } else {
+        return it->second(message);
+    }
+    return false;
+}
+
 void PrivSession::onRequest(MessagePtr &msg) {
     infof("request method %s\n", msg->method.c_str());
-
-    std::string method = msg->method;
-    bool result = false;
-    if (method == "keepAlive") {
-        result = true;
-        msg->data = Json::nullValue;
-    } else if (method == "startPreview") {
-        result = startPreview(msg);
-    } else if (method == "stopPreview") {
-        /*
-        std::shared_ptr<PrivSubSession> sub = getSubSession(msg->sessionId);
-        if (sub.get() == nullptr){
-            errorf("not found this session(%d)\n", msg->sessionId);
-            msg->code = 1;
-            msg->message = "invalid sessionId";
-            return;
-        }
-        else
-        */
-        result = stopPreview(msg);
-    } else if (method == "videoCapability") {
-        result = dealVideoCapability(msg);
-    } else if (method == "videoConfig") {
-        result = dealVideoConfig(msg);
-    } else if (method == "startTalkback") {
-        result = startTalkBack(msg);
-    } else if (method == "stopTalkback") {
-        result = stopTalkBack(msg);
-    } else if (method == "subscribeSmartEvent") {
-        result = subscribeSmartEvent(msg);
-    }else {
-        result = false;
-        msg->code = 1;
-        msg->message = "not support this method";
-        errorf("not support method:%s\n", method.c_str());
-    }
-
+    bool result = call(msg->method, msg);
     if (result) {
-        msg->code = 0;msg->message = "ok";
+        msg->code = 0;
+        msg->message = "ok";
     } 
-
     this->response(msg);  ///应答
 }
 
-void PrivSession::onMediaData(MessagePtr &msg, const char *buffer, uint32_t size){
+bool PrivSession::login(MessagePtr &msg) {
+    return true;
+}
+
+void PrivSession::onMediaData(MessagePtr &msg, const char *buffer, uint32_t size) {
     tracef("on media data len:%d\n", size);
 }
 
 PrivSubSessionPtr PrivSession::addNewSubSession(int32_t channel, int32_t sub_channel) {
-
     tracef("add new sub session channel:%d sub_channel:%d\n", channel, sub_channel);
-
     ///精确到毫秒
     uint32_t id = uint32_t(infra::getCurrentTimeUs());
     ///最高4位用来做别的定义
@@ -103,31 +104,27 @@ PrivSubSessionPtr PrivSession::getSubSession(int32_t channel, int32_t sub_channe
     if (it != mSubSessionMap.end()) {
         return it->second;
     }
-
     return PrivSubSessionPtr();
 }
 
 bool PrivSession::getChannelStreamType(MessagePtr &msg, int32_t &channel, int32_t &stream) {
-
-    if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()){
+    if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()) {
         channel = msg->data["channelNo"].asInt();
     } else {
         msg->code = 1001;msg->message = "param channelNo error";
         return false;
     }
-
-    if (msg->data.isMember("streamType") && msg->data["streamType"].isInt()){
+    if (msg->data.isMember("streamType") && msg->data["streamType"].isInt()) {
         channel = msg->data["streamType"].asInt();
     } else {
-        msg->code = 1001;msg->message = "param streamType error";
+        msg->code = 1001;
+        msg->message = "param streamType error";
         return false;
     }
-
     return true;
 }
 
-bool PrivSession:: startPreview(MessagePtr &msg){
-
+bool PrivSession::start_preview(MessagePtr &msg){
     int32_t channel = 1,stream = 1;
     if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()){
         channel = msg->data["channelNo"].asInt();
@@ -178,8 +175,7 @@ bool PrivSession:: startPreview(MessagePtr &msg){
     return true;
 }
 
-bool PrivSession::stopPreview(MessagePtr &msg){
-
+bool PrivSession::stop_preview(MessagePtr &msg) {
     int32_t channel = 1,streamType = 1;
     if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()){
         channel = msg->data["channelNo"].asInt();
@@ -205,7 +201,7 @@ bool PrivSession::stopPreview(MessagePtr &msg){
     return true;
 }
 
-bool PrivSession:: dealVideoCapability(MessagePtr &msg){
+bool PrivSession::dealVideoCapability(MessagePtr &msg){
 
     int32_t channel = 1,streamType = 1;
     if (!getChannelStreamType(msg, channel, streamType)){
@@ -264,7 +260,7 @@ bool PrivSession:: dealVideoCapability(MessagePtr &msg){
     return true;
 }
 
-bool PrivSession:: dealVideoConfig(MessagePtr &msg){
+bool PrivSession::dealVideoConfig(MessagePtr &msg){
 
     int32_t channel = 0,stream = 0;
     if (!getChannelStreamType(msg, channel, stream)){
@@ -288,13 +284,13 @@ bool PrivSession:: dealVideoConfig(MessagePtr &msg){
     return true;
 }
 
-bool PrivSession:: startTalkBack(MessagePtr &msg){
+bool PrivSession::startTalkBack(MessagePtr &msg){
     Json::Value data = Json::nullValue;
     msg->data = data;
     return true;
 }
 
-bool PrivSession:: stopTalkBack(MessagePtr &msg){
+bool PrivSession::stopTalkBack(MessagePtr &msg){
     Json::Value data = Json::nullValue;
     msg->data = data;
     return true;
@@ -447,7 +443,7 @@ void PrivSession::subSessionSendFailed(std::string error) {
     mSessionManager->remove(getSessionId());
 }
 
-void PrivSession::closeSession(){
+void PrivSession::closeSession() {
     ///关闭流的发送
     std::lock_guard<std::mutex> guard(mSessionMapMtx);
     for (const auto& it : mSubSessionMap){
