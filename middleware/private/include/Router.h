@@ -15,7 +15,6 @@
 #include <tuple>
 #include "MetaUtil.h"
 #include "MsgpackCodec.h"
-#include "cplusplus_14.h"
 #include "Defs.h"
 #include "infra/include/MD5.h"
 #include "infra/include/Buffer.h"
