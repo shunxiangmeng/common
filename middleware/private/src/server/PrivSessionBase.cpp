@@ -139,7 +139,7 @@ int32_t PrivSessionBase::onRead(int32_t socketFd) {
         MessagePtr msg;
         do {
             msg = parse();
-            if (msg.get()){
+            if (msg.get()) {
                 process(msg);
             }
         } while(msg.get() && mBufferDataLen > 0);
@@ -224,9 +224,6 @@ int32_t PrivSessionBase::sendCommand(const char* data, int32_t dataLen){
 MessagePtr PrivSessionBase::parse() {
     int32_t frameLen = 0;
     MessagePtr msg = parse(mBuffer, mBufferDataLen, frameLen);
-    if (msg.get() == nullptr) {
-        return msg;
-    }
 
     int32_t leftLen = mBufferDataLen - frameLen;
     if (leftLen > 0) {
@@ -235,40 +232,55 @@ MessagePtr PrivSessionBase::parse() {
     } else {
         mBufferDataLen = 0;
     }
-    tracef("after parse mBufferDataLen:%d\n", mBufferDataLen);
+    //tracef("after parse mBufferDataLen:%d\n", mBufferDataLen);
     return msg;
 }
 
-MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &usedLen){
+MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &usedLen) {
     usedLen = 0;
     if (buffer == nullptr || len < sizeof(PrivateDataHead)){
         errorf("buffer is nullptr or len(%d) is too small\n", len);
         return nullptr;
     }
 
-    ///查找消息头@@@@
+    uint32_t message_type = MESSAGE_TYPE_CMD;
+    ///查找消息头 @@@@ or ****
     int32_t i = 0U;
     for (; i < len - 3; i++) {
-        if (buffer[i+0] == '@' && buffer[i+1] == '@' && buffer[i+2] == '@' && buffer[i+3] == '@') {
+        if (buffer[i + 0] == '@' && buffer[i + 1] == '@' && buffer[i + 2] == '@' && buffer[i + 3] == '@') {
+            message_type = MESSAGE_TYPE_CMD;
+            break;
+        }
+        if (buffer[i + 0] == '*' && buffer[i + 1] == '*' && buffer[i + 2] == '*' && buffer[i + 3] == '*') {
+            message_type = MESSAGE_TYPE_RPC;
             break;
         }
     }
-
     if (i >= (len - 3)) {
         errorf("not found head tag '@@@@' \n");
         usedLen = len;   ///消耗掉所有数据
         return nullptr;
     }
-
     if (i > 0) {
         warnf("head tag '@@@@' start with %d\n", i);
         usedLen += i;
     }
 
     char *pBuffer = (char*)&buffer[usedLen];
+
+    if (message_type == MESSAGE_TYPE_RPC) {
+        CommonHeader *common_header = (CommonHeader*)buffer;
+        int32_t frame_len = common_header->body_len + sizeof(rpc_header);
+        infra::Buffer buffer(frame_len);
+        buffer.putData(pBuffer, frame_len);
+        rpc_server_->route(buffer, std::weak_ptr<infra::TcpSocket>(mSock));
+        usedLen += frame_len;
+        return nullptr;
+    }
+
     auto *head = reinterpret_cast<PrivateDataHead*>((char*)pBuffer);
-    uint32_t bodyLen = infra::ntohl(head->body_len);
-    int32_t frameLen = bodyLen + sizeof(PrivateDataHead);
+    uint32_t body_len = infra::ntohl(head->body_len);
+    int32_t frameLen = body_len + sizeof(PrivateDataHead);
     char *body = (char*)buffer + sizeof(PrivateDataHead);
 
     ///不满一帧数据
@@ -288,20 +300,15 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
     if (head->type == MESSAGE_TYPE_MEDIA) {
         msg->isMediaData = true;
         msg->mediaData = body;
-        msg->mediaDataLen = bodyLen;
+        msg->mediaDataLen = body_len;
         return msg;
-    } else if (head->type == MESSAGE_TYPE_RPC) {
-        infra::Buffer buffer(bodyLen);
-        buffer.putData(body, bodyLen);
-        rpc_server_->route(buffer);
-        return nullptr;
     } else {
         ///信令数据
         Json::Value root = Json::nullValue;
         Json::String err;
         Json::CharReaderBuilder readbuilder;
         std::unique_ptr<Json::CharReader> jsonreader(readbuilder.newCharReader());
-        jsonreader->parse(body, body + bodyLen, &root, &err);
+        jsonreader->parse(body, body + body_len, &root, &err);
         if (root.empty()) {
             return nullptr;
         }

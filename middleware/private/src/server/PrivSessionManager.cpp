@@ -105,7 +105,7 @@ int32_t PrivSessionManager::onRead(int32_t fd) {
         sock->getRemoteAddress(ip, port);
         
         ///私有协议连接
-        if (strstr(request, "@@@@") != nullptr) {
+        if (strstr(request, "@@@@") || strstr(request, "****")) {
             infof("new private connect fd:%d from %s:%d\n%s\n", fd, ip.data(), port, request);
             std::shared_ptr<PrivSession> session;
             uint32_t id = 0;

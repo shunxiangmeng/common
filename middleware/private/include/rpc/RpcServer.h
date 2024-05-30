@@ -24,7 +24,7 @@ public:
         router_.register_handler<is_pub>(name, f, self);
     }
 
-    route_result_t route(infra::Buffer &buffer);
+    route_result_t route(infra::Buffer &buffer, std::weak_ptr<infra::TcpSocket> sock);
 
 private:
     friend class PrivServer;
@@ -33,4 +33,5 @@ private:
 
 private:
     Router router_;
+    infra::Buffer buffer_;
 };
