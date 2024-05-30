@@ -93,10 +93,10 @@ int32_t PrivClient::onRead(int32_t fd) {
             return 0;
         }
 
-        int32_t frame_len = common_header.body_len + sizeof(rpc_header);
-        if (common_header.magic == MESSAGE_TYPE_RPC) {
+        int32_t frame_len = common_header.body_len;
+        if (common_header.magic == MAGIC_RPC) {
             frame_len += sizeof(rpc_header);
-        } else if (common_header.magic == MESSAGE_TYPE_CMD) {
+        } else if (common_header.magic == MAGIC_PRIV) {
             frame_len += sizeof(PrivateDataHead);
         }
 
@@ -116,9 +116,9 @@ int32_t PrivClient::onRead(int32_t fd) {
         }
         buffer.setSize(buffer.size() + ret);
 
-        if (common_header.magic == MESSAGE_TYPE_RPC) {
+        if (common_header.magic == MAGIC_RPC) {
             processRpc(buffer);
-        } else if (common_header.magic == MESSAGE_TYPE_CMD) {
+        } else if (common_header.magic == MAGIC_PRIV) {
             process(buffer);
         }
     } while (true);
@@ -162,27 +162,7 @@ infra::Buffer PrivClient::makeRequest(Json::Value &body) {
     return buffer;
 }
 
-int32_t PrivClient::sendRpcData(infra::Buffer& data) {
-    uint32_t sequence = 0;
-    {
-        std::lock_guard<std::mutex> guard(sequence_mutex_);
-        sequence = sequence_++;
-    }
-
-    uint32_t data_len = (uint32_t)data.size();
-    uint32_t buffer_len = (uint32_t)data.size() + sizeof(PrivateDataHead);
-    infra::Buffer buffer(buffer_len);
-    PrivateDataHead* head = reinterpret_cast<PrivateDataHead*>((char*)buffer.data());
-    head->magic = MAGIC_PRIV;
-    head->version = 0x10;
-    head->flag = 0x80;
-    head->type = MESSAGE_TYPE_RPC;              ///rpc
-    head->encrypt = 0x00;
-    head->sequence = infra::htonl(sequence);    ///转网络字节序
-    head->session_id = infra::htonl(session_id_);
-    head->body_len = infra::htonl(data_len);
-    memcpy((char*)buffer.data() + sizeof(PrivateDataHead), data.data(), data.size());
-    buffer.setSize(buffer_len);
+int32_t PrivClient::sendRpcData(infra::Buffer& buffer) {
     return sock_->send((const char*)buffer.data(), buffer.size());
 }
 
@@ -199,5 +179,5 @@ bool PrivClient::testSyncCall() {
 }
 
 void PrivClient::processRpc(infra::Buffer &buffer) {
-
+    rpc_client_.processResponse(buffer);
 }

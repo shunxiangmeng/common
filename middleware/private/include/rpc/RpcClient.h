@@ -53,7 +53,7 @@ public:
 
         //write(fu_id, request_type::req_res, std::move(ret), MD5::MD5Hash32(rpc_name.data()));
         uint32_t func_id = infra::MD5Hash32(rpc_name.data());
-        rpc_header header = { MAGIC_RPC, message_size, request_type::req_res, 0, func_id};;
+        rpc_header header = { MAGIC_RPC, message_size, request_type::req_res, fu_id, func_id};;
 
         buffer.putData((char*)&header, sizeof(header));
         buffer.putData((char*)ret.release(), (int32_t)ret.size());
