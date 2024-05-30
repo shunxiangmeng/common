@@ -183,10 +183,7 @@ bool PrivSessionBase::response(MessagePtr &msg) {
     std::string body = root.toStyledString();
 
     auto *head = reinterpret_cast<PrivateDataHead*>(mCmdSendBuffer);
-    head->tag[0] = '@';
-    head->tag[1] = '@';
-    head->tag[2] = '@';
-    head->tag[3] = '@';
+    head->magic = MAGIC_PRIV;
     head->version = 0x10;
     head->type = 0;
     if (msg->method == "keepAlive"){
@@ -196,7 +193,7 @@ bool PrivSessionBase::response(MessagePtr &msg) {
     head->flag = 0x80;
     head->sequence   = infra::htonl(msg->sequence);   ///应答透传sequence
     head->sessionId  = infra::htonl(msg->sessionId);
-    head->bodyLen    = infra::htonl((uint32_t)body.size());
+    head->body_len   = infra::htonl((uint32_t)body.size());
     head->encrypt = 0;
 
     int32_t copyLen = body.size() < (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead)) ? (int32_t)body.size() : (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead));
@@ -270,7 +267,7 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
 
     char *pBuffer = (char*)&buffer[usedLen];
     auto *head = reinterpret_cast<PrivateDataHead*>((char*)pBuffer);
-    uint32_t bodyLen = infra::ntohl(head->bodyLen);
+    uint32_t bodyLen = infra::ntohl(head->body_len);
     int32_t frameLen = bodyLen + sizeof(PrivateDataHead);
     char *body = (char*)buffer + sizeof(PrivateDataHead);
 
@@ -341,17 +338,14 @@ int32_t PrivSessionBase::sendStream(const char* data, int32_t dataLen, int32_t r
     std::lock_guard<std::mutex> guard(mSendMutex);
     if (reserve == sizeof(PrivateDataHead)) {  ///填充头
         PrivateDataHead *head = reinterpret_cast<PrivateDataHead*>((char*)data);
-        head->tag[0] = '@';
-        head->tag[1] = '@';
-        head->tag[2] = '@';
-        head->tag[3] = '@';
+        head->magic = MAGIC_PRIV;
         head->version = 0x10;
         head->flag = 0x80;
         head->type = 0x01;                       ///媒体数据
         head->encrypt  = 0x00;
         head->sequence  = infra::htons(mSequence++);    ///转网络字节序
         head->sessionId = infra::htonl(mSessionId);
-        head->bodyLen   = infra::htonl(dataLen - reserve);
+        head->body_len  = infra::htonl(dataLen - reserve);
     } else {
         //errorf("reserve(%d) != sizeof(PrivateDataHead)(%d)\n", reserve, sizeof(PrivateDataHead));
     }
@@ -390,17 +384,14 @@ int32_t PrivSessionBase::sendRequest(Json::Value &body) {
         return -1;
     }
     PrivateDataHead *head = reinterpret_cast<PrivateDataHead*>((char*)buffer.get());
-    head->tag[0] = '@';
-    head->tag[1] = '@';
-    head->tag[2] = '@';
-    head->tag[3] = '@';
+    head->magic = MAGIC_PRIV;
     head->version = 0x10;
     head->flag = 0x80;
     head->type = 0x00;                         ///信令数据
     head->encrypt  = 0x00;
     head->sequence  = infra::htons(mSequence++);    ///转网络字节序
     head->sessionId = infra::htonl(mSessionId);
-    head->bodyLen   = infra::htonl(dataLen);
+    head->body_len  = infra::htonl(dataLen);
     memcpy(head->buf, data.c_str(), dataLen);
     if (mProxy) {
         return mProxy->sendData((const char*)buffer.get(), bufferLen);

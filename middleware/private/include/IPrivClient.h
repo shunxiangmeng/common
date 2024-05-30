@@ -9,7 +9,7 @@
  ************************************************************************/
 #pragma once
 #include <memory>
-#include <chrono>
+#include "rpc/RpcClient.h"
 
 class IPrivClient {
 public:
@@ -23,5 +23,6 @@ public:
 
     virtual bool testSyncCall() = 0;
 
+    virtual RPCClient& rpcClient() = 0;
 
 };

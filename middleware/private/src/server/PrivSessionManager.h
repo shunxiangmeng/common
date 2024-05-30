@@ -16,7 +16,7 @@
 #include "infra/include/network/AcceptSocket.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
-#include "private/include/RpcServer.h"
+#include "private/include/rpc/RpcServer.h"
 
 class PrivSessionManager :  public IPrivSessionManager, public infra::SocketHandler {
 

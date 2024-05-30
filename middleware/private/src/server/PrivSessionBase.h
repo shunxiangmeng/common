@@ -16,7 +16,7 @@
 #include "PrivSessionProxy.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
-#include "private/include/RpcServer.h"
+#include "private/include/rpc/RpcServer.h"
 
 typedef std::shared_ptr<Message> MessagePtr;
 class PrivSessionBase : public infra::SocketHandler {

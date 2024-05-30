@@ -7,7 +7,7 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
-#include "private/include/RpcServer.h"
+#include "private/include/rpc/RpcServer.h"
 
 RPCServer::RPCServer() {
 }

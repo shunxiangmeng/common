@@ -40,7 +40,7 @@ std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &u
 
     char *pBuffer = (char*)&buffer[used_len];
     auto *head = reinterpret_cast<PrivateDataHead*>((char*)pBuffer);
-    uint32_t bodyLen = infra::ntohl(head->bodyLen);
+    uint32_t bodyLen = infra::ntohl(head->body_len);
     int32_t frameLen = bodyLen + sizeof(PrivateDataHead);
 
     ///不满一帧数据

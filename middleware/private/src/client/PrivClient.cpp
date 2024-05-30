@@ -17,7 +17,7 @@ std::shared_ptr<IPrivClient> IPrivClient::create() {
     return ptr;
 }
 
-PrivClient::PrivClient() : buffer_(8 * 1024) {
+PrivClient::PrivClient() : buffer_(8 * 1024), rpc_client_(this) {
     sock_ = std::make_shared<infra::TcpSocket>();
 }
 
@@ -63,10 +63,7 @@ void PrivClient::process(std::shared_ptr<Message> &message) {
     if (message->isResponse) {
         uint32_t sequence = message->sequence;
         warnf("deal response, sequence:%d\n", sequence);  ///应答暂时不处理
-        std::unique_lock<std::mutex> lock(cb_mtx_);
-        auto& f = future_map_[sequence];
-        f->set_value(req_result{ "ok"});
-        future_map_.erase(sequence);
+        rpc_client_.processResponse(sequence);
         return;
     }
 }
@@ -115,17 +112,14 @@ infra::Buffer PrivClient::makeRequest(Json::Value &body) {
     uint32_t buffer_len = (uint32_t)data.length() + sizeof(PrivateDataHead);
     infra::Buffer buffer(buffer_len);
     PrivateDataHead *head = reinterpret_cast<PrivateDataHead*>((char*)buffer.data());
-    head->tag[0] = '@';
-    head->tag[1] = '@';
-    head->tag[2] = '@';
-    head->tag[3] = '@';
+    head->magic = MAGIC_PRIV;
     head->version = 0x10;
     head->flag = 0x80;
     head->type = 0x00;                         ///信令数据
     head->encrypt  = 0x00;
     head->sequence  = infra::htonl(sequence);    ///转网络字节序
     head->sessionId = infra::htonl(session_id_);
-    head->bodyLen   = infra::htonl(data_len);
+    head->body_len  = infra::htonl(data_len);
     memcpy(head->buf, data.c_str(), data_len);
     buffer.setSize(buffer_len);
     return buffer;
@@ -142,17 +136,14 @@ int32_t PrivClient::sendRpcData(infra::Buffer& data) {
     uint32_t buffer_len = (uint32_t)data.size() + sizeof(PrivateDataHead);
     infra::Buffer buffer(buffer_len);
     PrivateDataHead* head = reinterpret_cast<PrivateDataHead*>((char*)buffer.data());
-    head->tag[0] = '@';
-    head->tag[1] = '@';
-    head->tag[2] = '@';
-    head->tag[3] = '@';
+    head->magic = MAGIC_PRIV;
     head->version = 0x10;
     head->flag = 0x80;
     head->type = MESSAGE_TYPE_RPC;              ///rpc
     head->encrypt = 0x00;
     head->sequence = infra::htonl(sequence);    ///转网络字节序
     head->sessionId = infra::htonl(session_id_);
-    head->bodyLen = infra::htonl(data_len);
+    head->body_len = infra::htonl(data_len);
     memcpy(head->buf, data.data(), data.size());
     buffer.setSize(buffer_len);
     return sock_->send((const char*)buffer.data(), buffer.size());
@@ -166,6 +157,6 @@ void PrivClient::sendKeepAlive() {
 
 
 bool PrivClient::testSyncCall() {
-    call("echo", 1, 2);
+    rpc_client_.call("echo", 1, 2);
     return true;
 }

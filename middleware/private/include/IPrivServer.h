@@ -9,7 +9,7 @@
  ************************************************************************/
 #pragma once
 #include "jsoncpp/include/value.h"
-#include "RpcServer.h"
+#include "rpc/RpcServer.h"
 
 class IPrivServer {
 public:

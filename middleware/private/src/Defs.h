@@ -18,18 +18,25 @@
 #define MESSAGE_TYPE_MEDIA  1
 #define MESSAGE_TYPE_RPC    2
 
+#define MAGIC_PRIV    0x40404040  //@@@@
+
 #pragma pack (1)
 typedef struct {
-    uint8_t     tag[4];    //@@@@
+    uint32_t    magic;         //@@@@ MAGIC_PRIV
+    uint32_t    body_len;
     uint8_t     version;
     uint8_t     flag;
     uint8_t     type;          ///0-信令，1-媒体数据, 2-rpc
     uint8_t     encrypt;       ///加密类型
     uint32_t    sequence;
     uint32_t    sessionId;
-    uint32_t    bodyLen;
     char        buf[0];
 } PrivateDataHead;
+
+typedef struct {
+    uint32_t    magic;
+    uint32_t    body_len;
+}CommonHeader;
 
 struct Message {
     bool            isResponse;       ///true表示应答，false是请求
