@@ -12,3 +12,7 @@
 #include "Defs.h"
 
 std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &usedLen);
+
+class PrivMessage {
+public:
+};

@@ -20,7 +20,6 @@
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
 #include "infra/include/Buffer.h"
-#include "infra/include/MD5.h"
 #include "jsoncpp/include/json.h"
 
 class PrivClient : public IPrivClient, public infra::SocketHandler {
@@ -52,11 +51,16 @@ private:
      */
     virtual int32_t onException(int32_t fd) override;
 
+    infra::Buffer doRead(int32_t &message_type);
+
     void sendKeepAlive();
 
     std::shared_ptr<Message> parse();
 
+    void process(infra::Buffer &buffer);
     void process(std::shared_ptr<Message> &request);
+
+    void processRpc(infra::Buffer &buffer);
 
     int32_t sendRequest(Json::Value &body);
 

@@ -192,12 +192,12 @@ bool PrivSessionBase::response(MessagePtr &msg) {
 
     head->flag = 0x80;
     head->sequence   = infra::htonl(msg->sequence);   ///应答透传sequence
-    head->sessionId  = infra::htonl(msg->sessionId);
+    head->session_id = infra::htonl(msg->sessionId);
     head->body_len   = infra::htonl((uint32_t)body.size());
     head->encrypt = 0;
 
     int32_t copyLen = body.size() < (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead)) ? (int32_t)body.size() : (sizeof(mCmdSendBuffer) - sizeof(PrivateDataHead));
-    memcpy(head->buf, body.c_str(), copyLen);
+    memcpy(mCmdSendBuffer + sizeof(PrivateDataHead), body.c_str(), copyLen);
 
     tracef("to response len:%d\n%s", body.size(), body.c_str());
 
@@ -282,12 +282,12 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
     MessagePtr msg(new Message());
     msg->isResponse = head->flag & 0x40 ? true : false;
     msg->sequence  = infra::ntohl(head->sequence);
-    msg->sessionId = infra::ntohl(head->sessionId);
+    msg->sessionId = infra::ntohl(head->session_id);
 
     ///媒体数据
     if (head->type == MESSAGE_TYPE_MEDIA) {
         msg->isMediaData = true;
-        msg->mediaData = head->buf;
+        msg->mediaData = body;
         msg->mediaDataLen = bodyLen;
         return msg;
     } else if (head->type == MESSAGE_TYPE_RPC) {
@@ -301,7 +301,7 @@ MessagePtr PrivSessionBase::parse(const char* buffer, int32_t len, int32_t &used
         Json::String err;
         Json::CharReaderBuilder readbuilder;
         std::unique_ptr<Json::CharReader> jsonreader(readbuilder.newCharReader());
-        jsonreader->parse(head->buf, head->buf + bodyLen, &root, &err);
+        jsonreader->parse(body, body + bodyLen, &root, &err);
         if (root.empty()) {
             return nullptr;
         }
@@ -344,7 +344,7 @@ int32_t PrivSessionBase::sendStream(const char* data, int32_t dataLen, int32_t r
         head->type = 0x01;                       ///媒体数据
         head->encrypt  = 0x00;
         head->sequence  = infra::htons(mSequence++);    ///转网络字节序
-        head->sessionId = infra::htonl(mSessionId);
+        head->session_id = infra::htonl(mSessionId);
         head->body_len  = infra::htonl(dataLen - reserve);
     } else {
         //errorf("reserve(%d) != sizeof(PrivateDataHead)(%d)\n", reserve, sizeof(PrivateDataHead));
@@ -390,9 +390,9 @@ int32_t PrivSessionBase::sendRequest(Json::Value &body) {
     head->type = 0x00;                         ///信令数据
     head->encrypt  = 0x00;
     head->sequence  = infra::htons(mSequence++);    ///转网络字节序
-    head->sessionId = infra::htonl(mSessionId);
+    head->session_id = infra::htonl(mSessionId);
     head->body_len  = infra::htonl(dataLen);
-    memcpy(head->buf, data.c_str(), dataLen);
+    memcpy((char*)buffer.get() + sizeof(PrivateDataHead), data.c_str(), dataLen);
     if (mProxy) {
         return mProxy->sendData((const char*)buffer.get(), bufferLen);
     } else {

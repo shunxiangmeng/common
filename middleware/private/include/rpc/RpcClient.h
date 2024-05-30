@@ -68,7 +68,7 @@ private:
     RPCClient(PrivClient *client);
     ~RPCClient();
 
-    void processResponse(uint32_t sequence);
+    void processResponse(infra::Buffer &buffer);
 
 private:
     PrivClient *const priv_client_;

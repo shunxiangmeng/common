@@ -20,7 +20,7 @@
 
 #define MAGIC_PRIV    0x40404040  //@@@@
 
-#pragma pack (1)
+#pragma pack (4)
 typedef struct {
     uint32_t    magic;         //@@@@ MAGIC_PRIV
     uint32_t    body_len;
@@ -29,8 +29,7 @@ typedef struct {
     uint8_t     type;          ///0-信令，1-媒体数据, 2-rpc
     uint8_t     encrypt;       ///加密类型
     uint32_t    sequence;
-    uint32_t    sessionId;
-    char        buf[0];
+    uint32_t    session_id;
 } PrivateDataHead;
 
 typedef struct {

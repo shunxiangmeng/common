@@ -42,6 +42,7 @@ std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &u
     auto *head = reinterpret_cast<PrivateDataHead*>((char*)pBuffer);
     uint32_t bodyLen = infra::ntohl(head->body_len);
     int32_t frameLen = bodyLen + sizeof(PrivateDataHead);
+    char *body = (char*)buffer + sizeof(PrivateDataHead);
 
     ///不满一帧数据
     if ((int32_t)len < frameLen) {
@@ -54,12 +55,12 @@ std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &u
     std::shared_ptr<Message> message = std::make_shared<Message>();
     message->isResponse = head->flag & 0x40 ? true : false;
     message->sequence  = infra::ntohl(head->sequence);
-    message->sessionId = infra::ntohl(head->sessionId);
+    message->sessionId = infra::ntohl(head->session_id);
 
     ///媒体数据
     if (head->type == 0x01) {
         message->isMediaData = true;
-        message->mediaData = head->buf;
+        message->mediaData = body;
         message->mediaDataLen = bodyLen;
         return message;
     } else {
@@ -68,7 +69,7 @@ std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &u
         Json::String err;
         Json::CharReaderBuilder readbuilder;
         std::unique_ptr<Json::CharReader> jsonreader(readbuilder.newCharReader());
-        jsonreader->parse(head->buf, head->buf + bodyLen, &root, &err);
+        jsonreader->parse(body, body + bodyLen, &root, &err);
         if (root.empty()) {
             return nullptr;
         }

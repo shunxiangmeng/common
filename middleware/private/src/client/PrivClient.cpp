@@ -59,32 +59,69 @@ std::shared_ptr<Message> PrivClient::parse() {
     return message;
 }
 
+
 void PrivClient::process(std::shared_ptr<Message> &message) {
     if (message->isResponse) {
         uint32_t sequence = message->sequence;
         warnf("deal response, sequence:%d\n", sequence);  ///应答暂时不处理
-        rpc_client_.processResponse(sequence);
         return;
     }
 }
 
-int32_t PrivClient::onRead(int32_t fd) {
-    char *recv_buffer = buffer_.data() + buffer_.size();
-    int32_t to_recv_length = buffer_.leftSize();
-    int32_t ret = sock_->recv(recv_buffer, to_recv_length);
-    if (ret > 0) {
-        buffer_.setSize(buffer_.size() + ret);
-        std::shared_ptr<Message> message;
-        do {
-            message = parse();
-            if (message) {
-                process(message);
-            }
-        } while(message && buffer_.size() > 0);
-    } else if (ret < 0) {
-        warnf("socket disconnect\n");
-        return -1;
+void PrivClient::process(infra::Buffer &buffer) {
+    int32_t used_len = 0;
+    std::shared_ptr<Message> message = parseBuffer(buffer.data(), buffer.size(), used_len);
+    if (message) {
+        process(message);
     }
+}
+
+
+int32_t PrivClient::onRead(int32_t fd) {
+    do {
+        CommonHeader common_header;
+        int32_t common_header_len = sizeof(common_header);
+        int32_t ret = sock_->recv((char*)&common_header, common_header_len);
+        if (ret < 0) {
+            warnf("socket disconnect\n");
+            return -1;
+        } else if (ret == 0) {
+            return 0;
+        }
+        if (ret != common_header_len) {
+            errorf("read common_header failed, ret:%d\n", ret);
+            return 0;
+        }
+
+        int32_t frame_len = common_header.body_len + sizeof(rpc_header);
+        if (common_header.magic == MESSAGE_TYPE_RPC) {
+            frame_len += sizeof(rpc_header);
+        } else if (common_header.magic == MESSAGE_TYPE_CMD) {
+            frame_len += sizeof(PrivateDataHead);
+        }
+
+        infra::Buffer buffer(frame_len);
+        buffer.putData((char*)&common_header, common_header_len);
+
+        char *to_read_buffer = buffer.data() + buffer.size();
+        int32_t to_read_length = frame_len - common_header_len;
+        ret = sock_->recv(to_read_buffer, to_read_length);
+        if (ret < 0) {
+            warnf("socket disconnect\n");
+            return -1;
+        }
+        if (ret < to_read_length) {
+            warnf("readed len:%d < to_read_length:%d, discard\n", ret, to_read_length);
+            return 0;
+        }
+        buffer.setSize(buffer.size() + ret);
+
+        if (common_header.magic == MESSAGE_TYPE_RPC) {
+            processRpc(buffer);
+        } else if (common_header.magic == MESSAGE_TYPE_CMD) {
+            process(buffer);
+        }
+    } while (true);
     return 0;
 }
 
@@ -117,10 +154,10 @@ infra::Buffer PrivClient::makeRequest(Json::Value &body) {
     head->flag = 0x80;
     head->type = 0x00;                         ///信令数据
     head->encrypt  = 0x00;
-    head->sequence  = infra::htonl(sequence);    ///转网络字节序
-    head->sessionId = infra::htonl(session_id_);
-    head->body_len  = infra::htonl(data_len);
-    memcpy(head->buf, data.c_str(), data_len);
+    head->sequence   = infra::htonl(sequence);    ///转网络字节序
+    head->session_id = infra::htonl(session_id_);
+    head->body_len   = infra::htonl(data_len);
+    memcpy((char*)buffer.data() + sizeof(PrivateDataHead), data.c_str(), data_len);
     buffer.setSize(buffer_len);
     return buffer;
 }
@@ -142,9 +179,9 @@ int32_t PrivClient::sendRpcData(infra::Buffer& data) {
     head->type = MESSAGE_TYPE_RPC;              ///rpc
     head->encrypt = 0x00;
     head->sequence = infra::htonl(sequence);    ///转网络字节序
-    head->sessionId = infra::htonl(session_id_);
+    head->session_id = infra::htonl(session_id_);
     head->body_len = infra::htonl(data_len);
-    memcpy(head->buf, data.data(), data.size());
+    memcpy((char*)buffer.data() + sizeof(PrivateDataHead), data.data(), data.size());
     buffer.setSize(buffer_len);
     return sock_->send((const char*)buffer.data(), buffer.size());
 }
@@ -159,4 +196,8 @@ void PrivClient::sendKeepAlive() {
 bool PrivClient::testSyncCall() {
     rpc_client_.call("echo", 1, 2);
     return true;
+}
+
+void PrivClient::processRpc(infra::Buffer &buffer) {
+
 }
