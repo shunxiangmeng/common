@@ -18,6 +18,7 @@
 #include "Defs.h"
 #include "infra/include/MD5.h"
 #include "infra/include/Buffer.h"
+#include "infra/include/network/TcpSocket.h"
 
 enum class router_error { ok, no_such_function, has_exception, unkonw };
 
@@ -73,7 +74,7 @@ public:
         return std::to_string(key);
     }
 
-    route_result_t route(uint32_t key, infra::Buffer &data, int32_t ptr) {
+    route_result_t route(uint32_t key, infra::Buffer &data, std::weak_ptr<infra::TcpSocket> sock) {
         route_result_t route_result{};
         std::string result;
         try {
@@ -83,7 +84,7 @@ public:
                 result = codec.pack_args_str(result_code::FAIL, "unknown function: " + get_name_by_key(key));
                 route_result.ec = router_error::no_such_function;
             } else {
-                it->second(ptr, data, result);
+                it->second(sock, data, result);
                 route_result.ec = router_error::ok;
             }
         } catch (const std::exception &ex) {
@@ -105,35 +106,35 @@ private:
     Router(Router&&) = delete;
 
     template <typename F, size_t... I, typename... Args>
-    static typename std::result_of<F(int32_t, Args...)>::type
-        call_helper(const F& f, const std::index_sequence<I...>&, std::tuple<Args...> tup, int32_t ptr) {
-        return f(ptr, std::move(std::get<I>(tup))...);
+    static typename std::result_of<F(std::weak_ptr<infra::TcpSocket>, Args...)>::type
+        call_helper(const F& f, const std::index_sequence<I...>&, std::tuple<Args...> tup, std::weak_ptr<infra::TcpSocket> sock) {
+        return f(sock, std::move(std::get<I>(tup))...);
     }
 
     template <typename F, typename... Args>
-    static typename std::enable_if<std::is_void<typename std::result_of<F(int32_t, Args...)>::type>::value>::type
-        call(const F& f, int32_t ptr, std::string& result, std::tuple<Args...> tp) {
-        call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), ptr);
+    static typename std::enable_if<std::is_void<typename std::result_of<F(std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
+        call(const F& f, std::weak_ptr<infra::TcpSocket> sock, std::string& result, std::tuple<Args...> tp) {
+        call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
         result = msgpack_codec::pack_args_str(result_code::OK);
     }
 
     template <typename F, typename... Args>
-    static typename std::enable_if<!std::is_void<typename std::result_of<F(int32_t, Args...)>::type>::value>::type
-        call(const F& f, int32_t ptr, std::string& result, std::tuple<Args...> tp) {
-        auto r = call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), ptr);
+    static typename std::enable_if<!std::is_void<typename std::result_of<F(std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
+        call(const F& f, std::weak_ptr<infra::TcpSocket> sock, std::string& result, std::tuple<Args...> tp) {
+        auto r = call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
         msgpack_codec codec;
         result = msgpack_codec::pack_args_str(result_code::OK, r);
     }
 
     template <bool is_pub, typename Function>
     void register_nonmember_func(uint32_t key, Function f) {
-        this->map_invokers_[key] = [f](int32_t ptr, infra::Buffer &data, std::string& result) {
+        this->map_invokers_[key] = [f](std::weak_ptr<infra::TcpSocket> sock, infra::Buffer &data, std::string& result) {
             using args_tuple = typename function_traits<Function>::bare_tuple_type;
             msgpack_codec codec;
             try {
                 auto tp = codec.unpack<args_tuple>(data.data() + sizeof(rpc_header), data.size() - sizeof(rpc_header));
                 helper_t<args_tuple, is_pub>{tp}();
-                call(f, ptr, result, std::move(tp));
+                call(f, sock, result, std::move(tp));
             }
             catch (std::invalid_argument& e) {
                 result = codec.pack_args_str(result_code::FAIL, e.what());
@@ -145,6 +146,6 @@ private:
     }
 
 private:
-    std::unordered_map<uint32_t, std::function<void(int32_t, infra::Buffer &, std::string &)>> map_invokers_;
+    std::unordered_map<uint32_t, std::function<void(std::weak_ptr<infra::TcpSocket> &, infra::Buffer &, std::string &)>> map_invokers_;
     std::unordered_map<uint32_t, std::string> key2func_name_;
 };

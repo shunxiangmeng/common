@@ -192,5 +192,5 @@ private:
     std::mutex                       mSendMutex;               ///发送锁，防止多线程发送给，导致协议错乱   
 
 protected:
-    RPCServer *const rpc_server_;         
+    RPCServer *const rpc_server_;
 };

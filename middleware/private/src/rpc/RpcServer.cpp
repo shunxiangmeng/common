@@ -16,7 +16,8 @@ RPCServer::~RPCServer() {
 }
 
 route_result_t RPCServer::route(infra::Buffer &buffer) {
+    std::weak_ptr<infra::TcpSocket> sock;
     rpc_header* header = (rpc_header*)buffer.data();
-    route_result_t ret = router_.route(header->func_id, buffer, 0);
+    route_result_t ret = router_.route(header->func_id, buffer, sock);
     return ret;
 }
