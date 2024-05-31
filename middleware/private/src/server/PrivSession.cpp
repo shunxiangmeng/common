@@ -26,18 +26,18 @@ PrivSession::~PrivSession() {
 }
 
 bool PrivSession::initial(std::shared_ptr<infra::TcpSocket>& newSock, int32_t bufferLen, bool bRecv) {
+    initMethodList();
     if (!PrivSessionBase::initial(newSock, bufferLen, bRecv)) {
         return false;
     }
-    initMethodList();
     return true;
 }
 
 bool PrivSession::initial(std::shared_ptr<infra::TcpSocket>& newSock, const char *buffer, int32_t len) {
+    initMethodList();
     if (!PrivSessionBase::initial(newSock, buffer, len)) {
         return false;
     }
-    initMethodList();
     return true;
 }
 
