@@ -17,10 +17,24 @@
 #include <unordered_map>
 #include "private/include/IPrivClient.h"
 #include "../Defs.h"
+#include "PrivCallResult.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
 #include "infra/include/Buffer.h"
 #include "jsoncpp/include/json.h"
+
+template <typename T> 
+struct FutureResult {
+    uint64_t id;
+    std::future<T> future;
+    template <class Rep, class Per>
+    std::future_status wait_for(const std::chrono::duration<Rep, Per> &rel_time) {
+        return future.wait_for(rel_time);
+    }
+    T get() { return future.get(); }
+};
+
+#define REQUEST_TIMEOUT 500
 
 class PrivClient : public IPrivClient, public infra::SocketHandler {
 public:
@@ -38,18 +52,12 @@ public:
     int32_t sendRpcData(infra::Buffer& buffer);
 
 private:
-    /**
-     * @brief scoket数据输入回调
-     * @param fd
-     * @return
-     */
     virtual int32_t onRead(int32_t fd) override;
-    /**
-     * @brief socket异常回调
-     * @param fd
-     * @return
-     */
     virtual int32_t onException(int32_t fd) override;
+
+    void onDisconnect();
+
+    bool login();
 
     infra::Buffer doRead(int32_t &message_type);
 
@@ -64,7 +72,10 @@ private:
 
     int32_t sendRequest(Json::Value &body);
 
-    infra::Buffer makeRequest(Json::Value &body);
+    CallResult syncRequest(Json::Value &body);
+    std::shared_ptr<AsyncCallResult> asyncRequest(Json::Value &body);
+
+    infra::Buffer makeRequest(uint32_t sequence, Json::Value &body);
 
 private:
     std::string server_ip_;
@@ -74,10 +85,12 @@ private:
     infra::Buffer buffer_;
 
     std::mutex send_mutex_;
-    std::mutex sequence_mutex_;
     uint32_t sequence_ = 0;
     uint32_t session_id_ = 0;
 
     RPCClient rpc_client_;
+
+    std::recursive_mutex future_map_mutex_;
+    std::unordered_map<uint32_t, std::shared_ptr<std::promise<CallResult>>> future_map_;
 
 };

@@ -18,13 +18,15 @@ std::shared_ptr<IPrivClient> IPrivClient::create() {
 }
 
 PrivClient::PrivClient() : buffer_(8 * 1024), rpc_client_(this) {
-    sock_ = std::make_shared<infra::TcpSocket>();
 }
 
 PrivClient::~PrivClient() {
 }
 
 bool PrivClient::connect(const char* server_ip, uint16_t server_port) {
+    if (!sock_) {
+        sock_ = std::make_shared<infra::TcpSocket>();
+    }
     if (sock_->isConnected()) {
         return true;
     }
@@ -38,6 +40,8 @@ bool PrivClient::connect(const char* server_ip, uint16_t server_port) {
         errorf("initial error\n");
         return false;
     }
+
+    login();
     return true;
 }
 
@@ -84,6 +88,7 @@ int32_t PrivClient::onRead(int32_t fd) {
         int32_t ret = sock_->recv((char*)&common_header, common_header_len);
         if (ret < 0) {
             warnf("socket disconnect\n");
+            onDisconnect();
             return -1;
         } else if (ret == 0) {
             return 0;
@@ -97,6 +102,7 @@ int32_t PrivClient::onRead(int32_t fd) {
         if (common_header.magic == MAGIC_RPC) {
             frame_len += sizeof(rpc_header);
         } else if (common_header.magic == MAGIC_PRIV) {
+            frame_len = infra::ntohl(common_header.body_len);
             frame_len += sizeof(PrivateDataHead);
         }
 
@@ -127,22 +133,27 @@ int32_t PrivClient::onRead(int32_t fd) {
 
 int32_t PrivClient::onException(int32_t fd) {
     errorf("priv_client socket error\n");
+    onDisconnect();
     return 0;
 }
 
+void PrivClient::onDisconnect() {
+    warnf("to remove fd:%d\n", sock_->getHandle());
+    if (!infra::NetworkThreadPool::instance()->delSocketEvent(sock_->getHandle(), shared_from_this())) {
+        errorf("delSocketEvent error\n");
+    }
+    sock_.reset();
+}
 
+/*
 int32_t PrivClient::sendRequest(Json::Value &body) {
     infra::Buffer buffer = makeRequest(body);
     std::lock_guard<std::mutex> guard(send_mutex_);
     return sock_->send((const char*)buffer.data(), buffer.size());
 }
+*/
 
-infra::Buffer PrivClient::makeRequest(Json::Value &body) {
-    uint32_t sequence = 0;
-    {
-        std::lock_guard<std::mutex> guard(sequence_mutex_);
-        sequence = sequence_++;
-    }
+infra::Buffer PrivClient::makeRequest(uint32_t sequence, Json::Value &body) {
     std::string data = body.toStyledString();
     uint32_t data_len = (uint32_t)data.length();
     uint32_t buffer_len = (uint32_t)data.length() + sizeof(PrivateDataHead);
@@ -161,20 +172,80 @@ infra::Buffer PrivClient::makeRequest(Json::Value &body) {
     return buffer;
 }
 
+CallResult PrivClient::syncRequest(Json::Value &body) {
+    auto releaseCall = [this](uint32_t resquence) {
+        std::lock_guard<std::recursive_mutex> guard(future_map_mutex_);
+        auto it = future_map_.find(resquence);
+        if (it != future_map_.end()) {
+            future_map_.erase(it);
+        }
+    };
+
+    auto async_call_result = asyncRequest(body);
+    auto wait_result = async_call_result->second.wait_for(std::chrono::milliseconds(REQUEST_TIMEOUT));
+    if (wait_result == std::future_status::timeout) {
+        releaseCall(async_call_result->first);
+        CallResult result;
+        result.error_code = PrivErrorCode::TIMEOUT;
+        result.error_message = "timeout";
+        return result;
+    }
+    CallResult result = async_call_result->second.get();
+    releaseCall(async_call_result->first);
+    return result;
+}
+
+std::shared_ptr<AsyncCallResult> PrivClient::asyncRequest(Json::Value &body) {
+    auto promise = std::make_shared<std::promise<CallResult>>();
+    std::future<CallResult> future = promise->get_future();
+
+    uint32_t sequence = 0;
+    {
+        std::lock_guard<std::recursive_mutex> guard(future_map_mutex_);
+        sequence = sequence_++;
+        future_map_.emplace(sequence, std::move(promise));
+    }
+
+    infra::Buffer buffer = makeRequest(sequence, body);
+    int32_t send_len = sock_->send((const char*)buffer.data(), buffer.size());
+    if (send_len < 0) {
+        CallResult result;
+        result.error_message = "send failed";
+        promise->set_value(std::move(result));
+    }
+    std::shared_ptr<AsyncCallResult> async_call_result = std::make_shared<AsyncCallResult>();
+    async_call_result->first = sequence;
+    async_call_result->second = std::move(future);
+    return async_call_result;
+}
+
 int32_t PrivClient::sendRpcData(infra::Buffer& buffer) {
+    if (!sock_ || !sock_->isConnected()) {
+        return -1;
+    }
     return sock_->send((const char*)buffer.data(), buffer.size());
 }
 
 void PrivClient::sendKeepAlive() {
     Json::Value root;
     root["method"] = "keepAlive";
-    sendRequest(root);
+    //sendRequest(root);
 }
 
+bool PrivClient::login() {
+    Json::Value root;
+    root["method"] = "login";
+    return syncRequest(root).success();
+}
 
 bool PrivClient::testSyncCall() {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
         auto result = rpc_client_.call<std::vector<int32_t>>("echo", 1 + i, 2);
+        printf("result.size():%ld\n", result.size());
+        for (auto& it : result) {
+            printf("%ld ", it);
+        }
+        printf("\n");
     }
     return true;
 }
@@ -182,3 +253,4 @@ bool PrivClient::testSyncCall() {
 void PrivClient::processRpc(infra::Buffer &buffer) {
     rpc_client_.processResponse(buffer);
 }
+

@@ -19,8 +19,12 @@ RPCClient::~RPCClient() {
 void RPCClient::processResponse(infra::Buffer &buffer) {
     rpc_header *header = (rpc_header*)buffer.data();
     std::string result(buffer.data() + sizeof(rpc_header), buffer.size() - sizeof(rpc_header));
+
     std::unique_lock<std::mutex> lock(cb_mtx_);
-    auto& f = future_map_[header->req_id];
-    f->set_value(req_result{ result });
-    future_map_.erase(header->req_id);
+    auto it = future_map_.find(header->req_id);
+    if (it != future_map_.end()) {
+        auto& f = future_map_[header->req_id];
+        f->set_value(req_result{ req_success, result });
+        future_map_.erase(it);
+    }
 }

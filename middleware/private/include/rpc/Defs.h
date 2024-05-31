@@ -55,7 +55,7 @@ inline bool has_error(std::string result) {
     //auto tp = codec.unpack<std::tuple<int>>(result.data(), result.size());
 
     //return std::get<0>(tp) != 0;
-    return 0;
+    return true;
 }
 
 inline std::string get_error_msg(std::string result) {
@@ -65,15 +65,22 @@ inline std::string get_error_msg(std::string result) {
     return result;
 }
 
+typedef enum {
+    req_success = 0,
+    req_send_failed,
+    req_timeout
+} req_error_code;
+
 class req_result {
 public:
     req_result() = default;
-    req_result(std::string data) : data_(data) {}
+    req_result(req_error_code code, std::string data) : error_code_(code), data_(data) {}
     
     template <typename T> T as() {
-        if (has_error(data_)) {
+        if (!success()) {
             std::string err_msg = data_.empty() ? data_ : get_error_msg(data_);
-            throw std::logic_error(err_msg);
+            //throw std::logic_error(err_msg);
+            return T();
         }
         return get_result<T>(data_);
     }
@@ -85,9 +92,10 @@ public:
         }
     }
 
-    bool success() const { return !has_error(data_); }
+    bool success() const { return error_code_ == req_success; }
 
 private:
+    req_error_code error_code_;
     std::string data_;
 };
 

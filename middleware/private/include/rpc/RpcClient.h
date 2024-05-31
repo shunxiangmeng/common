@@ -70,14 +70,18 @@ public:
 
         infra::Buffer buffer(message_size);
 
-        //write(fu_id, request_type::req_res, std::move(ret), MD5::MD5Hash32(rpc_name.data()));
         uint32_t func_id = infra::MD5Hash32(rpc_name.data());
         rpc_header header = { MAGIC_RPC, body_size, request_type::req_res, fu_id, func_id};;
 
         buffer.putData((char*)&header, sizeof(header));
         buffer.putData((char*)ret.release(), (int32_t)ret.size());
 
-        priv_client_->sendRpcData(buffer);
+        if (priv_client_->sendRpcData(buffer) < 0) {
+            std::unique_lock<std::mutex> lock(cb_mtx_);
+            auto& f = future_map_[fu_id];
+            f->set_value(req_result{ req_send_failed, "send failed" });
+            future_map_.erase(fu_id);
+        }
 
         return future_result<req_result>{fu_id, std::move(future)};
     }
