@@ -36,6 +36,7 @@ bool NetworkThreadPool::init(int32_t thread_num) {
         network_threads_.push_back(net_thread);
         network_threads_mutex_.unlock();
     }
+    running_ = true;
     return true;
 }
 
@@ -58,8 +59,15 @@ std::shared_ptr<NetworkThread> NetworkThreadPool::getThread() {
 }
 
 bool NetworkThreadPool::addSocketEvent(int32_t fd, SocketHandler::EventType event, std::shared_ptr<SocketHandler> handler) {
-    getThread()->addEvent(fd, event, handler);
-    return true;
+    if (!running_) {
+        errorf("network_thread_pool is not running\n");
+        return false;
+    }
+    auto executor = getThread();
+    if (!executor) {
+        return false;
+    }
+    return executor->addEvent(fd, event, handler);
 }
 
 bool NetworkThreadPool::modifySocketEvent(int32_t fd, SocketHandler::EventType event, std::shared_ptr<SocketHandler> handler) {

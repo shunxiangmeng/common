@@ -49,41 +49,11 @@ public:
         return future_result.get().template as<T>();
     }
 
-
     template <CallModel model, typename... Args>
     future_result<req_result> async_call(const std::string &rpc_name, Args &&...args) {
-        auto p = std::make_shared<std::promise<req_result>>();
-        std::future<req_result> future = p->get_future();
-
-        uint32_t fu_id = 0;
-        {
-            std::unique_lock<std::mutex> lock(cb_mtx_);
-            fu_id = sequence_++;
-            future_map_.emplace(fu_id, std::move(p));
-        }
-
         msgpack_codec codec;
         auto ret = codec.pack_args(std::forward<Args>(args)...);
-
-        uint32_t body_size = (uint32_t)ret.size();
-        uint32_t message_size = sizeof(rpc_header) + body_size;
-
-        infra::Buffer buffer(message_size);
-
-        uint32_t func_id = infra::MD5Hash32(rpc_name.data());
-        rpc_header header = { MAGIC_RPC, body_size, request_type::req_res, fu_id, func_id};;
-
-        buffer.putData((char*)&header, sizeof(header));
-        buffer.putData((char*)ret.release(), (int32_t)ret.size());
-
-        if (priv_client_->sendRpcData(buffer) < 0) {
-            std::unique_lock<std::mutex> lock(cb_mtx_);
-            auto& f = future_map_[fu_id];
-            f->set_value(req_result{ req_send_failed, "send failed" });
-            future_map_.erase(fu_id);
-        }
-
-        return future_result<req_result>{fu_id, std::move(future)};
+        return doAsyncCall(rpc_name, ret);
     }
 
 private:
@@ -92,6 +62,7 @@ private:
     ~RPCClient();
 
     void processResponse(infra::Buffer &buffer);
+    future_result<req_result> doAsyncCall(const std::string &rpc_name, msgpack::sbuffer& sbuffer);
 
 private:
     PrivClient *const priv_client_;

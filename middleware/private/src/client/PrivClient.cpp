@@ -32,12 +32,14 @@ bool PrivClient::connect(const char* server_ip, uint16_t server_port) {
     }
     if (!sock_->connect(std::string(server_ip), server_port, false)) {
         errorf("priv_client connect to %s:%d failed\n", server_ip, server_port);
+        sock_.reset();
         return false;
     }
     sock_->setNoblocked(true);
     auto event_type = infra::SocketHandler::EventType(infra::SocketHandler::EventType::read | infra::SocketHandler::EventType::except);
     if (!infra::NetworkThreadPool::instance()->addSocketEvent(sock_->getHandle(), event_type, shared_from_this())) {
         errorf("initial error\n");
+        sock_.reset();
         return false;
     }
 

@@ -35,9 +35,9 @@ private:
     std::shared_ptr<NetworkThread> getThread();
 
 private:
+    bool running_ = false;
     std::vector<std::shared_ptr<NetworkThread>> network_threads_;
     std::mutex network_threads_mutex_;
-
 };
 
 }

@@ -10,6 +10,7 @@
 #include <thread>
 #include <chrono>
 #include "OacClient.h"
+#include "infra/include/Logger.h"
 
 namespace oac {
 
@@ -22,7 +23,9 @@ IOacClient* OacClient::instance() {
     return &s_oac_client;
 }
 
-OacClient::OacClient() : image_manager_(ImageManager::Role::client) {
+OacClient::OacClient() 
+    : image_manager_(ImageManager::Role::client),
+    priv_client_(IPrivClient::create()), rpc_client_(priv_client_->rpcClient()) {
 }
 
 OacClient::~OacClient() {
@@ -30,6 +33,12 @@ OacClient::~OacClient() {
 
 
 bool OacClient::start() {
+    if (!priv_client_->connect("127.0.0.1", 7000)) {
+       errorf("priv_client connect failed\n");
+       return false; 
+    }
+    SharedMemoryInfo info = rpc_client_.call<SharedMemoryInfo>("shared_memory_info");
+
     if (!image_manager_.init(640, 480, IMAGE_PIXEL_FORMAT_RGB_888, 3)) {
         return false;
     }
