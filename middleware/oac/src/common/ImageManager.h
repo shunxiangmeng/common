@@ -12,6 +12,7 @@
 #include <vector>
 #include "infra/include/SharedMemory.h"
 #include "Oac.h"
+#include "Message.h"
 
 namespace oac {
 
@@ -25,7 +26,7 @@ public:
     ImageManager(Role role);
     ~ImageManager();
 
-    bool init(int32_t width, int32_t height, IMAGE_PIXEL_FORMAT format, int32_t picture_count);
+    bool init(SharedImageInfo& info);
 
     std::shared_ptr<SharedImage> getWriteSharedImage();
     std::shared_ptr<SharedImage> getReadSharedImage();
@@ -38,6 +39,7 @@ public:
 private:
     Role role_;
     std::string shared_memory_path_;
+    std::string shared_image_sem_prefix_;
     std::shared_ptr<infra::SharedMemory> shared_memory_;
     SharedMemoryHead* shared_memory_data_;
 

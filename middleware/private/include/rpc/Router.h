@@ -184,7 +184,7 @@ private:
             using args_tuple = typename function_traits<Function>::bare_tuple_type;
             msgpack_codec codec;
             try {
-                auto tp = codec.unpack<args_tuple>(data.data(), data.size());
+                auto tp = codec.unpack<args_tuple>(data.data() + sizeof(rpc_header), data.size() - sizeof(rpc_header));
                 helper_t<args_tuple, is_pub>{tp}();
                 call_member(f, self, wptr, result, std::move(tp));
             } catch (std::invalid_argument &e) {

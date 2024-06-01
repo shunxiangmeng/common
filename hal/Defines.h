@@ -9,7 +9,7 @@
  ************************************************************************/
 #pragma once
 
-typedef enum {
+typedef enum : int32_t {
     IMAGE_PIXEL_FORMAT_RGB_888 = 0,
     IMAGE_PIXEL_FORMAT_BGR_888,
     IMAGE_PIXEL_FORMAT_ABGR_8888,

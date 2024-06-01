@@ -13,22 +13,24 @@
 namespace oac {
 
 ImageManager::ImageManager(Role role) : role_(role) {
-    shared_memory_path_ = "/oac_shared_memory";
 }
 
 ImageManager::~ImageManager() {
 }
 
-bool ImageManager::init(int32_t width, int32_t height, IMAGE_PIXEL_FORMAT format, int32_t picture_count) {
-    if (picture_count > PICTURE_MAX) {
-        errorf("picture_count(%d) > PICTURE_MAX(%d)\n", picture_count, PICTURE_MAX);
+bool ImageManager::init(SharedImageInfo& info) {
+    if (info.count > PICTURE_MAX) {
+        errorf("picture_count(%d) > PICTURE_MAX(%d)\n", info.count, PICTURE_MAX);
         return false;
     }
 
-    int32_t picture_size = width * height * 3 + sizeof(SharedMemoryPictureHead);
-    int32_t shared_memory_total_size =  sizeof(SharedMemoryHead) + (picture_size * picture_count);
-    tracef("image:%dx%d, sizeof(SharedMemoryHead):%d, sizeof(SharedMemoryPictureHead):%d, shared_memory_total_size:%d\n", width, height, 
+    int32_t picture_size = info.width * info.height * 3 + sizeof(SharedMemoryPictureHead);
+    int32_t shared_memory_total_size =  sizeof(SharedMemoryHead) + (picture_size * info.count);
+    tracef("image:%dx%d, sizeof(SharedMemoryHead):%d, sizeof(SharedMemoryPictureHead):%d, shared_memory_total_size:%d\n", info.width, info.height, 
         sizeof(SharedMemoryHead), sizeof(SharedMemoryPictureHead), shared_memory_total_size);
+
+    shared_memory_path_ = info.shared_memory_path;
+    shared_image_sem_prefix_ = info.shared_image_sem_prefix;
 
     shared_memory_ = std::make_shared<infra::SharedMemory>(shared_memory_path_, shared_memory_total_size, role_ == Role::server);
     if (!shared_memory_->open()) {
@@ -45,7 +47,7 @@ bool ImageManager::init(int32_t width, int32_t height, IMAGE_PIXEL_FORMAT format
         shared_memory_data_->tag[2] = '@';
         shared_memory_data_->tag[3] = '@';
         shared_memory_data_->total_size = (int32_t)shared_memory_->size();
-        shared_memory_data_->picture_sum = picture_count;
+        shared_memory_data_->picture_sum = info.count;
         shared_memory_data_->picture_count = 0;
         shared_memory_data_->write_index = 0;
         shared_memory_data_->read_index = 0;
@@ -55,16 +57,16 @@ bool ImageManager::init(int32_t width, int32_t height, IMAGE_PIXEL_FORMAT format
         }
 
         uint8_t *picture_addr = data + sizeof(SharedMemoryHead);
-        for (auto i = 0; i < picture_count; i++) {
+        for (auto i = 0; i < info.count; i++) {
             SharedMemoryPictureHead* picture = (SharedMemoryPictureHead*)picture_addr;
             picture->empty = true;
             picture->busy = false;
             picture->index = i;
-            picture->format = format;
-            picture->width = width;
-            picture->height = height;
-            picture->stride = width;
-            picture->buffer_size = width * height * 3;
+            picture->format = info.format;
+            picture->width = info.width;
+            picture->height = info.height;
+            picture->stride = info.width;
+            picture->buffer_size = info.width * info.height * 3;
             picture->size = 0;
             picture->timestamp = 0;
             picture->frame_number = 0;
@@ -76,8 +78,8 @@ bool ImageManager::init(int32_t width, int32_t height, IMAGE_PIXEL_FORMAT format
         }
     }
 
-    for (auto i = 0; i < picture_count; i++) {
-        std::string sem_name = "/shared_pic_" + std::to_string(i);
+    for (auto i = 0; i < info.count; i++) {
+        std::string sem_name = shared_image_sem_prefix_ + std::to_string(i);
         auto p = std::make_shared<SharedImage>(sem_name);
         p->sem_name = sem_name;
         p->shared_picture = shared_memory_data_->picture[i];

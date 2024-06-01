@@ -37,7 +37,15 @@ bool OacServer::start(int32_t sub_channel, int32_t image_count) {
         return false;
     }
 
-    if (!image_manager_.init(*video_encode.width, *video_encode.height, IMAGE_PIXEL_FORMAT_RGB_888, image_count)) {
+    SharedImageInfo info;
+    info.shared_memory_path = "/oac_shared_memory";
+    info.shared_image_sem_prefix = "/oac_shared_image_";
+    info.width = *video_encode.width;
+    info.height = *video_encode.height;
+    info.format = IMAGE_PIXEL_FORMAT_RGB_888;
+    info.count = image_count;
+
+    if (!image_manager_.init(info)) {
         return false;
     }
 
@@ -93,6 +101,7 @@ SharedMemoryInfo OacServer::sharedMemoryInfo(rpc_conn wptr) {
     SharedMemoryInfo info;
     info.path = image_manager_.sharedMemoryPath();
     info.image_sems = image_manager_.imageSemNames();
+    tracef("shared_memory_info path:%s\n", info.path.data());
     return info;
 }
 
