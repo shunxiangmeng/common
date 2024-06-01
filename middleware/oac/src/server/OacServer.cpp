@@ -99,7 +99,8 @@ void OacServer::initServerMethod() {
 }
 
 void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
-    infra::WorkThreadPool::instance()->async([&]() {
+    tracef("alg server port:%d\n", alg_rpc_port);
+    infra::WorkThreadPool::instance()->async([&, alg_rpc_port]() {
         priv_client_ = IPrivClient::create();
         if (!priv_client_->connect("127.0.0.1", alg_rpc_port)) {
             errorf("priv_client connect port:%d failed\n", alg_rpc_port);
