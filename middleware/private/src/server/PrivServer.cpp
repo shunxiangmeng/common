@@ -17,14 +17,17 @@ IPrivServer* IPrivServer::instance() {
     return s_server.get();
 }
 
-PrivServer::PrivServer() : port_(0), session_manager_(nullptr) {
+PrivServer::PrivServer() : running_(false), port_(0), session_manager_(nullptr) {
     session_manager_ = std::make_shared<PrivSessionManager>(&rpc_server_);
 }
 
 PrivServer::~PrivServer() {
 }
 
-bool PrivServer::start(uint16_t port){
+bool PrivServer::start(uint16_t port) {
+    if (running_) {
+        return true;
+    }
     if (!acceptor_.listen("0.0.0.0", port)) {
         errorf("RtspService listen port %d error\n", port);
         return false;
@@ -34,6 +37,7 @@ bool PrivServer::start(uint16_t port){
         acceptor_.close();
         return false;
     }
+    running_ = true;
     infof("start privateServer on port %d\n", port);
     return true;
 }
@@ -59,6 +63,7 @@ bool PrivServer::stop() {
     warnf("stop privateService\n");
     infra::NetworkThreadPool::instance()->delSocketEvent(acceptor_.getHandle(), shared_from_this());
     acceptor_.close();
+    running_ = false;
     return true;
 }
 

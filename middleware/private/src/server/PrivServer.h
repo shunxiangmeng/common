@@ -67,6 +67,7 @@ private:
     virtual int32_t onException(int32_t fd) override;
 
 private:
+    bool running_ = false;
     uint16_t              port_;
     infra::AcceptSocket   acceptor_;
     RPCServer rpc_server_;

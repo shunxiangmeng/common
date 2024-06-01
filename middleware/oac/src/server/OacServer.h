@@ -12,6 +12,8 @@
 #include "oac/include/OacServer.h"
 #include "infra/include/thread/Thread.h"
 #include "../common/ImageManager.h"
+#include "../common/Message.h"
+#include "private/include/IPrivServer.h"
 
 namespace oac {
 
@@ -26,10 +28,15 @@ public:
 
 private:
     virtual void run() override;
+    void initServerMethod();
+
+    //rpc method
+    SharedMemoryInfo sharedMemoryInfo(rpc_conn wptr);
 
 private:
     int32_t alg_channel_;
     ImageManager image_manager_;
+    RPCServer &rpc_server_;
 };
 
 

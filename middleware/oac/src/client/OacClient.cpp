@@ -66,4 +66,9 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
     return true;
 }
 
+SharedMemoryInfo OacClient::sharedMemoryInfo() {
+    SharedMemoryInfo info;
+    return info;
+}
+
 }

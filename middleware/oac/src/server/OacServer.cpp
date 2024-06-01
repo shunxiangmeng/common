@@ -22,7 +22,8 @@ OacServer* OacServer::instance() {
     return &s_oac_server;
 }
 
-OacServer::OacServer() : image_manager_(ImageManager::Role::server) {
+OacServer::OacServer() : image_manager_(ImageManager::Role::server), 
+    rpc_server_(IPrivServer::instance()->rpcServer()) {
     
 }
 
@@ -39,6 +40,8 @@ bool OacServer::start(int32_t sub_channel, int32_t image_count) {
     if (!image_manager_.init(*video_encode.width, *video_encode.height, IMAGE_PIXEL_FORMAT_RGB_888, image_count)) {
         return false;
     }
+
+    initServerMethod();
 
     return infra::Thread::start();
 }
@@ -80,6 +83,17 @@ void OacServer::run() {
 
     }
     warnf("OacServer thread exit...\n");
+}
+
+void OacServer::initServerMethod() {
+    rpc_server_.register_handler("shared_memory_info", &OacServer::sharedMemoryInfo, this);
+}
+
+SharedMemoryInfo OacServer::sharedMemoryInfo(rpc_conn wptr) {
+    SharedMemoryInfo info;
+    info.path = image_manager_.sharedMemoryPath();
+    info.image_sems = image_manager_.imageSemNames();
+    return info;
 }
 
 }

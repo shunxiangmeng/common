@@ -22,6 +22,8 @@
 
 enum class router_error { ok, no_such_function, has_exception, unkonw };
 
+using rpc_conn = std::weak_ptr<infra::TcpSocket>;
+
 struct route_result_t {
     router_error ec = router_error::unkonw;
     std::string result;
@@ -60,6 +62,13 @@ public:
         return register_nonmember_func<is_pub>(key, std::move(f));
     }
 
+    template <bool is_pub = false, typename Function, typename Self>
+    void register_handler(std::string const &name, const Function &f, Self *self) {
+        uint32_t key = infra::MD5Hash32(name.data());
+        key2func_name_.emplace(key, name);
+        return register_member_func<is_pub>(key, f, self);
+    }
+
     void remove_handler(std::string const &name) {
         uint32_t key = infra::MD5Hash32(name.data());
         this->map_invokers_.erase(key);
@@ -74,7 +83,7 @@ public:
         return std::to_string(key);
     }
 
-    route_result_t route(uint32_t key, infra::Buffer &data, std::weak_ptr<infra::TcpSocket> sock) {
+    route_result_t route(uint32_t key, infra::Buffer &data, rpc_conn wptr) {
         route_result_t route_result{};
         std::string result;
         try {
@@ -84,7 +93,7 @@ public:
                 result = codec.pack_args_str(result_code::FAIL, "unknown function: " + get_name_by_key(key));
                 route_result.ec = router_error::no_such_function;
             } else {
-                it->second(sock, data, result);
+                it->second(wptr, data, result);
                 route_result.ec = router_error::ok;
             }
         } catch (const std::exception &ex) {
@@ -106,35 +115,35 @@ private:
     Router(Router&&) = delete;
 
     template <typename F, size_t... I, typename... Args>
-    static typename std::result_of<F(std::weak_ptr<infra::TcpSocket>, Args...)>::type
-        call_helper(const F& f, const std::index_sequence<I...>&, std::tuple<Args...> tup, std::weak_ptr<infra::TcpSocket> sock) {
-        return f(sock, std::move(std::get<I>(tup))...);
+    static typename std::result_of<F(rpc_conn, Args...)>::type
+        call_helper(const F& f, const std::index_sequence<I...>&, std::tuple<Args...> tup, rpc_conn wptr) {
+        return f(wptr, std::move(std::get<I>(tup))...);
     }
 
     template <typename F, typename... Args>
-    static typename std::enable_if<std::is_void<typename std::result_of<F(std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
-        call(const F& f, std::weak_ptr<infra::TcpSocket> sock, std::string& result, std::tuple<Args...> tp) {
-        call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
+    static typename std::enable_if<std::is_void<typename std::result_of<F(rpc_conn, Args...)>::type>::value>::type
+        call(const F& f, rpc_conn wptr, std::string& result, std::tuple<Args...> tp) {
+        call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), wptr);
         result = msgpack_codec::pack_args_str(result_code::OK);
     }
 
     template <typename F, typename... Args>
-    static typename std::enable_if<!std::is_void<typename std::result_of<F(std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
-        call(const F& f, std::weak_ptr<infra::TcpSocket> sock, std::string& result, std::tuple<Args...> tp) {
-        auto r = call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
+    static typename std::enable_if<!std::is_void<typename std::result_of<F(rpc_conn, Args...)>::type>::value>::type
+        call(const F& f, rpc_conn wptr, std::string& result, std::tuple<Args...> tp) {
+        auto r = call_helper(f, std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), wptr);
         msgpack_codec codec;
         result = msgpack_codec::pack_args_str(result_code::OK, r);
     }
 
     template <bool is_pub, typename Function>
     void register_nonmember_func(uint32_t key, Function f) {
-        this->map_invokers_[key] = [f](std::weak_ptr<infra::TcpSocket> sock, infra::Buffer &data, std::string& result) {
+        this->map_invokers_[key] = [f](rpc_conn wptr, infra::Buffer &data, std::string& result) {
             using args_tuple = typename function_traits<Function>::bare_tuple_type;
             msgpack_codec codec;
             try {
                 auto tp = codec.unpack<args_tuple>(data.data() + sizeof(rpc_header), data.size() - sizeof(rpc_header));
                 helper_t<args_tuple, is_pub>{tp}();
-                call(f, sock, result, std::move(tp));
+                call(f, wptr, result, std::move(tp));
             }
             catch (std::invalid_argument& e) {
                 result = codec.pack_args_str(result_code::FAIL, e.what());
@@ -147,37 +156,37 @@ private:
 
 
     template <typename F, typename Self, size_t... Indexes, typename... Args>
-    static typename std::result_of<F(Self, std::weak_ptr<infra::TcpSocket>, Args...)>::type
+    static typename std::result_of<F(Self, rpc_conn, Args...)>::type
         call_member_helper(const F &f, Self *self, 
                             const std::index_sequence<Indexes...> &,
                             std::tuple<Args...> tup,
-                            std::weak_ptr<infra::TcpSocket> sock = std::shared_ptr<infra::TcpSocket>{nullptr}) {
-        return (*self.*f)(sock, std::move(std::get<Indexes>(tup))...);
+                            rpc_conn wptr = rpc_conn{nullptr}) {
+        return (*self.*f)(wptr, std::move(std::get<Indexes>(tup))...);
     }
 
     template <typename F, typename Self, typename... Args>
-    static typename std::enable_if<std::is_void<typename std::result_of<F(Self, std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
-    call_member(const F &f, Self *self, std::weak_ptr<infra::TcpSocket> sock, std::string &result, std::tuple<Args...> tp) {
-        call_member_helper(f, self, typename std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
+    static typename std::enable_if<std::is_void<typename std::result_of<F(Self, rpc_conn, Args...)>::type>::value>::type
+    call_member(const F &f, Self *self, rpc_conn wptr, std::string &result, std::tuple<Args...> tp) {
+        call_member_helper(f, self, typename std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), wptr);
         result = msgpack_codec::pack_args_str(result_code::OK);
     }
 
     template <typename F, typename Self, typename... Args>
-    static typename std::enable_if<!std::is_void<typename std::result_of<F(Self, std::weak_ptr<infra::TcpSocket>, Args...)>::type>::value>::type
-    call_member(const F &f, Self *self, std::weak_ptr<infra::TcpSocket> sock, std::string &result, std::tuple<Args...> tp) {
-        auto r = call_member_helper(f, self, typename std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), sock);
+    static typename std::enable_if<!std::is_void<typename std::result_of<F(Self, rpc_conn, Args...)>::type>::value>::type
+    call_member(const F &f, Self *self, rpc_conn wptr, std::string &result, std::tuple<Args...> tp) {
+        auto r = call_member_helper(f, self, typename std::make_index_sequence<sizeof...(Args)>{}, std::move(tp), wptr);
         result = msgpack_codec::pack_args_str(result_code::OK, r);
     }
 
     template <bool is_pub, typename Function, typename Self>
     void register_member_func(uint32_t key, const Function &f, Self *self) {
-        this->map_invokers_[key] = [f, self](std::weak_ptr<infra::TcpSocket> sock, infra::Buffer &data, std::string &result) {
+        this->map_invokers_[key] = [f, self](rpc_conn wptr, infra::Buffer &data, std::string &result) {
             using args_tuple = typename function_traits<Function>::bare_tuple_type;
             msgpack_codec codec;
             try {
                 auto tp = codec.unpack<args_tuple>(data.data(), data.size());
                 helper_t<args_tuple, is_pub>{tp}();
-                call_member(f, self, sock, result, std::move(tp));
+                call_member(f, self, wptr, result, std::move(tp));
             } catch (std::invalid_argument &e) {
                 result = codec.pack_args_str(result_code::FAIL, e.what());
             } catch (const std::exception &e) {
@@ -187,6 +196,6 @@ private:
     }
 
 private:
-    std::unordered_map<uint32_t, std::function<void(std::weak_ptr<infra::TcpSocket> &, infra::Buffer &, std::string &)>> map_invokers_;
+    std::unordered_map<uint32_t, std::function<void(rpc_conn &, infra::Buffer &, std::string &)>> map_invokers_;
     std::unordered_map<uint32_t, std::string> key2func_name_;
 };

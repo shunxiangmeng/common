@@ -9,6 +9,7 @@
  ************************************************************************/
 #pragma once
 #include <stdint.h>
+
 namespace oac {
 class IOacServer {
 public:
