@@ -17,6 +17,10 @@ IPrivServer* IPrivServer::instance() {
     return s_server.get();
 }
 
+std::shared_ptr<IPrivServer> IPrivServer::create() {
+    return std::make_shared<PrivServer>();
+}
+
 PrivServer::PrivServer() : running_(false), port_(0), session_manager_(nullptr) {
     session_manager_ = std::make_shared<PrivSessionManager>(&rpc_server_);
 }

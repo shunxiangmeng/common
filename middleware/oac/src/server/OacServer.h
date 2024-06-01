@@ -14,6 +14,7 @@
 #include "../common/ImageManager.h"
 #include "../common/Message.h"
 #include "private/include/IPrivServer.h"
+#include "private/include/IPrivClient.h"
 
 namespace oac {
 
@@ -31,6 +32,7 @@ private:
     void initServerMethod();
 
     //rpc method
+    void algInfo(rpc_conn wptr, uint16_t alg_rpc_port);
     SharedImageInfo sharedImageInfo(rpc_conn wptr);
 
 private:
@@ -38,6 +40,7 @@ private:
     int32_t alg_channel_;
     ImageManager image_manager_;
     RPCServer &rpc_server_;
+    std::shared_ptr<IPrivClient> priv_client_;
 };
 
 

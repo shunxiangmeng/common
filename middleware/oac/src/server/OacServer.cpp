@@ -10,6 +10,7 @@
 #include "OacServer.h"
 #include "infra/include/Logger.h"
 #include "hal/Video.h"
+#include "infra/include/thread/WorkThreadPool.h"
 
 namespace oac {
 
@@ -93,7 +94,21 @@ void OacServer::run() {
 }
 
 void OacServer::initServerMethod() {
-    rpc_server_.register_handler("shared_memory_info", &OacServer::sharedImageInfo, this);
+    rpc_server_.register_handler("on_alg_info", &OacServer::algInfo, this);
+    rpc_server_.register_handler("shared_image_info", &OacServer::sharedImageInfo, this);
+}
+
+void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
+    infra::WorkThreadPool::instance()->async([&]() {
+        priv_client_ = IPrivClient::create();
+        if (!priv_client_->connect("127.0.0.1", alg_rpc_port)) {
+            errorf("priv_client connect port:%d failed\n", alg_rpc_port);
+            return; 
+        }
+        std::string alg_sdk_version = priv_client_->rpcClient().call<std::string>("alg_sdk_version");
+        std::string alg_application_version = priv_client_->rpcClient().call<std::string>("alg_application_version");
+        infof("alg_sdk_version:%s, alg_application_version:%s\n", alg_sdk_version.data(), alg_application_version.data());
+    });
 }
 
 SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {

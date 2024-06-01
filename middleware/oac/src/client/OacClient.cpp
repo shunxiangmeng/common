@@ -24,20 +24,26 @@ IOacClient* OacClient::instance() {
 }
 
 OacClient::OacClient() 
-    : image_manager_(ImageManager::Role::client),
-    priv_client_(IPrivClient::create()), rpc_client_(priv_client_->rpcClient()) {
+    : running_(false), image_manager_(ImageManager::Role::client),
+    priv_client_(IPrivClient::create()), rpc_client_(priv_client_->rpcClient()),
+    priv_server_(IPrivServer::create()), rpc_server_(priv_server_->rpcServer()) {
+    priv_server_port_ = 7001;
 }
 
 OacClient::~OacClient() {
 }
 
-
 bool OacClient::start() {
+    if (!priv_server_->start(priv_server_port_)) {
+        return false;
+    }
+    initRpcServerMethod();
+
     if (!priv_client_->connect("127.0.0.1", 7000)) {
        errorf("priv_client connect failed\n");
        return false; 
     }
-    SharedImageInfo info = rpc_client_.call<SharedImageInfo>("shared_memory_info");
+    SharedImageInfo info = rpc_client_.call<SharedImageInfo>("shared_image_info");
 
     if (!image_manager_.init(info)) {
         return false;
@@ -47,6 +53,18 @@ bool OacClient::start() {
 
 bool OacClient::stop() {
     return false;
+}
+
+void OacClient::initRpcServerMethod() {
+    rpc_server_.register_handler("alg_sdk_version", &OacClient::algVersion, this);
+    rpc_server_.register_handler("alg_application_version", &OacClient::algApplicationVersion, this);
+}
+
+std::string OacClient::algVersion(rpc_conn wptr) {
+    return "0.7.1.999";
+}
+std::string OacClient::algApplicationVersion(rpc_conn wptr) {
+    return "1.0.0.2";
 }
 
 bool OacClient::getImageFrame(ImageFrame& image) {

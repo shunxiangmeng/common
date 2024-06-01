@@ -26,6 +26,10 @@ public:
      */
     static IPrivServer* instance();
     /**
+     * @brief create
+     */
+    static std::shared_ptr<IPrivServer> create();
+    /**
      * @brief 启动私有服务
      * @param[in] port 服务监听端口号
      */
