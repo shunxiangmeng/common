@@ -26,8 +26,6 @@ public:
     virtual bool getImageFrame(ImageFrame& image) override;
     virtual bool releaseImageFrame(ImageFrame& image) override;   //使用完成之后需要调用此接口释image
 
-    SharedMemoryInfo sharedMemoryInfo();
-
 private:
     ImageManager image_manager_;
     std::shared_ptr<IPrivClient> priv_client_;

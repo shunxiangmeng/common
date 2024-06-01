@@ -62,7 +62,7 @@ bool ImageManager::init(SharedImageInfo& info) {
             picture->empty = true;
             picture->busy = false;
             picture->index = i;
-            picture->format = info.format;
+            picture->format = (IMAGE_PIXEL_FORMAT)info.format;
             picture->width = info.width;
             picture->height = info.height;
             picture->stride = info.width;

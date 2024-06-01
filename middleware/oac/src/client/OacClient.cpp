@@ -37,9 +37,9 @@ bool OacClient::start() {
        errorf("priv_client connect failed\n");
        return false; 
     }
-    SharedMemoryInfo info = rpc_client_.call<SharedMemoryInfo>("shared_memory_info");
+    SharedImageInfo info = rpc_client_.call<SharedImageInfo>("shared_memory_info");
 
-    if (!image_manager_.init(640, 480, IMAGE_PIXEL_FORMAT_RGB_888, 3)) {
+    if (!image_manager_.init(info)) {
         return false;
     }
     return true;
@@ -75,9 +75,5 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
     return true;
 }
 
-SharedMemoryInfo OacClient::sharedMemoryInfo() {
-    SharedMemoryInfo info;
-    return info;
-}
 
 }

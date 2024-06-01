@@ -31,9 +31,10 @@ private:
     void initServerMethod();
 
     //rpc method
-    SharedMemoryInfo sharedMemoryInfo(rpc_conn wptr);
+    SharedImageInfo sharedImageInfo(rpc_conn wptr);
 
 private:
+    SharedImageInfo info_;
     int32_t alg_channel_;
     ImageManager image_manager_;
     RPCServer &rpc_server_;
