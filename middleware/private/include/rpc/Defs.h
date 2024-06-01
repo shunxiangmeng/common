@@ -50,19 +50,15 @@ inline bool has_error(std::string result) {
     if (result.empty()) {
         return true;
     }
-
-    //msgpack_codec codec;
-    //auto tp = codec.unpack<std::tuple<int>>(result.data(), result.size());
-
-    //return std::get<0>(tp) != 0;
-    return true;
+    msgpack_codec codec;
+    auto tp = codec.unpack<std::tuple<int>>(result.data(), result.size());
+    return std::get<0>(tp) != 0;
 }
 
 inline std::string get_error_msg(std::string result) {
-    //msgpack_codec codec;
-    //auto tp = codec.unpack<std::tuple<int, std::string>>(result.data(), result.size());
-    //return std::get<1>(tp);
-    return result;
+    msgpack_codec codec;
+    auto tp = codec.unpack<std::tuple<int, std::string>>(result.data(), result.size());
+    return std::get<1>(tp);
 }
 
 typedef enum {

@@ -44,10 +44,10 @@ bool OacClient::start() {
        return false; 
     }
     SharedImageInfo info = rpc_client_.call<SharedImageInfo>("shared_image_info");
-
     if (!image_manager_.init(info)) {
         return false;
     }
+    rpc_client_.call("on_alg_info", priv_server_port_);
     return true;
 }
 
