@@ -36,7 +36,7 @@ future_result<req_result> RPCClient::doAsyncCall(const std::string &rpc_name, ms
     rpc_header header = { MAGIC_RPC, body_size, request_type::req_res, fu_id, func_id};;
 
     buffer.putData((char*)&header, sizeof(header));
-    buffer.putData((char*)sbuffer.release(), (int32_t)sbuffer.size());
+    buffer.putData((char*)sbuffer.release(), (int32_t)body_size);
 
     if (priv_client_->sendRpcData(buffer) < 0) {
         std::unique_lock<std::mutex> lock(cb_mtx_);
