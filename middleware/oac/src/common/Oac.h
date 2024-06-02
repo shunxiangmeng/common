@@ -40,9 +40,6 @@ typedef struct {
     int32_t picture_count; // 队列中的图片数量
     int32_t write_index;   // 写索引
     int32_t read_index;    // 读索引
-
-    SharedMemoryPictureHead* picture[PICTURE_MAX];
-
 } SharedMemoryHead;
 
 

@@ -39,9 +39,10 @@ bool ImageManager::init(SharedImageInfo& info) {
     }
 
     uint8_t *data = shared_memory_->data();
-    shared_memory_data_ = (SharedMemoryHead*)data;
+    uint8_t *picture_addr = data + sizeof(SharedMemoryHead);
     // server 初始化共享内存
     if (role_ == Role::server) {
+        shared_memory_data_ = (SharedMemoryHead*)data;
         shared_memory_data_->tag[0] = '@';
         shared_memory_data_->tag[1] = '@';
         shared_memory_data_->tag[2] = '@';
@@ -52,11 +53,6 @@ bool ImageManager::init(SharedImageInfo& info) {
         shared_memory_data_->write_index = 0;
         shared_memory_data_->read_index = 0;
 
-        for (auto i = 0; i < PICTURE_MAX; i++) {
-            shared_memory_data_->picture[i] = nullptr;
-        }
-
-        uint8_t *picture_addr = data + sizeof(SharedMemoryHead);
         for (auto i = 0; i < info.count; i++) {
             SharedMemoryPictureHead* picture = (SharedMemoryPictureHead*)picture_addr;
             picture->empty = true;
@@ -72,18 +68,18 @@ bool ImageManager::init(SharedImageInfo& info) {
             picture->frame_number = 0;
             picture->data = picture_addr + sizeof(SharedMemoryPictureHead);
 
-            shared_memory_data_->picture[i] = picture;
-
             picture_addr += picture_size;
         }
     }
 
     for (auto i = 0; i < info.count; i++) {
+        SharedMemoryPictureHead* picture = (SharedMemoryPictureHead*)picture_addr;
         std::string sem_name = shared_image_sem_prefix_ + std::to_string(i);
         auto p = std::make_shared<SharedImage>(sem_name);
         p->sem_name = sem_name;
-        p->shared_picture = shared_memory_data_->picture[i];
+        p->shared_picture = picture;
         shared_images_.push_back(std::move(p));
+        picture_addr += picture_size;
     }
 
     //infof("role:%d, write_index:%d, read_index:%d\n", role_, shared_memory_data_->write_index, shared_memory_data_->read_index);
