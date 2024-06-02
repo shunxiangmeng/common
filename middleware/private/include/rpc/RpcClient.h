@@ -12,12 +12,6 @@
 #include <unordered_map>
 #include "Router.h"
 
-template <typename T> inline T get_result(std::string result) {
-    msgpack_codec codec;
-    auto tp = codec.unpack<std::tuple<int, T>>(result.data(), result.size());
-    return std::get<1>(tp);
-}
-
 class PrivClient;
 class RPCClient {
 public:

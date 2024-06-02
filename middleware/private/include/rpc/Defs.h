@@ -67,6 +67,12 @@ typedef enum {
     req_timeout
 } req_error_code;
 
+template <typename T> inline T get_result(std::string result) {
+    msgpack_codec codec;
+    auto tp = codec.unpack<std::tuple<int, T>>(result.data(), result.size());
+    return std::get<1>(tp);
+}
+
 class req_result {
 public:
     req_result() = default;

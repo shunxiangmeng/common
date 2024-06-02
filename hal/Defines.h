@@ -8,6 +8,7 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <stdint.h>
 
 typedef enum : int32_t {
     IMAGE_PIXEL_FORMAT_RGB_888 = 0,
