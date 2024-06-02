@@ -66,7 +66,6 @@ bool ImageManager::init(SharedImageInfo& info) {
             picture->size = 0;
             picture->timestamp = 0;
             picture->frame_number = 0;
-            picture->data = (uint8_t*)picture + sizeof(SharedMemoryPictureHead);
             
             picture_addr += picture_size;
         }
@@ -75,12 +74,11 @@ bool ImageManager::init(SharedImageInfo& info) {
     uint8_t *picture_addr = data + sizeof(SharedMemoryHead);
     for (auto i = 0; i < info.count; i++) {
         SharedMemoryPictureHead* picture = (SharedMemoryPictureHead*)picture_addr;
-        picture->data = (uint8_t*)picture + sizeof(SharedMemoryPictureHead);
-
         std::string sem_name = shared_image_sem_prefix_ + std::to_string(i);
         auto p = std::make_shared<SharedImage>(sem_name);
         p->sem_name = sem_name;
         p->shared_picture = picture;
+        p->data_addr = (uint8_t*)picture + sizeof(SharedMemoryPictureHead);
         shared_images_.push_back(std::move(p));
 
         picture_addr += picture_size;
@@ -93,7 +91,7 @@ bool ImageManager::init(SharedImageInfo& info) {
 
 std::shared_ptr<SharedImage> ImageManager::getWriteSharedImage() {
     auto image = shared_images_[shared_memory_data_->write_index];
-    //tracef("get write index:%d, shared_index:%d\n", shared_memory_data_->write_index, image->shared_picture->index);
+    tracef("get write index:%d, shared_index:%d\n", shared_memory_data_->write_index, image->shared_picture->index);
     shared_memory_data_->write_index++;
     if (shared_memory_data_->write_index >= shared_memory_data_->picture_sum) {
         shared_memory_data_->write_index = 0;

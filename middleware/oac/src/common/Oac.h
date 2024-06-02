@@ -29,7 +29,6 @@ typedef struct {
     int64_t timestamp;
     uint32_t frame_number;
     int32_t buffer_size;
-    uint8_t* data;
 } SharedMemoryPictureHead;
 
 
@@ -47,7 +46,8 @@ typedef struct SharedImage {
     Semaphore sem;
     std::string sem_name;
     SharedMemoryPictureHead* shared_picture;
-    SharedImage(const std::string& name): sem(name), shared_picture(nullptr) {
+    uint8_t* data_addr;
+    SharedImage(const std::string& name): sem(name), shared_picture(nullptr), data_addr(nullptr) {
     }
     ~SharedImage() {
         tracef("~SharedImage()\n");

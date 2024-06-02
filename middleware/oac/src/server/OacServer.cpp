@@ -71,7 +71,7 @@ void OacServer::run() {
 
         hal::IVideo::VideoImage video_image;
         video_image.buffer_size = image->shared_picture->buffer_size;
-        video_image.data = image->shared_picture->data;
+        video_image.data = image->data_addr;
 
         hal::IVideo::instance()->getViImage(0, alg_channel_, video_image);
 
@@ -83,7 +83,7 @@ void OacServer::run() {
         image->shared_picture->frame_number = video_image.frame_number;
         image->shared_picture->empty = false;
         image->shared_picture->busy = false;
-        //warnf("write index:%d, pts:%lld\n", image->shared_picture->index, image->shared_picture->timestamp);
+        warnf("write index:%d, pts:%lld\n", image->shared_picture->index, image->shared_picture->timestamp);
         image->release();
 
 

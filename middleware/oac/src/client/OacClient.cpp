@@ -82,7 +82,7 @@ bool OacClient::getImageFrame(ImageFrame& image) {
     image.size = shared_image->shared_picture->size;
     image.timestamp = shared_image->shared_picture->timestamp;
     image.frame_number = shared_image->shared_picture->frame_number;
-    image.data = shared_image->shared_picture->data;
+    image.data = shared_image->data_addr;
     return true;
 }
 
