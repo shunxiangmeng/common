@@ -113,6 +113,7 @@ void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
 }
 
 SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {
+    tracef("sharedImageInfo+++\n");
     return info_;
 }
 
