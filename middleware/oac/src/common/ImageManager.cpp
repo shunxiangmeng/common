@@ -39,9 +39,9 @@ bool ImageManager::init(SharedImageInfo& info) {
     }
 
     uint8_t *data = shared_memory_->data();
+    shared_memory_data_ = (SharedMemoryHead*)data;
     // server 初始化共享内存
     if (role_ == Role::server) {
-        shared_memory_data_ = (SharedMemoryHead*)data;
         shared_memory_data_->tag[0] = '@';
         shared_memory_data_->tag[1] = '@';
         shared_memory_data_->tag[2] = '@';
@@ -75,6 +75,8 @@ bool ImageManager::init(SharedImageInfo& info) {
     uint8_t *picture_addr = data + sizeof(SharedMemoryHead);
     for (auto i = 0; i < info.count; i++) {
         SharedMemoryPictureHead* picture = (SharedMemoryPictureHead*)picture_addr;
+        picture->data = (uint8_t*)picture + sizeof(SharedMemoryPictureHead);
+
         std::string sem_name = shared_image_sem_prefix_ + std::to_string(i);
         auto p = std::make_shared<SharedImage>(sem_name);
         p->sem_name = sem_name;
