@@ -11,6 +11,7 @@
 #include "Ulucu.h"
 #include "UlucuFrame.h"
 #include "infra/include/Logger.h"
+#include "../Defs.h"
 
 UlucuPack::UlucuPack() {
 }
@@ -49,7 +50,7 @@ int32_t UlucuPack::putVideo(MediaFrame &frame) {
         naltype = 'I';
     }
 
-    uint32_t reserveLen = 0; //ULUCU_PROTOCL_HEAD_LEN;
+    uint32_t reserveLen = sizeof(PrivateDataHead);
     frameLen += reserveLen;
     MediaFrame outFrame(frameLen);
     if (outFrame.empty()) {
@@ -201,4 +202,9 @@ int8_t UlucuPack::audioSample(uint32_t sample) {
         default:
             return unibSampleNone;
     }
+}
+
+MediaFrame UlucuPack::getMediaFrameFromBuffer(const char* buffer, int32_t size) {
+    MediaFrame frame;
+    return frame;
 }

@@ -25,13 +25,15 @@ public:
      * @param[in] frame 待转码的数据包
      * @return
      */
-    virtual int32_t putPacket(MediaFrameType type, MediaFrame &frame);
+    int32_t putPacket(MediaFrameType type, MediaFrame &frame);
     /**
      * @brief 获取转码好的数据
      * @param[in] type
      * @param[in] frame 已转码的数据包
      */
-    virtual int32_t getPacket(MediaFrameType type, MediaFrame &frame);
+    int32_t getPacket(MediaFrameType type, MediaFrame &frame);
+
+    static MediaFrame getMediaFrameFromBuffer(const char* buffer, int32_t size);
 
 private:
     /**

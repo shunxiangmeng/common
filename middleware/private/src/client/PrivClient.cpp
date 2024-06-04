@@ -11,6 +11,7 @@
 #include "infra/include/Logger.h"
 #include "../PrivMessage.h"
 #include "infra/include/network/NetworkThreadPool.h"
+#include "../ulucuframe/UlucuPack.h"
 
 std::shared_ptr<IPrivClient> IPrivClient::create() {
     auto ptr = std::make_shared<PrivClient>();
@@ -72,6 +73,9 @@ void PrivClient::process(std::shared_ptr<Message> &message) {
         warnf("deal response, sequence:%d\n", sequence);  ///应答暂时不处理
         return;
     }
+    if (message->isMediaData) {
+        onMediaFrame(message);
+    }
 }
 
 void PrivClient::process(infra::Buffer &buffer) {
@@ -82,6 +86,14 @@ void PrivClient::process(infra::Buffer &buffer) {
     }
 }
 
+
+void PrivClient::onMediaFrame(std::shared_ptr<Message> &message) {
+    MediaFrame frame = UlucuPack::getMediaFrameFromBuffer(message->mediaData, message->mediaDataLen);
+    if (frame.empty()) {
+        return;
+    }
+    media_signal_(frame.getMediaFrameType(), frame);
+}
 
 int32_t PrivClient::onRead(int32_t fd) {
     do {
@@ -256,3 +268,38 @@ void PrivClient::processRpc(infra::Buffer &buffer) {
     rpc_client_.processResponse(buffer);
 }
 
+bool PrivClient::startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) {
+    Json::Value root;
+    root["method"] = "start_preview";
+    root["channel"] = channel;
+    root["sub_channel"] = sub_channel;
+    if (!syncRequest(root).success()) {
+        errorf("start preview failed\n");
+        return false;
+    }
+    preview_channel_ = channel;
+    preview_sub_channel_ = sub_channel;
+    int32_t ret = media_signal_.attach(onframe);
+    if (ret < 0) {
+        errorf("media_signal attach failed ret:%d\n", ret);
+        return false;
+    }
+    return true;
+}
+
+bool PrivClient::stopPreview(OnFrameProc onframe) {
+    Json::Value root;
+    root["method"] = "stop_preview";
+    //root["channel"] = channel;
+    //root["sub_channel"] = sub_channel;
+    if (!syncRequest(root).success()) {
+        errorf("stop preview failed\n");
+        return false;
+    }
+    int32_t ret = media_signal_.detach(onframe);
+    if (ret < 0) {
+        errorf("media_signal detach failed ret:%d\n", ret);
+        return false;
+    }
+    return true;
+}

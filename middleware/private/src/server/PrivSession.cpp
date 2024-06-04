@@ -108,44 +108,46 @@ PrivSubSessionPtr PrivSession::getSubSession(int32_t channel, int32_t sub_channe
 }
 
 bool PrivSession::getChannelStreamType(MessagePtr &msg, int32_t &channel, int32_t &stream) {
-    if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()) {
-        channel = msg->data["channelNo"].asInt();
+    if (msg->data.isMember("channel") && msg->data["channel"].isInt()) {
+        channel = msg->data["channel"].asInt();
     } else {
-        msg->code = 1001;msg->message = "param channelNo error";
+        msg->code = 1001;msg->message = "param channel error";
         return false;
     }
-    if (msg->data.isMember("streamType") && msg->data["streamType"].isInt()) {
-        channel = msg->data["streamType"].asInt();
+    if (msg->data.isMember("sub_channel") && msg->data["sub_channel"].isInt()) {
+        channel = msg->data["sub_channel"].asInt();
     } else {
         msg->code = 1001;
-        msg->message = "param streamType error";
+        msg->message = "param sub_channel error";
         return false;
     }
     return true;
 }
 
-bool PrivSession::start_preview(MessagePtr &msg){
-    int32_t channel = 1,stream = 1;
-    if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()){
-        channel = msg->data["channelNo"].asInt();
-    } else {
-        msg->code = 1001;msg->message = "param channelNo error";
-        return false;
-    }
-
-    if (msg->data.isMember("streamType") && msg->data["streamType"].isInt()){
-        stream = msg->data["streamType"].asInt();
+bool PrivSession::start_preview(MessagePtr &msg) {
+    int32_t channel = 1;
+    int32_t sub_channel = 1;
+    if (msg->data.isMember("channel") && msg->data["channel"].isInt()){
+        channel = msg->data["channel"].asInt();
     } else {
         msg->code = 1001;
-        msg->message = "param streamType error";
+        msg->message = "param channel error";
         return false;
     }
 
-    PrivSubSessionPtr sub = getSubSession(channel, stream);
+    if (msg->data.isMember("sub_channel") && msg->data["sub_channel"].isInt()){
+        sub_channel = msg->data["sub_channel"].asInt();
+    } else {
+        msg->code = 1001;
+        msg->message = "param sub_channel error";
+        return false;
+    }
+
+    PrivSubSessionPtr sub = getSubSession(channel, sub_channel);
     if (sub.get() == nullptr) {
         ///创建子会话，用做发流
         tracef("create sub session\n");
-        sub = addNewSubSession(channel, stream);
+        sub = addNewSubSession(channel, sub_channel);
     }
 
     sub->setCallback(PrivSubSession::CallbackSignal::Proc(&PrivSession::subSessionSendFailed, this));
@@ -160,7 +162,7 @@ bool PrivSession::start_preview(MessagePtr &msg){
         return false;
     }
 
-    if (!sub->startStream(channel, stream)){
+    if (!sub->startStream(channel, sub_channel)){
         errorf("subSession startStream failed\n");
         return false;
     }
@@ -177,23 +179,24 @@ bool PrivSession::start_preview(MessagePtr &msg){
 
 bool PrivSession::stop_preview(MessagePtr &msg) {
     int32_t channel = 1,streamType = 1;
-    if (msg->data.isMember("channelNo") && msg->data["channelNo"].isInt()){
-        channel = msg->data["channelNo"].asInt();
+    if (msg->data.isMember("channel") && msg->data["channel"].isInt()){
+        channel = msg->data["channel"].asInt();
     } else{
         msg->code = 1001;msg->message = "param channelNo error";
         return false;
     }
 
-    if (msg->data.isMember("streamType") && msg->data["streamType"].isInt()){
-        channel = msg->data["streamType"].asInt();
+    if (msg->data.isMember("sub_channel") && msg->data["sub_channel"].isInt()){
+        channel = msg->data["sub_channel"].asInt();
     } else {
-        msg->code = 1001;msg->message = "param streamType error";
+        msg->code = 1001;msg->message = "param sub_channel error";
         return false;
     }
 
     PrivSubSessionPtr sub = getSubSession(channel, streamType);
     if (!sub->stopStream(channel, streamType)){
-        msg->code = 1001;msg->message = "stop preview error";
+        msg->code = 1001;
+        msg->message = "stop preview error";
         return false;
     }
 

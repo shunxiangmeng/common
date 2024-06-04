@@ -42,6 +42,8 @@ public:
     virtual ~PrivClient();
 
     virtual bool connect(const char* server_ip, uint16_t server_port) override;
+    virtual bool startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) override;
+    virtual bool stopPreview(OnFrameProc onframe) override;
 
     virtual bool testSyncCall() override;
 
@@ -59,7 +61,7 @@ private:
 
     bool login();
 
-    infra::Buffer doRead(int32_t &message_type);
+    void onMediaFrame(std::shared_ptr<Message> &message);
 
     void sendKeepAlive();
 
@@ -92,5 +94,9 @@ private:
 
     std::recursive_mutex future_map_mutex_;
     std::unordered_map<uint32_t, std::shared_ptr<std::promise<CallResult>>> future_map_;
+
+    PrivClientSignal media_signal_;
+    int32_t preview_channel_;
+    int32_t preview_sub_channel_;
 
 };
