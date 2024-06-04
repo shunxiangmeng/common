@@ -127,7 +127,7 @@ bool PrivSession::getChannelStreamType(MessagePtr &msg, int32_t &channel, int32_
 bool PrivSession::start_preview(MessagePtr &msg) {
     int32_t channel = 1;
     int32_t sub_channel = 1;
-    if (msg->data.isMember("channel") && msg->data["channel"].isInt()){
+    if (msg->data.isMember("channel") && msg->data["channel"].isInt()) {
         channel = msg->data["channel"].asInt();
     } else {
         msg->code = 1001;
@@ -135,7 +135,7 @@ bool PrivSession::start_preview(MessagePtr &msg) {
         return false;
     }
 
-    if (msg->data.isMember("sub_channel") && msg->data["sub_channel"].isInt()){
+    if (msg->data.isMember("sub_channel") && msg->data["sub_channel"].isInt()) {
         sub_channel = msg->data["sub_channel"].asInt();
     } else {
         msg->code = 1001;
@@ -182,7 +182,7 @@ bool PrivSession::stop_preview(MessagePtr &msg) {
     if (msg->data.isMember("channel") && msg->data["channel"].isInt()){
         channel = msg->data["channel"].asInt();
     } else{
-        msg->code = 1001;msg->message = "param channelNo error";
+        msg->code = 1001;msg->message = "param channel error";
         return false;
     }
 
