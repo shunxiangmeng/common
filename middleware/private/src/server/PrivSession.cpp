@@ -11,6 +11,7 @@
 #include "PrivEventManager.h"
 #include "infra/include/Timestamp.h"
 #include "infra/include/Logger.h"
+#include "infra/include/thread/WorkThreadPool.h"
 
 PrivSession::PrivSession(IPrivSessionManager *manager, const char* name, uint32_t sessionId, RPCServer *rpc_server):
     PrivSessionBase(nullptr, name, sessionId, rpc_server), mSessionManager(manager), mStreamAlive(false), mSmartEventTimer("test") {
@@ -456,4 +457,14 @@ void PrivSession::closeSession() {
     ///删除所有子会话
     mSubSessionMap.clear();
     //close();
+}
+
+void PrivSession::onDisconnect() {
+    tracef("onDisconnect+++\n");
+    infra::WorkThreadPool::instance()->async([&] () {
+        PrivSession::closeSession();
+        if (mSessionManager) {
+            mSessionManager->remove(this->getSessionId());
+        }
+    });
 }

@@ -114,6 +114,8 @@ private:
      */
     void subSessionSendFailed(std::string error);
 
+    virtual void onDisconnect() override;
+
 private:
     bool call(std::string key, MessagePtr &message);
 

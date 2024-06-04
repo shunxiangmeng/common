@@ -64,7 +64,7 @@ bool PrivSubSession::setCallback(CallbackSignal::Proc proc) {
 }
 
 void PrivSubSession::onData(MediaFrameType type, MediaFrame &frame){
-    tracef("onData index:%d, size:%4d, pts:%lld\n", type, frame.size(), frame.dts());
+    //tracef("onData index:%d, size:%4d, pts:%lld\n", type, frame.size(), frame.dts());
     if (mSessionBase == nullptr) {
         return;
     }

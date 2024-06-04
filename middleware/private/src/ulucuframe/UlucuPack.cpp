@@ -111,7 +111,7 @@ int32_t UlucuPack::putAudio(MediaFrame &frame) {
         return -1;
     }
 
-    uint32_t reserveLen = 0;//ULUCU_PROTOCL_HEAD_LEN;
+    uint32_t reserveLen = sizeof(PrivateDataHead);
     uint32_t frameLen = frame.size() + reserveLen;
     frameLen += sizeof(UlucuFrameHead) + sizeof(UlucuAudioExHead);
 
