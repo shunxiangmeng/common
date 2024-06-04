@@ -69,6 +69,7 @@ private:
 
     void process(infra::Buffer &buffer);
     void process(std::shared_ptr<Message> &request);
+    void onResponse(std::shared_ptr<Message> &request);
 
     void processRpc(infra::Buffer &buffer);
 
