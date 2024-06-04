@@ -206,5 +206,90 @@ int8_t UlucuPack::audioSample(uint32_t sample) {
 
 MediaFrame UlucuPack::getMediaFrameFromBuffer(const char* buffer, int32_t size) {
     MediaFrame frame;
+    if (size < sizeof(UlucuFrameHead)) {
+        errorf("frame size is too small\n");
+        return frame;
+    }
+
+    UlucuFrameHead* head = (UlucuFrameHead*)buffer;
+    if (head->tag[0] != '#' || head->tag[1] != '#') {
+        errorf("tag error\n");
+        return MediaFrame();
+    }
+    uint8_t type = head->type;
+    if (type == videoFrame) {
+        frame.setMediaFrameType(Video);
+    } else if (type == audioFrame) {
+        frame.setMediaFrameType(Audio);
+    } else if (type == watermark) {
+        errorf("not impl watermark frame\n");
+        return frame;
+    } else {
+        errorf("unknown type %d\n", type);
+        return frame;
+    }
+
+    frame.setPts(head->pts);
+    frame.setDts(head->pts + head->dts);
+
+    uint8_t sub_type = head->subType;
+    if (type == 'V' && sub_type == 'I') {
+        UlucuVideoExHead* ex_head = (UlucuVideoExHead*)(buffer + sizeof(UlucuFrameHead));
+        VideoFrameInfo info;
+        if (ex_head->encode == unibVideoCodecH264) {
+            info.codec = H264;
+        } else if (ex_head->encode == unibVideoCodecH265) {
+            info.codec = H265;
+        } else {
+            errorf("unsupport video codec %d\n", ex_head->encode);
+            return frame;
+        }
+        info.type = VideoFrame_I;
+        info.width = ex_head->width;
+        info.height = ex_head->height;
+        frame.setVideoFrameInfo(info);
+    } else if (type == 'A') {
+        UlucuAudioExHead* ex_head = (UlucuAudioExHead*)(buffer + sizeof(UlucuFrameHead));
+        AudioFrameInfo info;
+        switch (ex_head->encode) {
+            case unibAudioCodecPCM:   info.codec = PCM; break;
+            case unibAudioCodecG711a: info.codec = G711a; break;
+            case unibAudioCodecG711u: info.codec = G711u; break;
+            case unibAudioCodecG726:  info.codec = G726; break;
+            case unibAudioCodecAAC:   info.codec = AAC; break;
+            default:
+                errorf("unsupport audio codec %d\n", ex_head->encode);
+                return frame;
+        }
+        
+        switch (ex_head->rate) {
+            case unibSample4000: info.sample_rate = 4000; break;
+            case unibSample8000: info.sample_rate = 8000; break;
+            case unibSample11025: info.sample_rate = 11025; break;
+            case unibSample16000: info.sample_rate = 16000; break;
+            case unibSample20000: info.sample_rate = 20000; break;
+            case unibSample22050: info.sample_rate = 22025; break;
+            case unibSample32000: info.sample_rate = 32000; break;
+            case unibSample44100: info.sample_rate = 44100; break;
+            case unibSample48000: info.sample_rate = 48000; break;
+            case unibSample64000: info.sample_rate = 64000; break;
+            case unibSample96000: info.sample_rate = 96000; break;
+            case unibSample128000: info.sample_rate = 128000; break;
+            case unibSample192000: info.sample_rate = 192000; break;
+            default:
+                errorf("unsupport audio rate %d\n", ex_head->rate);
+                return frame;
+        }
+
+        info.bit_per_sample = ex_head->sampleBit;
+        info.channel_count = ex_head->channel;
+        info.channel = ex_head->track;
+        frame.setAudioFrameInfo(info);
+    }
+    const char* frame_data = buffer + sizeof(UlucuFrameHead) + head->exLength;
+    int32_t frame_data_size = head->payloadLen;
+
+    frame.ensureCapacity(frame_data_size);
+    frame.putData(frame_data, frame_data_size);
     return frame;
 }
