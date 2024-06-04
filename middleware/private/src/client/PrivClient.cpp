@@ -133,6 +133,8 @@ int32_t PrivClient::onRead(int32_t fd) {
         } else if (common_header.magic == MAGIC_PRIV) {
             frame_len = infra::ntohl(common_header.body_len);
             frame_len += sizeof(PrivateDataHead);
+        } else {
+            warnf("unknown magic 0x%08x\n", common_header.magic);
         }
 
         infra::Buffer buffer(frame_len);
@@ -305,8 +307,8 @@ bool PrivClient::startPreview(int32_t channel, int32_t sub_channel, OnFrameProc 
 bool PrivClient::stopPreview(OnFrameProc onframe) {
     Json::Value root;
     root["method"] = "stop_preview";
-    //root["data"]["channel"] = channel;
-    //root["data"]["sub_channel"] = sub_channel;
+    root["data"]["channel"] = preview_channel_;
+    root["data"]["sub_channel"] = preview_sub_channel_;
     if (!syncRequest(root).success()) {
         errorf("stop preview failed\n");
         return false;
