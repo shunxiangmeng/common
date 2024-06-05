@@ -28,6 +28,11 @@ public:
      */
     UlucuFrame& setSequence(uint32_t seq);
     /**
+     * @brief 获取帧序号
+     * @param[out] seq 帧序号，视频和音频的序号单独计算
+     */
+    UlucuFrame& getSequence(uint32_t &seq);
+    /**
      * @brief 设置UTC时间戳
      * @param[in] dts utc时间，单位是ms
      */
@@ -67,6 +72,11 @@ public:
      * @param[in] info
      */
     UlucuFrame& setVideoInfo(const VFrameInfo &info);
+    /**
+     * @brief 设置视频编码类型，只有I帧才调用这个函数，P帧B帧可以不用调用
+     * @param[in] info
+     */
+    UlucuFrame& getVideoInfo(const VFrameInfo &info);
     /**
      * @brief 设置音频编码类型
      * @param[in] info

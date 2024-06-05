@@ -35,6 +35,14 @@ UlucuFrame& UlucuFrame::setSequence(uint32_t seq) {
     return *this;
 }
 
+UlucuFrame& UlucuFrame::getSequence(uint32_t &seq) {
+    if (mBuffer == nullptr) {
+        return *this;
+    }
+    UlucuFrameHead *head = reinterpret_cast<UlucuFrameHead*>(mBuffer);
+    return *this;
+}
+
 UlucuFrame& UlucuFrame::setDtsPts(uint64_t dts, uint64_t pts) {
     if (mBuffer == nullptr) {
         return *this;
@@ -175,10 +183,6 @@ uint32_t UlucuFrame::makeFrame(uint8_t *buffer, uint32_t len, bool avcchvcc) {
         head->exLength = sizeof(UlucuAudioExHead);
         to += sizeof(UlucuAudioExHead);
         total += sizeof(UlucuAudioExHead);
-    }
-
-    if (len > 50000) {
-        len = len;
     }
 
     memcpy(to, buffer, len);

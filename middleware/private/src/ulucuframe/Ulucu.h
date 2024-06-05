@@ -20,8 +20,8 @@
  */
 typedef struct {
     uint8_t         tag[2];              /**"##" */
-    uint8_t         type;                /** @see UNIBType */
-    uint8_t         subType;             /** 子类型 */
+    uint8_t         type;                /** @see UlucuFrameType */
+    uint8_t         subType;             /** 子类型 video: I P B*/
     uint32_t        payloadLen;          /** 负载长度 */
     uint64_t        dts;                 /** dts UTC时间，单位ms */
     uint16_t        pts;                 /** pts相对dts的偏移值,B帧才需要 */
@@ -48,7 +48,7 @@ typedef struct {
     uint8_t encode;                     /** 编码 */
     uint8_t track;                      /***/
     uint8_t sampleBit;                  /***/
-    uint8_t rate;                       /***/
+    uint8_t rate;                       /** @UlucuAudioSample */
     uint8_t channel;                    /***/
     uint8_t res[2];                     /***/
 } UlucuAudioExHead;
@@ -57,7 +57,7 @@ typedef struct {
  * @brief video frame info
  */
 typedef struct {
-    uint8_t         encode;            /** 编码类型 */
+    uint8_t         encode;            /** 编码类型 @UlucuVideoCodec */
     uint8_t         type;              /**'I'/'P'/'B'*/
     uint16_t        width;             /** 视频宽 */
     uint16_t        height;            /** 视频高 */
@@ -69,10 +69,10 @@ typedef struct {
  * @brief audio frame info
  */
 typedef struct {
-    uint8_t         encode;             /** 编码类型 */
+    uint8_t         encode;             /** 编码类型 @UlucuAudioCodec */
     uint8_t         track;              /** 编码通道 */
     uint8_t         sampleBit;          /** 编码位数 */
-    uint8_t         rate;               /** 采样率 */
+    uint8_t         rate;               /** 采样率 @UlucuAudioSample */
     uint8_t         channel;            /** 声道 */
 } AFrameInfo;
 

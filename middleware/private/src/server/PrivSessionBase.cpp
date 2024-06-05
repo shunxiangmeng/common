@@ -350,14 +350,14 @@ int32_t PrivSessionBase::sendStream(const char* data, int32_t dataLen, int32_t r
         head->flag = 0x80;
         head->type = 0x01;                       ///媒体数据
         head->encrypt  = 0x00;
-        head->sequence  = infra::htons(mSequence++);    ///转网络字节序
+        head->sequence  = infra::htonl(mSequence++);    ///转网络字节序
         head->session_id = infra::htonl(mSessionId);
         head->body_len  = infra::htonl(dataLen - reserve);
     } else {
-        //errorf("reserve(%d) != sizeof(PrivateDataHead)(%d)\n", reserve, sizeof(PrivateDataHead));
+        errorf("reserve(%d) != sizeof(PrivateDataHead)(%d)\n", reserve, sizeof(PrivateDataHead));
     }
 
-    if (mProxy){
+    if (mProxy) {
         return mProxy->sendData(data, dataLen);
     }
 

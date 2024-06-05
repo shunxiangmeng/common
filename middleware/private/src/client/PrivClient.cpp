@@ -69,8 +69,7 @@ std::shared_ptr<Message> PrivClient::parse() {
 
 void PrivClient::process(std::shared_ptr<Message> &message) {
     if (message->isResponse) {
-        uint32_t sequence = message->sequence;
-        warnf("deal response, sequence:%d\n", sequence);  ///应答暂时不处理
+        onResponse(message);
         return;
     }
     if (message->isMediaData) {
@@ -86,6 +85,22 @@ void PrivClient::process(infra::Buffer &buffer) {
     }
 }
 
+void PrivClient::onResponse(std::shared_ptr<Message> &message) {
+    uint32_t sequence = message->sequence;
+    std::lock_guard<std::recursive_mutex> lock(future_map_mutex_);
+    auto it = future_map_.find(sequence);
+    if (it != future_map_.end()) {
+
+        CallResult result;
+        result.error_code = PrivErrorCode::SUCCESS;
+        result.error_message = message->message;
+        result.data = message->data;
+
+        auto& f = future_map_[sequence];
+        f->set_value(std::move(result));
+        future_map_.erase(it);
+    }
+}
 
 void PrivClient::onMediaFrame(std::shared_ptr<Message> &message) {
     MediaFrame frame = UlucuPack::getMediaFrameFromBuffer(message->mediaData, message->mediaDataLen);
@@ -118,6 +133,8 @@ int32_t PrivClient::onRead(int32_t fd) {
         } else if (common_header.magic == MAGIC_PRIV) {
             frame_len = infra::ntohl(common_header.body_len);
             frame_len += sizeof(PrivateDataHead);
+        } else {
+            warnf("unknown magic 0x%08x\n", common_header.magic);
         }
 
         infra::Buffer buffer(frame_len);
@@ -271,8 +288,8 @@ void PrivClient::processRpc(infra::Buffer &buffer) {
 bool PrivClient::startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) {
     Json::Value root;
     root["method"] = "start_preview";
-    root["channel"] = channel;
-    root["sub_channel"] = sub_channel;
+    root["data"]["channel"] = channel;
+    root["data"]["sub_channel"] = sub_channel;
     if (!syncRequest(root).success()) {
         errorf("start preview failed\n");
         return false;
@@ -290,8 +307,8 @@ bool PrivClient::startPreview(int32_t channel, int32_t sub_channel, OnFrameProc 
 bool PrivClient::stopPreview(OnFrameProc onframe) {
     Json::Value root;
     root["method"] = "stop_preview";
-    //root["channel"] = channel;
-    //root["sub_channel"] = sub_channel;
+    root["data"]["channel"] = preview_channel_;
+    root["data"]["sub_channel"] = preview_sub_channel_;
     if (!syncRequest(root).success()) {
         errorf("stop preview failed\n");
         return false;
