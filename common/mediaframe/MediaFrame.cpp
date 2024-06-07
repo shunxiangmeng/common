@@ -76,6 +76,39 @@ MediaFrame& MediaFrame::setPlacementType(PlacementType placement) {
     return *this;
 }
 
+static int32_t toLittleEndian(int32_t value) {
+    int32_t little = 0;
+    uint8_t* p = (uint8_t*)&little;
+    p[0] = value >> 24;
+    p[1] = value >> 16;
+    p[2] = value >> 8;
+    p[3] = value;
+    return little;
+}
+
+MediaFrame& MediaFrame::convertPlacementTypeToAnnexb() {
+    const int32_t nalu_delimiter_len = 4;
+    if (minternal_ && minternal_->placement != Annexb && size() > nalu_delimiter_len) {
+        char* buffer = data();
+        int32_t remaind_len = size();
+        int32_t pos = 0;
+        do {
+            char* tmp = buffer + pos;
+            int32_t* p_nalu_len = (int32_t*)(buffer + pos);
+            int32_t nalu_len = toLittleEndian(*p_nalu_len);
+
+            tmp[0] = 0x00;
+            tmp[1] = 0x00;
+            tmp[2] = 0x00;
+            tmp[3] = 0x01;
+
+            pos += nalu_delimiter_len + nalu_len;
+            remaind_len -= (nalu_delimiter_len + nalu_len);
+        } while (remaind_len > nalu_delimiter_len);
+    }
+    return *this;
+}
+
 MediaFrame& MediaFrame::setVideoFrameInfo(VideoFrameInfo &info) {
     if (minternal_) {
         minternal_->video_info = info;
