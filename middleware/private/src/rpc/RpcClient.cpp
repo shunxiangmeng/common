@@ -47,9 +47,9 @@ future_result<req_result> RPCClient::doAsyncCall(const std::string &rpc_name, ms
     return future_result<req_result>{fu_id, std::move(future)};
 }
 
-void RPCClient::processResponse(infra::Buffer &buffer) {
-    rpc_header *header = (rpc_header*)buffer.data();
-    std::string result(buffer.data() + sizeof(rpc_header), buffer.size() - sizeof(rpc_header));
+void RPCClient::processResponse(const char* buffer, int32_t size) {
+    rpc_header *header = (rpc_header*)buffer;
+    std::string result(buffer + sizeof(rpc_header), size - sizeof(rpc_header));
 
     std::unique_lock<std::mutex> lock(cb_mtx_);
     auto it = future_map_.find(header->req_id);

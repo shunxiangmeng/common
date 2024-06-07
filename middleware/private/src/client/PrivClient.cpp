@@ -18,7 +18,7 @@ std::shared_ptr<IPrivClient> IPrivClient::create() {
     return ptr;
 }
 
-PrivClient::PrivClient() : buffer_(8 * 1024), rpc_client_(this) {
+PrivClient::PrivClient() : buffer_(32 * 1024), rpc_client_(this) {
 }
 
 PrivClient::~PrivClient() {
@@ -77,9 +77,9 @@ void PrivClient::process(std::shared_ptr<Message> &message) {
     }
 }
 
-void PrivClient::process(infra::Buffer &buffer) {
+void PrivClient::process(const char* buffer, int32_t size) {
     int32_t used_len = 0;
-    std::shared_ptr<Message> message = parseBuffer(buffer.data(), buffer.size(), used_len);
+    std::shared_ptr<Message> message = parseBuffer(buffer, size, used_len);
     if (message) {
         process(message);
     }
@@ -110,6 +110,7 @@ void PrivClient::onMediaFrame(std::shared_ptr<Message> &message) {
     media_signal_(frame.getMediaFrameType(), frame);
 }
 
+#if 0
 int32_t PrivClient::onRead(int32_t fd) {
     do {
         CommonHeader common_header;
@@ -159,6 +160,92 @@ int32_t PrivClient::onRead(int32_t fd) {
             process(buffer);
         }
     } while (true);
+    return 0;
+}
+#endif
+
+bool PrivClient::ensureRead(int32_t &readed_size) {
+    char *to_read_buffer = buffer_.data() + buffer_.size();
+    int32_t to_read_length = buffer_.leftSize();
+    int32_t ret = sock_->recv(to_read_buffer, to_read_length);
+    if (ret < 0) {
+        warnf("socket disconnect\n");
+        return false;
+    }
+    if (ret >= 0 && ret < to_read_length) {
+        buffer_.setSize(buffer_.size() + ret);
+        readed_size += ret;
+        return true;
+    }
+    buffer_.setSize(buffer_.size() + ret);
+    readed_size += ret;
+
+    // 2倍扩容
+    int32_t to_expend_size = buffer_.capacity() * 2;
+    if (to_expend_size > 2 * 1024 * 1024) {
+        warnf("expand buffer size to %d error\n", to_expend_size);
+        return false;
+    }
+    warnf("expand buffer size to %d\n", to_expend_size);
+    if (!buffer_.ensureCapacity(to_expend_size)) {
+        warnf("expand buffer size to %d error\n", to_expend_size);
+        return false;
+    }
+    return ensureRead(readed_size);
+}
+
+int32_t PrivClient::onRead(int32_t fd) {
+    if (fd != sock_->getHandle()) {
+        errorf("socketFd(%d) != getHandle(%d)\n", fd, sock_->getHandle());
+        return -1;
+    }
+    int32_t readed_size = 0;
+    if (!ensureRead(readed_size)) {
+        errorf("ensureRead failed, readed_size:%d\n", readed_size);
+        onDisconnect();
+        return false;
+    }
+    //infof("readed_size:%d.............\n", readed_size);
+    int32_t used_len = 0;
+    int32_t left_size = buffer_.size();
+    do {
+        char* data = buffer_.data();
+        data += used_len;
+
+        int32_t frame_len = 0;
+        CommonHeader *common_header = (CommonHeader*)data;
+        if (common_header->magic == MAGIC_RPC) {
+            frame_len = common_header->body_len;
+            frame_len += sizeof(rpc_header);
+        } else if (common_header->magic == MAGIC_PRIV) {
+            frame_len = infra::ntohl(common_header->body_len);
+            frame_len += sizeof(PrivateDataHead);
+        } else {
+            warnf("unknown magic 0x%08x, left_size:%d\n", common_header->magic, left_size);
+            frame_len = 1;
+        }
+
+        if (frame_len > left_size) {
+            memcpy(buffer_.data(), data, left_size);
+            //tracef("frame_len %d > left_size %d\n", frame_len, left_size);
+            break;
+        }
+
+        if (common_header->magic == MAGIC_RPC) {
+            processRpc(data, frame_len);
+        } else if (common_header->magic == MAGIC_PRIV) {
+            process(data, frame_len);
+        }
+        used_len += frame_len;
+        left_size -= frame_len;
+
+        if (left_size > 0 && left_size < sizeof(CommonHeader)) {
+            memcpy(buffer_.data(), data, left_size);
+            warnf("left_size %d enough head size %d\n", left_size, sizeof(CommonHeader));
+            break;
+        }
+    } while (left_size > 0);
+    buffer_.resize(left_size);
     return 0;
 }
 
@@ -281,8 +368,8 @@ bool PrivClient::testSyncCall() {
     return true;
 }
 
-void PrivClient::processRpc(infra::Buffer &buffer) {
-    rpc_client_.processResponse(buffer);
+void PrivClient::processRpc(const char* buffer, int32_t size) {
+    rpc_client_.processResponse(buffer, size);
 }
 
 bool PrivClient::startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) {

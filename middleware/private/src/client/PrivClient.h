@@ -56,6 +56,7 @@ public:
 private:
     virtual int32_t onRead(int32_t fd) override;
     virtual int32_t onException(int32_t fd) override;
+    bool ensureRead(int32_t &readed_size);
 
     void onDisconnect();
 
@@ -67,11 +68,11 @@ private:
 
     std::shared_ptr<Message> parse();
 
-    void process(infra::Buffer &buffer);
+    void process(const char* buffer, int32_t size);
     void process(std::shared_ptr<Message> &request);
     void onResponse(std::shared_ptr<Message> &request);
 
-    void processRpc(infra::Buffer &buffer);
+    void processRpc(const char* buffer, int32_t size);
 
     int32_t sendRequest(Json::Value &body);
 
