@@ -87,6 +87,12 @@ public:
     MediaFrame& setPlacementType(PlacementType placement);
 
     /**
+     * @brief 转换存放格式，如果已经是对应的转换格式，则没有任何操作
+     * @param[in] placement @PlacementType
+     */
+    MediaFrame& convertPlacementTypeToAnnexb();
+
+    /**
      * @brief 设置video信息
      * @param[in] info @VideoFrameInfo
      */

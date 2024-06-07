@@ -165,6 +165,7 @@ bool PrivSession::start_preview(MessagePtr &msg) {
 
     if (!sub->startStream(channel, sub_channel)){
         errorf("subSession startStream failed\n");
+        msg->message = "start stream failed\n";
         return false;
     }
 
