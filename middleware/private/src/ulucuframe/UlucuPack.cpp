@@ -233,22 +233,32 @@ MediaFrame UlucuPack::getMediaFrameFromBuffer(const char* buffer, int32_t size) 
     frame.setDts(head->pts + head->dts);
 
     uint8_t sub_type = head->subType;
-    if (type == 'V' && sub_type == 'I') {
-        UlucuVideoExHead* ex_head = (UlucuVideoExHead*)(buffer + sizeof(UlucuFrameHead));
+    if (type == videoFrame) {
         VideoFrameInfo info;
-        if (ex_head->encode == unibVideoCodecH264) {
-            info.codec = H264;
-        } else if (ex_head->encode == unibVideoCodecH265) {
-            info.codec = H265;
+        if (sub_type == 'I') {
+            UlucuVideoExHead* ex_head = (UlucuVideoExHead*)(buffer + sizeof(UlucuFrameHead));
+            if (ex_head->encode == unibVideoCodecH264) {
+                info.codec = H264;
+            } else if (ex_head->encode == unibVideoCodecH265) {
+                info.codec = H265;
+            } else {
+                errorf("unsupport video codec %d\n", ex_head->encode);
+                return frame;
+            }
+            info.type = VideoFrame_I;
+            info.width = ex_head->width;
+            info.height = ex_head->height;
+        } else if (sub_type == 'B') {
+            info.type = VideoFrame_B;
+            info.width = -1;
+            info.height = -1;
         } else {
-            errorf("unsupport video codec %d\n", ex_head->encode);
-            return frame;
+            info.type = VideoFrame_P;
+            info.width = -1;
+            info.height = -1;
         }
-        info.type = VideoFrame_I;
-        info.width = ex_head->width;
-        info.height = ex_head->height;
         frame.setVideoFrameInfo(info);
-    } else if (type == 'A') {
+    } else if (type == audioFrame) {
         UlucuAudioExHead* ex_head = (UlucuAudioExHead*)(buffer + sizeof(UlucuFrameHead));
         AudioFrameInfo info;
         switch (ex_head->encode) {
@@ -291,5 +301,14 @@ MediaFrame UlucuPack::getMediaFrameFromBuffer(const char* buffer, int32_t size) 
 
     frame.ensureCapacity(frame_data_size);
     frame.putData(frame_data, frame_data_size);
+
+    if (type == videoFrame) {
+        if (frame_data[0] == 0x00 && frame_data[1] == 0x00 && frame_data[2] == 0x00 && frame_data[3] == 0x01) {
+            frame.setPlacementType(Annexb);
+        } else {
+            frame.setPlacementType(AvccHvcc);
+        }
+    }
+
     return frame;
 }
