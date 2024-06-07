@@ -51,7 +51,7 @@ bool Buffer::ensureCapacity(int32_t capacity) {
         int32_t old_data_size = 0;
         int32_t old_real_capacity = 0;
         if (internal_) {
-            std::shared_ptr<char[]> buffer_temp = internal_->buffer;
+            buffer_temp = internal_->buffer;
             old_data_size = internal_->size;
             old_real_capacity = internal_->real_capacity;
         }
@@ -67,6 +67,7 @@ bool Buffer::ensureCapacity(int32_t capacity) {
         if (old_data_size) {
             infof("buffer extention memory from %d to %d\n", old_data_size, capacity);
             memcpy(internal_->buffer.get(), buffer_temp.get(), old_data_size);
+            resize(old_data_size);
         }
 
         BufferMemoryStatistic::instance()->increase(internal_->real_capacity - old_real_capacity);

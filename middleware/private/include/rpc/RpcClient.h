@@ -55,7 +55,7 @@ private:
     RPCClient(PrivClient *client);
     ~RPCClient();
 
-    void processResponse(infra::Buffer &buffer);
+    void processResponse(const char* buffer, int32_t size);
     future_result<req_result> doAsyncCall(const std::string &rpc_name, msgpack::sbuffer& sbuffer);
 
 private:
