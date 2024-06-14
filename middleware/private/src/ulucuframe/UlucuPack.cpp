@@ -229,8 +229,8 @@ MediaFrame UlucuPack::getMediaFrameFromBuffer(const char* buffer, int32_t size) 
         return frame;
     }
 
-    frame.setPts(head->pts);
-    frame.setDts(head->pts + head->dts);
+    frame.setPts(head->dts + head->pts);
+    frame.setDts(head->dts);
 
     uint8_t sub_type = head->subType;
     if (type == videoFrame) {
