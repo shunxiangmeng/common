@@ -189,7 +189,7 @@ private:
     IPrivSessionProxy                   *mProxy;                  ///代理
 
     std::shared_ptr<infra::TcpSocket>   mSock;
-    std::mutex                       mSendMutex;               ///发送锁，防止多线程发送给，导致协议错乱   
+    std::timed_mutex                    mSendMutex;               ///发送锁，防止多线程发送，导致协议错乱
 
 protected:
     RPCServer *const rpc_server_;

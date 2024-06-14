@@ -17,6 +17,7 @@ PrivSubSession::PrivSubSession(PrivSessionBase *master,const char* name, uint32_
         errorf("private base session is nullptr\n");
     }
     ulucu_packager_ = std::make_shared<UlucuPack>();
+    to_send_meidaframe_list_ = std::make_shared<MediaFrameList>();
 }
 
 PrivSubSession::~PrivSubSession() {
@@ -75,14 +76,50 @@ void PrivSubSession::onData(MediaFrameType type, MediaFrame &frame){
     ulucu_packager_->putPacket(type, frame);
     MediaFrame outframe;
     if (ulucu_packager_->getPacket(type, outframe)) {
-        int32_t ret = mSessionBase->sendStream((const char*)outframe.data(), outframe.size(), outframe.reserve());
-        if (ret < 0) {
-            errorf("onData send failed ret:%d\n", ret);
-            if (!mCallback.empty()) {
-                mCallback("send error");
-            }
-            mStreaming = false;
+        to_send_meidaframe_list_->push_back(outframe);
+        //tracef("to_send_meidaframe_list_.size();%d\n", to_send_meidaframe_list_->size());
+
+        if (!stream_send_taskexcutor_) {
+            stream_send_taskexcutor_ = infra::WorkThreadPool::instance()->getExecutor();
         }
+
+        /* 保证数据的顺序发送，发送任务都压入同一个线程 */
+        stream_send_taskexcutor_->postTask([this] () {
+            do {
+                MediaFrame to_send_frame = to_send_meidaframe_list_->front();
+                if (to_send_frame.empty()) {
+                    return;
+                }
+
+                int32_t ret = mSessionBase->sendStream((const char*)to_send_frame.data(), to_send_frame.size(), to_send_frame.reserve());
+                if (ret < 0) {
+                    errorf("onData send failed ret:%d\n", ret);
+                    if (!mCallback.empty()) {
+                        mCallback("send error");
+                    }
+                    mStreaming = false;
+                    return;
+                } else if (ret > 0) {
+                    to_send_meidaframe_list_->pop_front();
+                }
+
+                const int32_t list_max_frame = 200;
+                // socket is blocked or the network is too show 
+                if (to_send_meidaframe_list_->size() > list_max_frame) {
+                    warnf("to_send_meidaframe_list_.size:%d > %d\n", to_send_meidaframe_list_->size(), list_max_frame);
+                    int32_t discard_frame_count = 0;
+                    do {
+                        MediaFrame frame = to_send_meidaframe_list_->front();
+                        if (discard_frame_count != 0 && frame.isKeyFrame()) {
+                            break;
+                        }
+                        to_send_meidaframe_list_->pop_front();
+                        discard_frame_count++;
+                    } while (to_send_meidaframe_list_->size() > 0);
+                    warnf("discard_frame:%d\n", discard_frame_count);
+                }
+            } while (to_send_meidaframe_list_->size() > 0);
+        });
     }
 }
 

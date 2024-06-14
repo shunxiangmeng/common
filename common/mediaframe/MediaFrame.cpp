@@ -44,6 +44,10 @@ void MediaFrame::reset() {
     internal_.reset();
 }
 
+bool MediaFrame::isKeyFrame() const {
+    return minternal_ && minternal_->type == Video && minternal_->video_info.type == VideoFrame_I;
+}
+
 bool MediaFrame::ensureCapacity(int32_t capacity) {
     return infra::Buffer::ensureCapacity(capacity);
 }

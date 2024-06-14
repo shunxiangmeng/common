@@ -7,6 +7,7 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
+#include <chrono>
 #include "jsoncpp/include/json.h"
 #include "PrivSessionBase.h"
 #include "PrivSessionManager.h"
@@ -342,7 +343,10 @@ void PrivSessionBase::process(MessagePtr &request){
 }
 
 int32_t PrivSessionBase::sendStream(const char* data, int32_t dataLen, int32_t reserve) {
-    std::lock_guard<std::mutex> guard(mSendMutex);
+    if (!mSendMutex.try_lock_for(std::chrono::milliseconds(10))) {
+        warnf("sendstream timeout\n");
+        return 0;
+    }
     if (reserve == sizeof(PrivateDataHead)) {  ///填充头
         PrivateDataHead *head = reinterpret_cast<PrivateDataHead*>((char*)data);
         head->magic = MAGIC_PRIV;
@@ -358,38 +362,47 @@ int32_t PrivSessionBase::sendStream(const char* data, int32_t dataLen, int32_t r
     }
 
     if (mProxy) {
-        return mProxy->sendData(data, dataLen);
+        int32_t ret = mProxy->sendData(data, dataLen);
+        mSendMutex.unlock();
+        return ret;
     }
 
     int32_t sendLen = 0;
     int32_t toSendLen = dataLen;
-
+    int32_t try_count = 0;
     do {
         int32_t len = send(data, toSendLen);
         if (len < 0){
             errorf("send len %d error\n", toSendLen);
             break;
         } else if (len == 0) {
-            warnf("send len = 0\n");
+            try_count++;
+            if (try_count >= 10) {
+                warnf("sendlen = 0, try_count:%d, sendlen:%d, dataLen:%d\n", try_count, sendLen, dataLen);
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
-
         toSendLen -= len;
         sendLen += len;
-    } while (toSendLen > 0);
-
+    } while (toSendLen > 0 && try_count < 10);
+    mSendMutex.unlock();
     return sendLen;
 }
 
 int32_t PrivSessionBase::sendRequest(Json::Value &body) {
-    std::lock_guard<std::mutex> guard(mSendMutex);
+    if (!mSendMutex.try_lock_for(std::chrono::milliseconds(100))) {
+        warnf("sendRequest timeout\n");
+        return -1;
+    }
     std::string data = body.toStyledString();
     uint32_t dataLen = (uint32_t)data.length();
     uint32_t bufferLen = (uint32_t)data.length() + sizeof(PrivateDataHead);
     std::shared_ptr<uint8_t> buffer(new uint8_t[bufferLen]);
     if (buffer.get() == nullptr) {
+        mSendMutex.unlock();
         return -1;
     }
+    int32_t ret = 0;
     PrivateDataHead *head = reinterpret_cast<PrivateDataHead*>((char*)buffer.get());
     head->magic = MAGIC_PRIV;
     head->version = 0x10;
@@ -401,8 +414,10 @@ int32_t PrivSessionBase::sendRequest(Json::Value &body) {
     head->body_len  = infra::htonl(dataLen);
     memcpy((char*)buffer.get() + sizeof(PrivateDataHead), data.c_str(), dataLen);
     if (mProxy) {
-        return mProxy->sendData((const char*)buffer.get(), bufferLen);
+        ret = mProxy->sendData((const char*)buffer.get(), bufferLen);
     } else {
-        return sendCommand((const char*)buffer.get(), bufferLen);
+        ret =  sendCommand((const char*)buffer.get(), bufferLen);
     }
+    mSendMutex.unlock();
+    return ret;
 }

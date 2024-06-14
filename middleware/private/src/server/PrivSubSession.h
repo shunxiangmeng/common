@@ -14,6 +14,8 @@
 #include "stream/mediasession/MediaSession.h"
 #include "infra/include/Signal.h"
 #include "../ulucuframe/UlucuPack.h"
+#include "common/mediaframe/MediaFrameList.h"
+#include "infra/include/thread/WorkThreadPool.h"
 
 class PrivSubSession {
     friend class PrivSession;
@@ -89,6 +91,9 @@ private:
     CallbackSignal::Proc            mCallback;
 
     std::shared_ptr<UlucuPack>  ulucu_packager_;
+    std::shared_ptr<MediaFrameList> to_send_meidaframe_list_;
+    std::shared_ptr<infra::TaskExecutor> stream_send_taskexcutor_;
+
 };
 
 typedef std::shared_ptr<PrivSubSession>    PrivSubSessionPtr;

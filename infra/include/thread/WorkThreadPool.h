@@ -33,11 +33,11 @@ public:
      */
     std::vector<int> getThreadLoad();
 
+    std::shared_ptr<TaskExecutor> getExecutor();
+
 private:
     WorkThreadPool();
     ~WorkThreadPool();
-
-    std::shared_ptr<TaskExecutor> getExecutor();
 
 private:
     //std::map<std::thread::id, Thread> threads_;
