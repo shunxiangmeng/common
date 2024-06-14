@@ -17,6 +17,19 @@ int64_t getCurrentTimeMs() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+std::string getCurrentTime() {
+    //auto now = std::chrono::high_resolution_clock::now();
+    //std::time_t now_c = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    //return std::ctime(&now_c);
+    time_t now = time(NULL);
+    struct tm* local;
+    //local = std::gmtime(&now);  utc time
+    local = localtime(&now);
+    char time_str[128];
+    size_t size = strftime(time_str, sizeof(time_str), "%Y-%m-%d %X", local);
+    return std::string(time_str);
+}
+
 NtpTime convertTimestampToNtpTime(Timestamp timestamp) {
     int64_t now_us = timestamp.micros();
     uint32_t seconds = (uint32_t)(now_us / 1000000) + kNtpJan1970;
