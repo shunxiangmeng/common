@@ -51,6 +51,8 @@ bool OacServer::start(int32_t sub_channel, int32_t image_count) {
 
     initServerMethod();
 
+    IPrivServer::instance()->addSubscribeEvent("detect_target");
+
     return infra::Thread::start();
 }
 
@@ -83,7 +85,7 @@ void OacServer::run() {
         image->shared_picture->frame_number = video_image.frame_number;
         image->shared_picture->empty = false;
         image->shared_picture->busy = false;
-        warnf("write index:%d, pts:%lld\n", image->shared_picture->index, image->shared_picture->timestamp);
+        //warnf("write index:%d, pts:%lld\n", image->shared_picture->index, image->shared_picture->timestamp);
         image->release();
 
 
@@ -120,6 +122,7 @@ SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {
 
 void OacServer::onCurrentDetectTarget(rpc_conn wptr, std::string json_data) {
     tracef("onCurrentDetectTarget:%s\n", json_data.data());
+    IPrivServer::instance()->sendEvent("detect_target", json_data);
 }
 
 }

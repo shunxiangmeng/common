@@ -91,7 +91,7 @@ bool ImageManager::init(SharedImageInfo& info) {
 
 std::shared_ptr<SharedImage> ImageManager::getWriteSharedImage() {
     auto image = shared_images_[shared_memory_data_->write_index];
-    tracef("get write index:%d, shared_index:%d\n", shared_memory_data_->write_index, image->shared_picture->index);
+    //tracef("get write index:%d, shared_index:%d\n", shared_memory_data_->write_index, image->shared_picture->index);
     shared_memory_data_->write_index++;
     if (shared_memory_data_->write_index >= shared_memory_data_->picture_sum) {
         shared_memory_data_->write_index = 0;
