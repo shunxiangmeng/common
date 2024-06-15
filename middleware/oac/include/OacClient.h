@@ -9,6 +9,7 @@
  ************************************************************************/
 #pragma once
 #include <stdint.h>
+#include <vector>
 #include "hal/Defines.h"
 
 namespace oac {
@@ -26,6 +27,23 @@ struct ImageFrame {
     uint8_t* data;
 };
 
+typedef struct {
+    float x;      //0-1
+    float y;      //0-1
+    float w;
+    float h;
+} Rect;
+
+typedef enum {
+    E_TargetType_face,
+    E_TargetType_body
+} TargetType;
+
+typedef struct {
+    TargetType type;
+    uint32_t id;
+    Rect rect;
+} Target;
 
 class IOacClient {
 public:
@@ -36,6 +54,8 @@ public:
 
     virtual bool getImageFrame(ImageFrame& image) = 0;
     virtual bool releaseImageFrame(ImageFrame& image) = 0;   //使用完成之后需要调用此接口释image
+
+    virtual bool pushCurrentDetectTarget(std::vector<Target>& target) = 0;  //推送检测结果，用于视频叠加
 
 };
 

@@ -34,6 +34,7 @@ private:
     //rpc method
     void algInfo(rpc_conn wptr, uint16_t alg_rpc_port);
     SharedImageInfo sharedImageInfo(rpc_conn wptr);
+    void onCurrentDetectTarget(rpc_conn wptr, std::string json_data);
 
 private:
     SharedImageInfo info_;

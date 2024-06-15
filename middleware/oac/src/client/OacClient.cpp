@@ -11,6 +11,7 @@
 #include <chrono>
 #include "OacClient.h"
 #include "infra/include/Logger.h"
+#include "jsoncpp/include/json.h"
 
 namespace oac {
 
@@ -93,5 +94,27 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
     return true;
 }
 
+bool OacClient::pushCurrentDetectTarget(std::vector<Target>& targets) {
+    if (targets.size() == 0) {
+        return false;
+    }
+    Json::Value root = Json::nullValue;
+    for (auto &target: targets) {
+        Json::Value item = Json::nullValue;
+        item["type"] = (int32_t)target.type;
+        item["id"] = target.id;
+        item["x"] = target.rect.x;
+        item["y"] = target.rect.y;
+        item["w"] = target.rect.w;
+        item["h"] = target.rect.h;
+        root.append(item);
+    }
+
+    Json::FastWriter writer;
+    std::string str = writer.write(root);
+    tracef("str:%d, targets:%s\n", str.size(), str.data());
+    rpc_client_.call("on_current_detect_target", std::move(str));
+    return true;
+};
 
 }

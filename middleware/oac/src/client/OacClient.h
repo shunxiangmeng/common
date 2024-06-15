@@ -26,6 +26,7 @@ public:
 
     virtual bool getImageFrame(ImageFrame& image) override;
     virtual bool releaseImageFrame(ImageFrame& image) override;   //使用完成之后需要调用此接口释image
+    virtual bool pushCurrentDetectTarget(std::vector<Target>& target) override; 
 
 private:
     void initRpcServerMethod();
