@@ -244,7 +244,7 @@ public:
   static constexpr UInt64 maxUInt64 = UInt64(-1);
 #endif // defined(JSON_HAS_INT64)
   /// Default precision for real value for string representation.
-  static constexpr UInt defaultRealPrecision = 17;
+  static constexpr UInt defaultRealPrecision = 6;
   // The constant is hard-coded because some compiler have trouble
   // converting Value::maxUInt64 to a double correctly (AIX/xlC).
   // Assumes that UInt64 is a 64 bits integer.

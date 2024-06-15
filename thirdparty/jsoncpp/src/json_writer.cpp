@@ -140,7 +140,7 @@ String valueToString(double value, bool useSpecialFloats,
   while (true) {
     int len = jsoncpp_snprintf(
         &*buffer.begin(), buffer.size(),
-        (precisionType == PrecisionType::significantDigits) ? "%.*g" : "%.*f",
+        (precisionType == PrecisionType::significantDigits) ? "%.*f" : "%.*f",
         precision, value);
     assert(len >= 0);
     auto wouldPrint = static_cast<size_t>(len);
@@ -1237,8 +1237,8 @@ void StreamWriterBuilder::setDefaults(Json::Value* settings) {
   (*settings)["dropNullPlaceholders"] = false;
   (*settings)["useSpecialFloats"] = false;
   (*settings)["emitUTF8"] = false;
-  (*settings)["precision"] = 17;
-  (*settings)["precisionType"] = "significant";
+  (*settings)["precision"] = 6;
+  (*settings)["precisionType"] = "decimal";
   //! [StreamWriterBuilderDefaults]
 }
 
