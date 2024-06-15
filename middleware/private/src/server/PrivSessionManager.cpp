@@ -202,3 +202,16 @@ bool PrivSessionManager::sendEvent(const char* name, const Json::Value &event) {
     }
     return true;
 }
+
+bool PrivSessionManager::sendEvent(const char* name, const std::string &event) {
+    std::lock_guard<std::mutex> guard(session_map_mutex_);
+    for (auto &it : session_map_) {
+        if (it.second) {
+            it.second->sendEvent(name, event);
+        } else {
+            errorf("sessionId:%u it->second is nullptr\n", it.first);
+            return false;
+        }
+    }
+    return true;
+}

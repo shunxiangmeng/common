@@ -45,6 +45,12 @@ typedef struct {
     Rect rect;
 } Target;
 
+typedef struct {
+    uint32_t timestamp;
+    std::vector<Target> targets;
+} CurrentDetectResult;
+
+
 class IOacClient {
 public:
     static IOacClient* instance();
@@ -55,7 +61,7 @@ public:
     virtual bool getImageFrame(ImageFrame& image) = 0;
     virtual bool releaseImageFrame(ImageFrame& image) = 0;   //使用完成之后需要调用此接口释image
 
-    virtual bool pushCurrentDetectTarget(std::vector<Target>& target) = 0;  //推送检测结果，用于视频叠加
+    virtual bool pushCurrentDetectTarget(CurrentDetectResult& current_result) = 0;  //推送检测结果，用于视频叠加
 
 };
 

@@ -302,7 +302,7 @@ bool PrivSession::stopTalkBack(MessagePtr &msg){
 }
 
 //订阅智能事件，当前直接全部订阅
-bool PrivSession::subscribeSmartEvent(MessagePtr &msg) {
+bool PrivSession::subscribeEvent(MessagePtr &msg) {
     if (!msg->data.isMember("event") || !msg->data["event"].isArray()) {
         Json::Value data = Json::nullValue;
         msg->data = data;
@@ -432,7 +432,24 @@ bool PrivSession::sendEvent(const char* name, const Json::Value &event) {
     std::vector<std::string>::iterator it = std::find(mSubscribedEvents.begin(), mSubscribedEvents.end(), name); 
     if (it != mSubscribedEvents.end()) {
         Json::Value data = Json::nullValue;
-        data["method"] = "smartEvent";
+        data["method"] = "smart_event";
+        data["data"] = event;
+        if (this->sendRequest(data) < 0) {
+            errorf("sendRequest error\n");
+        }
+    } else {
+        //debugf("event:%s not subscribe\n", name);
+    }  
+    return true;
+}
+
+bool PrivSession::sendEvent(const char* name, const std::string &event) {
+    std::lock_guard<std::mutex> guard(mSubscribedEventsMtx);
+    std::vector<std::string>::iterator it = std::find(mSubscribedEvents.begin(), mSubscribedEvents.end(), name); 
+    if (it != mSubscribedEvents.end()) {
+        Json::Value data = Json::nullValue;
+        data["method"] = "smart_event";
+        data["name"] = name;
         data["data"] = event;
         if (this->sendRequest(data) < 0) {
             errorf("sendRequest error\n");

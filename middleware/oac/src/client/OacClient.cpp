@@ -94,12 +94,13 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
     return true;
 }
 
-bool OacClient::pushCurrentDetectTarget(std::vector<Target>& targets) {
-    if (targets.size() == 0) {
+bool OacClient::pushCurrentDetectTarget(CurrentDetectResult& result) {
+    if (result.targets.size() == 0) {
         return false;
     }
     Json::Value root = Json::nullValue;
-    for (auto &target: targets) {
+    root["timestamp"] = result.timestamp;
+    for (auto &target: result.targets) {
         Json::Value item = Json::nullValue;
         item["type"] = (int32_t)target.type;
         item["id"] = target.id;
@@ -107,7 +108,7 @@ bool OacClient::pushCurrentDetectTarget(std::vector<Target>& targets) {
         item["y"] = target.rect.y;
         item["w"] = target.rect.w;
         item["h"] = target.rect.h;
-        root.append(item);
+        root["targets"].append(item);
     }
 
     Json::FastWriter writer;

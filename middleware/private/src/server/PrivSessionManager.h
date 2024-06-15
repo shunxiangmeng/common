@@ -66,6 +66,12 @@ public:
      * @param[in] event  json格式的事件
      */
     bool sendEvent(const char* name, const Json::Value &event);
+    /**
+     * @brief 发送事件
+     * @param[in] name  事件名
+     * @param[in] event string格式的事件
+     */
+    bool sendEvent(const char* name, const std::string &event);
 private:
     /**
      * @brief scoket数据输入回调
