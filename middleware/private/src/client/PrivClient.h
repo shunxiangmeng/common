@@ -44,6 +44,7 @@ public:
     virtual bool connect(const char* server_ip, uint16_t server_port) override;
     virtual bool startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) override;
     virtual bool stopPreview(OnFrameProc onframe) override;
+    virtual bool subscribeEvent(const char* event, EventFunction event_callback) override;
 
     virtual bool testSyncCall() override;
 
@@ -70,7 +71,8 @@ private:
 
     void process(const char* buffer, int32_t size);
     void process(std::shared_ptr<Message> &request);
-    void onResponse(std::shared_ptr<Message> &request);
+    void onResponse(std::shared_ptr<Message> &message);
+    void onRequest(std::shared_ptr<Message>& message);
 
     void processRpc(const char* buffer, int32_t size);
 
@@ -81,6 +83,18 @@ private:
 
     infra::Buffer makeRequest(uint32_t sequence, Json::Value &body);
 
+    bool event(std::shared_ptr<Message>& message);
+
+private:
+    void initMethodList();
+    bool call(std::string key, std::shared_ptr<Message>& message);
+
+    template <typename Function, typename Self>
+    void registerMethodFunc(std::string&& key, const Function& f, Self* self) {
+        this->map_invokers_[key] = [f, self](std::shared_ptr<Message>& message) {
+            return (*self.*f)(message);
+        };
+    }
 private:
     std::string server_ip_;
     uint16_t server_port_;
@@ -101,4 +115,6 @@ private:
     int32_t preview_channel_;
     int32_t preview_sub_channel_;
 
+    std::unordered_map<std::string, std::function<bool(std::shared_ptr<Message>&)>> map_invokers_;
+    EventFunction event_callback_;
 };

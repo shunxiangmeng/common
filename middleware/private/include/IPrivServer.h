@@ -8,6 +8,7 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <functional>
 #include "jsoncpp/include/value.h"
 #include "rpc/RpcServer.h"
 

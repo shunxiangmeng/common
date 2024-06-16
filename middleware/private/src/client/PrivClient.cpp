@@ -19,9 +19,28 @@ std::shared_ptr<IPrivClient> IPrivClient::create() {
 }
 
 PrivClient::PrivClient() : buffer_(32 * 1024), rpc_client_(this) {
+    initMethodList();
 }
 
 PrivClient::~PrivClient() {
+}
+
+#define REGISTER_METHOND_FUNC(x) registerMethodFunc(#x, &PrivClient::x, this)
+void PrivClient::initMethodList() {
+    REGISTER_METHOND_FUNC(event);
+}
+
+bool PrivClient::call(std::string key, std::shared_ptr<Message>& message) {
+    auto it = map_invokers_.find(key);
+    if (it == map_invokers_.end()) {
+        message->code = 1;
+        message->message = "not support this method";
+        errorf("not support method:%s\n", message->method.c_str());
+    }
+    else {
+        return it->second(message);
+    }
+    return false;
 }
 
 bool PrivClient::connect(const char* server_ip, uint16_t server_port) {
@@ -68,12 +87,14 @@ std::shared_ptr<Message> PrivClient::parse() {
 
 
 void PrivClient::process(std::shared_ptr<Message> &message) {
-    if (message->isResponse) {
-        onResponse(message);
-        return;
-    }
     if (message->isMediaData) {
         onMediaFrame(message);
+        return;
+    }
+    if (message->isResponse) {
+        onResponse(message);
+    } else {
+        onRequest(message);
     }
 }
 
@@ -90,7 +111,6 @@ void PrivClient::onResponse(std::shared_ptr<Message> &message) {
     std::lock_guard<std::recursive_mutex> lock(future_map_mutex_);
     auto it = future_map_.find(sequence);
     if (it != future_map_.end()) {
-
         CallResult result;
         result.error_code = PrivErrorCode::SUCCESS;
         result.error_message = message->message;
@@ -100,6 +120,11 @@ void PrivClient::onResponse(std::shared_ptr<Message> &message) {
         f->set_value(std::move(result));
         future_map_.erase(it);
     }
+}
+
+void PrivClient::onRequest(std::shared_ptr<Message>& message) {
+    //infof("request method %s\n", message->method.c_str());
+    call(message->method, message);
 }
 
 void PrivClient::onMediaFrame(std::shared_ptr<Message> &message) {
@@ -404,6 +429,25 @@ bool PrivClient::stopPreview(OnFrameProc onframe) {
     if (ret < 0) {
         errorf("media_signal detach failed ret:%d\n", ret);
         return false;
+    }
+    return true;
+}
+
+bool PrivClient::subscribeEvent(const char* event, EventFunction event_callback) {
+    Json::Value root;
+    root["method"] = "subscribe_event";
+    root["data"]["event"].append(event);
+    if (!syncRequest(root).success()) {
+        errorf("stop preview failed\n");
+        return false;
+    }
+    event_callback_ = event_callback;
+    return true;
+}
+
+bool PrivClient::event(std::shared_ptr<Message>& message) {
+    if (event_callback_) {
+        event_callback_(message->data);
     }
     return true;
 }

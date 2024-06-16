@@ -27,30 +27,6 @@ struct ImageFrame {
     uint8_t* data;
 };
 
-typedef struct {
-    float x;      //0-1
-    float y;      //0-1
-    float w;
-    float h;
-} Rect;
-
-typedef enum {
-    E_TargetType_face,
-    E_TargetType_body
-} TargetType;
-
-typedef struct {
-    TargetType type;
-    uint32_t id;
-    Rect rect;
-} Target;
-
-typedef struct {
-    uint32_t timestamp;
-    std::vector<Target> targets;
-} CurrentDetectResult;
-
-
 class IOacClient {
 public:
     static IOacClient* instance();
