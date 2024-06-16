@@ -213,7 +213,7 @@ int32_t PrivSessionBase::send(const char* buffer, int32_t len) {
     return mSock->send(buffer, len);
 }
 
-int32_t PrivSessionBase::sendCommand(const char* data, int32_t dataLen){
+int32_t PrivSessionBase::sendCommand(const char* data, int32_t dataLen) {
     int32_t ret = send(data, dataLen);
     if (ret < 0) {
         errorf("PrivSessionBase::sendCommand failed ret:%d\n", ret);

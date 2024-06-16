@@ -101,7 +101,7 @@ private:
     bool dealVideoConfig(MessagePtr &msg);
     bool startTalkBack(MessagePtr &msg);
     bool stopTalkBack(MessagePtr &msg);
-    bool subscribeEvent(MessagePtr &msg);
+    bool subscribe_event(MessagePtr &msg);
     bool pushSmartEvent();
     bool getChannelStreamType(MessagePtr &msg, int32_t &channel, int32_t &streamType);
 

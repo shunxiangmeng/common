@@ -121,7 +121,7 @@ SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {
 }
 
 void OacServer::onCurrentDetectTarget(rpc_conn wptr, std::string json_data) {
-    tracef("onCurrentDetectTarget:%s\n", json_data.data());
+    //tracef("onCurrentDetectTarget:%s\n", json_data.data());
     IPrivServer::instance()->sendEvent("detect_target", json_data);
 }
 
