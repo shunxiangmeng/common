@@ -44,8 +44,12 @@ bool OacClient::start() {
        errorf("priv_client connect failed\n");
        return false; 
     }
-    SharedImageInfo info = rpc_client_.call<SharedImageInfo>("shared_image_info");
-    if (!image_manager_.init(info)) {
+    infra::optional<SharedImageInfo> info = rpc_client_.call<SharedImageInfo>("shared_image_info");
+    if (!info.has_value()) {
+        errorf("get shared_image_info error\n");
+        return false;
+    }
+    if (!image_manager_.init(*info)) {
         return false;
     }
     rpc_client_.call("on_alg_info", priv_server_port_);

@@ -81,8 +81,7 @@ public:
     template <typename T> T as() {
         if (!success()) {
             std::string err_msg = data_.empty() ? data_ : get_error_msg(data_);
-            //throw std::logic_error(err_msg);
-            return T();
+            throw std::logic_error(err_msg);
         }
         return get_result<T>(data_);
     }
@@ -90,7 +89,7 @@ public:
     void as() {
         if (has_error(data_)) {
             std::string err_msg = data_.empty() ? data_ : get_error_msg(data_);
-            //throw std::logic_error(err_msg);
+            throw std::logic_error(err_msg);
         }
     }
 

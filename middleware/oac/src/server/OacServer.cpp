@@ -109,9 +109,9 @@ void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
             errorf("priv_client connect port:%d failed\n", alg_rpc_port);
             return; 
         }
-        std::string alg_sdk_version = priv_client_->rpcClient().call<std::string>("alg_sdk_version");
-        std::string alg_application_version = priv_client_->rpcClient().call<std::string>("alg_application_version");
-        infof("alg_sdk_version:%s, alg_application_version:%s\n", alg_sdk_version.data(), alg_application_version.data());
+        infra::optional<std::string> alg_sdk_version = priv_client_->rpcClient().call<std::string>("alg_sdk_version");
+        infra::optional<std::string> alg_application_version = priv_client_->rpcClient().call<std::string>("alg_application_version");
+        //infof("alg_sdk_version:%s, alg_application_version:%s\n", *(alg_sdk_version.data()), *(alg_application_version.data()));
     });
 }
 

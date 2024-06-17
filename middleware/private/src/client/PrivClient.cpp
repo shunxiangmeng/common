@@ -384,8 +384,8 @@ bool PrivClient::login() {
 bool PrivClient::testSyncCall() {
     for (int i = 0; i < 2; i++) {
         auto result = rpc_client_.call<std::vector<int32_t>>("echo", 1 + i, 2);
-        printf("result.size():%ld\n", result.size());
-        for (auto& it : result) {
+        printf("result.size():%ld\n", (*result).size());
+        for (auto& it : *result) {
             printf("%ld ", it);
         }
         printf("\n");
