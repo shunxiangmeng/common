@@ -13,7 +13,7 @@
 #include "WebSocket/PrivWebsocketSession.h"
 #include "infra/include/Timestamp.h"
 
-PrivSessionManager::PrivSessionManager(RPCServer* rpc_server) : max_connect_(16), mCloseSessionTimer(0), rpc_server_(rpc_server) {
+PrivSessionManager::PrivSessionManager(RPCServer* rpc_server) : max_connect_(16), session_count_(0), mCloseSessionTimer(0), rpc_server_(rpc_server) {
 }
 
 PrivSessionManager::~PrivSessionManager() {
