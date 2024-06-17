@@ -21,11 +21,13 @@ class OacClient : public IOacClient {
 public:
     static IOacClient* instance();
 
+    virtual bool init(std::weak_ptr<IOacAlg> alg) override;
     virtual bool start() override;
     virtual bool stop() override;
 
     virtual bool getImageFrame(ImageFrame& image) override;
     virtual bool releaseImageFrame(ImageFrame& image) override;   //使用完成之后需要调用此接口释image
+    virtual bool pushDetectRegion(std::vector<DetectRegion>& detect_region) override;
     virtual bool pushCurrentDetectTarget(CurrentDetectResult& result) override; 
 
 private:
@@ -37,6 +39,7 @@ private:
 
 private:
     bool running_;
+    std::weak_ptr<IOacAlg> alg_;
     ImageManager image_manager_;
     std::shared_ptr<IPrivClient> priv_client_;
     RPCClient &rpc_client_;

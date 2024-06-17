@@ -98,6 +98,7 @@ void OacServer::run() {
 void OacServer::initServerMethod() {
     rpc_server_.register_handler("on_alg_info", &OacServer::algInfo, this);
     rpc_server_.register_handler("shared_image_info", &OacServer::sharedImageInfo, this);
+    rpc_server_.register_handler("on_detect_region", &OacServer::onDetectRegion, this);
     rpc_server_.register_handler("on_current_detect_target", &OacServer::onCurrentDetectTarget, this);
 }
 
@@ -118,6 +119,10 @@ void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
 SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {
     tracef("sharedImageInfo+++\n");
     return info_;
+}
+
+void OacServer::onDetectRegion(rpc_conn wptr, std::string detect_region) {
+    tracef("onDetectRegion:%s\n");
 }
 
 void OacServer::onCurrentDetectTarget(rpc_conn wptr, std::string json_data) {

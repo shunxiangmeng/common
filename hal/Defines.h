@@ -40,3 +40,8 @@ typedef struct {
     uint32_t timestamp;
     std::vector<Target> targets;
 } CurrentDetectResult;
+
+typedef struct {
+    uint32_t color;  //rgb888
+    Rect rect;
+} DetectRegion;

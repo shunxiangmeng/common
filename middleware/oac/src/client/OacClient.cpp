@@ -34,6 +34,11 @@ OacClient::OacClient()
 OacClient::~OacClient() {
 }
 
+bool OacClient::init(std::weak_ptr<IOacAlg> alg) {
+    alg_ = alg;
+    return true;
+}
+
 bool OacClient::start() {
     if (!priv_server_->start(priv_server_port_)) {
         return false;
@@ -66,10 +71,19 @@ void OacClient::initRpcServerMethod() {
 }
 
 std::string OacClient::algVersion(rpc_conn wptr) {
-    return "0.7.1.999";
+    auto alg = alg_.lock();
+    if (alg) {
+        return alg->sdkVersion();
+    }
+    return "0.0.0.0";
 }
+
 std::string OacClient::algApplicationVersion(rpc_conn wptr) {
-    return "1.0.0.2";
+    auto alg = alg_.lock();
+    if (alg) {
+        return alg->version();
+    }
+    return "0.0.0.0";
 }
 
 bool OacClient::getImageFrame(ImageFrame& image) {
@@ -95,6 +109,11 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
     std::shared_ptr<SharedImage> shared_image = image_manager_.getSharedImageByIndex(image.index);
     shared_image->shared_picture->empty = true;
     shared_image->release();
+    return true;
+}
+
+bool OacClient::pushDetectRegion(std::vector<DetectRegion>& detect_region) {
+    
     return true;
 }
 
