@@ -55,7 +55,7 @@ public:
             result = t;
             return result;
         } catch (std::exception &ex) {
-            errorf("rpc call exception %s\n", ex.what());
+            errorf("rpc call %s exception: %s\n", rpc_name.data(), ex.what());
             return result;
         }
     }

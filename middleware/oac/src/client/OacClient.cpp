@@ -117,7 +117,7 @@ bool OacClient::pushCurrentDetectTarget(CurrentDetectResult& result) {
 
     Json::FastWriter writer;
     std::string str = writer.write(root);
-    tracef("str:%d, targets:%s\n", str.size(), str.data());
+    //tracef("str:%d, targets:%s\n", str.size(), str.data());
     rpc_client_.call("on_current_detect_target", std::move(str));
     return true;
 };
