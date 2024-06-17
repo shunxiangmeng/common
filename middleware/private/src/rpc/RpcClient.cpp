@@ -33,7 +33,7 @@ future_result<req_result> RPCClient::doAsyncCall(const std::string &rpc_name, ms
     infra::Buffer buffer(message_size);
 
     uint32_t func_id = infra::MD5Hash32(rpc_name.data());
-    rpc_header header = { MAGIC_RPC, body_size, request_type::req_res, fu_id, func_id};;
+    rpc_header header = { MAGIC_RPC, body_size, request_type::req_res, fu_id, func_id};
 
     buffer.putData((char*)&header, sizeof(header));
     buffer.putData((char*)sbuffer.release(), (int32_t)body_size);

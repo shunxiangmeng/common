@@ -19,6 +19,7 @@
 #include "infra/include/MD5.h"
 #include "infra/include/Buffer.h"
 #include "infra/include/network/TcpSocket.h"
+#include "infra/include/Logger.h"
 
 enum class router_error { ok, no_such_function, has_exception, unkonw };
 
@@ -58,6 +59,7 @@ public:
     template <bool is_pub = false, typename Function>
     void register_handler(std::string const &name, Function f, bool pub = false) {
         uint32_t key = infra::MD5Hash32(name.data());
+        tracef("rpc server register:%s %08d\n", name.data(), std::to_string(key));
         key2func_name_.emplace(key, name);
         return register_nonmember_func<is_pub>(key, std::move(f));
     }
@@ -65,6 +67,7 @@ public:
     template <bool is_pub = false, typename Function, typename Self>
     void register_handler(std::string const &name, const Function &f, Self *self) {
         uint32_t key = infra::MD5Hash32(name.data());
+        tracef("rpc server register:%s %08d\n", name.data(), std::to_string(key));
         key2func_name_.emplace(key, name);
         return register_member_func<is_pub>(key, f, self);
     }
