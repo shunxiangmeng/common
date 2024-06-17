@@ -11,6 +11,7 @@
 #include <chrono>
 #include "OacClient.h"
 #include "infra/include/Logger.h"
+#include "jsoncpp/include/json.h"
 
 namespace oac {
 
@@ -33,6 +34,11 @@ OacClient::OacClient()
 OacClient::~OacClient() {
 }
 
+bool OacClient::init(std::weak_ptr<IOacAlg> alg) {
+    alg_ = alg;
+    return true;
+}
+
 bool OacClient::start() {
     if (!priv_server_->start(priv_server_port_)) {
         return false;
@@ -43,8 +49,12 @@ bool OacClient::start() {
        errorf("priv_client connect failed\n");
        return false; 
     }
-    SharedImageInfo info = rpc_client_.call<SharedImageInfo>("shared_image_info");
-    if (!image_manager_.init(info)) {
+    infra::optional<SharedImageInfo> info = rpc_client_.call<SharedImageInfo>("shared_image_info");
+    if (!info.has_value()) {
+        errorf("get shared_image_info error\n");
+        return false;
+    }
+    if (!image_manager_.init(*info)) {
         return false;
     }
     rpc_client_.call("on_alg_info", priv_server_port_);
@@ -61,10 +71,19 @@ void OacClient::initRpcServerMethod() {
 }
 
 std::string OacClient::algVersion(rpc_conn wptr) {
-    return "0.7.1.999";
+    auto alg = alg_.lock();
+    if (alg) {
+        return alg->sdkVersion();
+    }
+    return "0.0.0.0";
 }
+
 std::string OacClient::algApplicationVersion(rpc_conn wptr) {
-    return "1.0.0.2";
+    auto alg = alg_.lock();
+    if (alg) {
+        return alg->version();
+    }
+    return "0.0.0.0";
 }
 
 bool OacClient::getImageFrame(ImageFrame& image) {
@@ -93,5 +112,33 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
     return true;
 }
 
+bool OacClient::pushDetectRegion(std::vector<DetectRegion>& detect_region) {
+    
+    return true;
+}
+
+bool OacClient::pushCurrentDetectTarget(CurrentDetectResult& result) {
+    if (result.targets.size() == 0) {
+        return false;
+    }
+    Json::Value root = Json::nullValue;
+    root["timestamp"] = result.timestamp;
+    for (auto &target: result.targets) {
+        Json::Value item = Json::nullValue;
+        item["type"] = (int32_t)target.type;
+        item["id"] = target.id;
+        item["x"] = target.rect.x;
+        item["y"] = target.rect.y;
+        item["w"] = target.rect.w;
+        item["h"] = target.rect.h;
+        root["targets"].append(item);
+    }
+
+    Json::FastWriter writer;
+    std::string str = writer.write(root);
+    //tracef("str:%d, targets:%s\n", str.size(), str.data());
+    rpc_client_.call("on_current_detect_target", std::move(str));
+    return true;
+};
 
 }

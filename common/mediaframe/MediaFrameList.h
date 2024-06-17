@@ -28,9 +28,9 @@ public:
     bool empty() const;
 
     MediaFrame front();
-
+    MediaFrame take_front();
 
 private:
     std::list<MediaFrame> list_;
-    std::recursive_mutex mutex_;
+    std::mutex mutex_;
 };

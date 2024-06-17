@@ -13,7 +13,7 @@
 #include "WebSocket/PrivWebsocketSession.h"
 #include "infra/include/Timestamp.h"
 
-PrivSessionManager::PrivSessionManager(RPCServer* rpc_server) : max_connect_(16), mCloseSessionTimer(0), rpc_server_(rpc_server) {
+PrivSessionManager::PrivSessionManager(RPCServer* rpc_server) : max_connect_(16), session_count_(0), mCloseSessionTimer(0), rpc_server_(rpc_server) {
 }
 
 PrivSessionManager::~PrivSessionManager() {
@@ -191,6 +191,19 @@ std::shared_ptr<PrivSession> PrivSessionManager::getSessionBySessionId(uint32_t 
 
 //给每个session都发送事件
 bool PrivSessionManager::sendEvent(const char* name, const Json::Value &event) {
+    std::lock_guard<std::mutex> guard(session_map_mutex_);
+    for (auto &it : session_map_) {
+        if (it.second) {
+            it.second->sendEvent(name, event);
+        } else {
+            errorf("sessionId:%u it->second is nullptr\n", it.first);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool PrivSessionManager::sendEvent(const char* name, const std::string &event) {
     std::lock_guard<std::mutex> guard(session_map_mutex_);
     for (auto &it : session_map_) {
         if (it.second) {

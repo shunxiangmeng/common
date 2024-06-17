@@ -88,6 +88,18 @@ bool PrivServer::sendEvent(const char* name, const Json::Value &event) {
     return true;
 }
 
+bool PrivServer::sendEvent(const char* name, const std::string &event) {
+    if (session_manager_) {
+        if (session_manager_->sendEvent(name, event) == false) {
+            errorf("session_manager_->sendEvent error\n");
+            return false;
+        }
+    } else {
+        errorf("session_manager_ is nullptr\n");
+        return false;
+    }
+    return true;
+}
 
 RPCServer& PrivServer::rpcServer() {
     return rpc_server_;

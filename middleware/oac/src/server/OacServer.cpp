@@ -51,6 +51,8 @@ bool OacServer::start(int32_t sub_channel, int32_t image_count) {
 
     initServerMethod();
 
+    IPrivServer::instance()->addSubscribeEvent("detect_target");
+
     return infra::Thread::start();
 }
 
@@ -83,7 +85,7 @@ void OacServer::run() {
         image->shared_picture->frame_number = video_image.frame_number;
         image->shared_picture->empty = false;
         image->shared_picture->busy = false;
-        warnf("write index:%d, pts:%lld\n", image->shared_picture->index, image->shared_picture->timestamp);
+        //warnf("write index:%d, pts:%lld\n", image->shared_picture->index, image->shared_picture->timestamp);
         image->release();
 
 
@@ -96,6 +98,8 @@ void OacServer::run() {
 void OacServer::initServerMethod() {
     rpc_server_.register_handler("on_alg_info", &OacServer::algInfo, this);
     rpc_server_.register_handler("shared_image_info", &OacServer::sharedImageInfo, this);
+    rpc_server_.register_handler("on_detect_region", &OacServer::onDetectRegion, this);
+    rpc_server_.register_handler("on_current_detect_target", &OacServer::onCurrentDetectTarget, this);
 }
 
 void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
@@ -106,15 +110,24 @@ void OacServer::algInfo(rpc_conn wptr, uint16_t alg_rpc_port) {
             errorf("priv_client connect port:%d failed\n", alg_rpc_port);
             return; 
         }
-        std::string alg_sdk_version = priv_client_->rpcClient().call<std::string>("alg_sdk_version");
-        std::string alg_application_version = priv_client_->rpcClient().call<std::string>("alg_application_version");
-        infof("alg_sdk_version:%s, alg_application_version:%s\n", alg_sdk_version.data(), alg_application_version.data());
+        infra::optional<std::string> alg_sdk_version = priv_client_->rpcClient().call<std::string>("alg_sdk_version");
+        infra::optional<std::string> alg_application_version = priv_client_->rpcClient().call<std::string>("alg_application_version");
+        //infof("alg_sdk_version:%s, alg_application_version:%s\n", *(alg_sdk_version.data()), *(alg_application_version.data()));
     });
 }
 
 SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {
     tracef("sharedImageInfo+++\n");
     return info_;
+}
+
+void OacServer::onDetectRegion(rpc_conn wptr, std::string detect_region) {
+    tracef("onDetectRegion:%s\n");
+}
+
+void OacServer::onCurrentDetectTarget(rpc_conn wptr, std::string json_data) {
+    //tracef("onCurrentDetectTarget:%s\n", json_data.data());
+    IPrivServer::instance()->sendEvent("detect_target", json_data);
 }
 
 }

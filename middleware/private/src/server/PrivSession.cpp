@@ -47,6 +47,7 @@ void PrivSession::initMethodList() {
     REGISTER_METHOND_FUNC(login);
     REGISTER_METHOND_FUNC(start_preview);
     REGISTER_METHOND_FUNC(stop_preview);
+    REGISTER_METHOND_FUNC(subscribe_event);
 }
 
 bool PrivSession::call(std::string key, MessagePtr &message) {
@@ -302,7 +303,7 @@ bool PrivSession::stopTalkBack(MessagePtr &msg){
 }
 
 //订阅智能事件，当前直接全部订阅
-bool PrivSession::subscribeSmartEvent(MessagePtr &msg) {
+bool PrivSession::subscribe_event(MessagePtr &msg) {
     if (!msg->data.isMember("event") || !msg->data["event"].isArray()) {
         Json::Value data = Json::nullValue;
         msg->data = data;
@@ -432,8 +433,33 @@ bool PrivSession::sendEvent(const char* name, const Json::Value &event) {
     std::vector<std::string>::iterator it = std::find(mSubscribedEvents.begin(), mSubscribedEvents.end(), name); 
     if (it != mSubscribedEvents.end()) {
         Json::Value data = Json::nullValue;
-        data["method"] = "smartEvent";
+        data["method"] = "smart_event";
         data["data"] = event;
+        if (this->sendRequest(data) < 0) {
+            errorf("sendRequest error\n");
+        }
+    } else {
+        //debugf("event:%s not subscribe\n", name);
+    }  
+    return true;
+}
+
+bool PrivSession::sendEvent(const char* name, const std::string &event) {
+    Json::Value root = Json::nullValue;
+    Json::String err;
+    Json::CharReaderBuilder readbuilder;
+    std::unique_ptr<Json::CharReader> jsonreader(readbuilder.newCharReader());
+    jsonreader->parse(event.data(), event.data() + event.size(), &root, &err);
+    if (root.empty()) {
+        return false;
+    }
+    std::lock_guard<std::mutex> guard(mSubscribedEventsMtx);
+    std::vector<std::string>::iterator it = std::find(mSubscribedEvents.begin(), mSubscribedEvents.end(), name); 
+    if (it != mSubscribedEvents.end()) {
+        Json::Value data = Json::nullValue;
+        data["method"] = "event";
+        data["event"] = name;
+        data["data"] = root;
         if (this->sendRequest(data) < 0) {
             errorf("sendRequest error\n");
         }

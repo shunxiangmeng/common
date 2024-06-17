@@ -50,6 +50,12 @@ public:
      * @param[in] event  json格式的事件
      */
     virtual bool sendEvent(const char* name, const Json::Value &event) override;
+    /**
+     * @brief 发送事件
+     * @param[in] name  事件名
+     * @param[in] event  string格式的事件
+     */
+    virtual bool sendEvent(const char* name, const std::string &event) override;
 
     virtual RPCServer& rpcServer() override;
 private:

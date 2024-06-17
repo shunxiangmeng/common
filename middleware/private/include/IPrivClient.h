@@ -12,6 +12,9 @@
 #include "rpc/RpcClient.h"
 #include "infra/include/Signal.h"
 #include "common/mediaframe/MediaFrame.h"
+#include "jsoncpp/include/json.h"
+
+using EventFunction = std::function<void(Json::Value&)>;
 
 class IPrivClient {
 public:
@@ -28,6 +31,8 @@ typedef PrivClientSignal::Proc OnFrameProc;
     virtual bool startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) = 0;
 
     virtual bool stopPreview(OnFrameProc onframe) = 0;
+
+    virtual bool subscribeEvent(const char* event, EventFunction event_callback) = 0;
 
     virtual bool testSyncCall() = 0;
 

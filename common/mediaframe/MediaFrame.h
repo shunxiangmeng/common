@@ -63,6 +63,12 @@ public:
     bool ensureCapacity(int32_t capacity);
 
     /**
+     * @brief 是否为I帧
+     * @return @
+     */
+    bool isKeyFrame() const;
+
+    /**
      * @brief 获取帧类型
      * @return @MediaFrameType
      */

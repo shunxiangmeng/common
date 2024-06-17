@@ -11,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include "Router.h"
+#include "infra/include/Optional.h"
+#include "infra/include/Logger.h"
 
 class PrivClient;
 class RPCClient {
@@ -18,29 +20,44 @@ public:
     template <size_t TIMEOUT = DEFAULT_TIMEOUT, typename T = void, typename... Args>
     typename std::enable_if<std::is_void<T>::value>::type 
     call(const std::string &rpc_name, Args &&...args) {
-        auto future_result = async_call<FUTURE>(rpc_name, std::forward<Args>(args)...);
-        auto status = future_result.wait_for(std::chrono::milliseconds(TIMEOUT));
-        if (status == std::future_status::timeout || status == std::future_status::deferred) {
-            throw std::out_of_range("timeout or deferred");
+        try {
+            auto future_result = async_call<FUTURE>(rpc_name, std::forward<Args>(args)...);
+            auto status = future_result.wait_for(std::chrono::milliseconds(TIMEOUT));
+            if (status == std::future_status::timeout || status == std::future_status::deferred) {
+                //throw std::out_of_range("timeout or deferred");
+                errorf("rpc call %s timeout\n", rpc_name.data());
+            }
+            future_result.get().as();
+        } catch (std::exception &ex) {
+            errorf("rpc call exception %s\n", ex.what());
         }
-        future_result.get().as();
     }
 
     template <typename T, typename... Args>
-    typename std::enable_if<!std::is_void<T>::value, T>::type
+    typename std::enable_if<!std::is_void<T>::value, infra::optional<T>>::type
     call(const std::string &rpc_name, Args &&...args) {
         return call<DEFAULT_TIMEOUT, T>(rpc_name, std::forward<Args>(args)...);
     }
 
     template <size_t TIMEOUT, typename T, typename... Args>
-    typename std::enable_if<!std::is_void<T>::value, T>::type
+    typename std::enable_if<!std::is_void<T>::value, infra::optional<T>>::type
         call(const std::string& rpc_name, Args &&...args) {
-        auto future_result = async_call<FUTURE>(rpc_name, std::forward<Args>(args)...);
-        auto status = future_result.wait_for(std::chrono::milliseconds(TIMEOUT));
-        if (status == std::future_status::timeout || status == std::future_status::deferred) {
-            throw std::out_of_range("timeout or deferred");
+        infra::optional<T> result;
+        try {
+            auto future_result = async_call<FUTURE>(rpc_name, std::forward<Args>(args)...);
+            auto status = future_result.wait_for(std::chrono::milliseconds(TIMEOUT));
+            if (status == std::future_status::timeout || status == std::future_status::deferred) {
+                //throw std::out_of_range("timeout or deferred");
+                errorf("rpc call %s timeout\n", rpc_name.data());
+                return result;
+            }
+            T t = future_result.get().template as<T>();
+            result = t;
+            return result;
+        } catch (std::exception &ex) {
+            errorf("rpc call %s exception: %s\n", rpc_name.data(), ex.what());
+            return result;
         }
-        return future_result.get().template as<T>();
     }
 
     template <CallModel model, typename... Args>

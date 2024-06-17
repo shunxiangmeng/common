@@ -81,8 +81,7 @@ public:
     template <typename T> T as() {
         if (!success()) {
             std::string err_msg = data_.empty() ? data_ : get_error_msg(data_);
-            //throw std::logic_error(err_msg);
-            return T();
+            throw std::logic_error(err_msg);
         }
         return get_result<T>(data_);
     }
@@ -94,7 +93,9 @@ public:
         }
     }
 
-    bool success() const { return error_code_ == req_success; }
+    bool success() const { 
+        return !has_error(data_); 
+    }
 
 private:
     req_error_code error_code_;

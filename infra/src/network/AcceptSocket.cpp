@@ -63,6 +63,7 @@ std::shared_ptr<TcpSocket> AcceptSocket::accept() {
     }
 
     std::shared_ptr<TcpSocket> new_client_tcp = std::make_shared<TcpSocket>(client_fd);
+    new_client_tcp->setNoblocked(true);
     new_client_tcp->setConnectState(TcpSocket::connected);
     return new_client_tcp;
 }

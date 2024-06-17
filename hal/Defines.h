@@ -17,3 +17,31 @@ typedef enum : int32_t {
     IMAGE_PIXEL_FORMAT_ARGB_8888,
     IMAGE_PIXEL_FORMAT_YUV_420
 } IMAGE_PIXEL_FORMAT;
+
+typedef enum {
+    E_TargetType_face,
+    E_TargetType_body
+} TargetType;
+
+typedef struct {
+    float x;      //0-1
+    float y;      //0-1
+    float w;
+    float h;
+} Rect;
+
+typedef struct {
+    TargetType type;
+    uint32_t id;
+    Rect rect;
+} Target;
+
+typedef struct {
+    uint32_t timestamp;
+    std::vector<Target> targets;
+} CurrentDetectResult;
+
+typedef struct {
+    uint32_t color;  //rgb888
+    Rect rect;
+} DetectRegion;
