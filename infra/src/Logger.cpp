@@ -69,7 +69,7 @@ void ConsoleLogChannel::clearConsoleColour() {
 }
 
 void ConsoleLogChannel::write(const std::vector<std::shared_ptr<LogContent>> &content) {
-    for (auto i = 0; i < content.size(); i++) {
+    for (size_t i = 0; i < content.size(); i++) {
         setConsoleColour(content[i]->level);
         std::cout << content[i]->content;
         clearConsoleColour();
@@ -100,7 +100,7 @@ FileLogChannel::~FileLogChannel() {
 
 void FileLogChannel::write(const std::vector<std::shared_ptr<LogContent>> &content) {
     if (fstream_.is_open()) {
-        for (auto i = 0; i < content.size(); i++) {
+        for (size_t i = 0; i < content.size(); i++) {
             fstream_ << content[i]->content;
         }
     }
@@ -220,3 +220,10 @@ void Logger::printLog(LogLevel level, const char *file, int line, const char *fm
 }
 
 }  //namespace
+
+
+extern "C" {
+void printflog_for_c(int level, const char *file, int line, const char *fmt, ...) {
+    infra::Logger::instance().printLog((infra::LogLevel)level, file, line, fmt);
+}
+}
