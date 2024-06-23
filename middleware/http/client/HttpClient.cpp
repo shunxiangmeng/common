@@ -27,12 +27,12 @@ bool HttpClient::init() {
         return false;
     }
 
-    curl_easy_setopt(curl, CURLOPT_URL, "http://example.com");
-    CURLcode res = curl_easy_perform(curl);
+    curl_easy_setopt(curl_, CURLOPT_URL, "http://example.com");
+    CURLcode res = curl_easy_perform(curl_);
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
     }
-    curl_easy_cleanup(curl);
+    curl_easy_cleanup(curl_);
 
     return true;
 }

@@ -239,7 +239,7 @@ void aydebug_printf(char *funNameStr, const char *buf, uint16 buflen)
     DEBUGF("%s->len=%d  \n", funNameStr, buflen);
     for( i = 0; i < buflen ; i++ )
     {
-	fprintf(stderr,"%-2x ", (uint8)(buf[i]));//����ǿ��ת�����б�Ҫ
+        fprintf(stderr,"%-2x ", (uint8)(buf[i]));
     }
     DEBUGF("\n");
 }
@@ -247,8 +247,8 @@ void aydebug_printf(char *funNameStr, const char *buf, uint16 buflen)
 int ay_printf(int level,const char *format,...)
 {
     ay_sdk_handle psdk = sdk_get_handle(0);
-    if(psdk==NULL)
-	return -1;
+    if (psdk==NULL)
+        return -1;
 
     int ret = 0;
     char timebuf[32]={0};
@@ -260,44 +260,44 @@ int ay_printf(int level,const char *format,...)
 
     if(AYE_LOG_LEVEL_ERROR == level || AYE_LOG_LEVEL_TRACE==level)
     {
-	char event[32] = {0};
-	char msg[1024]={0};
-	time_t t = time(NULL);
-	//struct tm local;
-	//localtime_r(&t,&local);
-	//ret = strftime(log,sizeof(log), "[%F %T]", &local);
-	//ret = snprintf(log,sizeof(log), "{{%s}}", "error");
-	vsnprintf(log+ret,sizeof(log)-ret,format,ap);
-	if(log[0] == '{')
-	{
-	    sscanf(log,"{{%31[a-zA-Z0-9]}}%1023[^\n]",event,msg);
-	}
-	else
-	{
-	    strcpy(event,"DeviceCommEvent");
-	    strcpy(msg,"Other|");
-	    sscanf(log,"%1010[^\n]",msg+strlen(msg));
-	}
-	aymonitor_get_uplog(t,event,msg,log,sizeof(log));
-	aydebug_write_cache(&psdk->debug.log_cache,log);
+        char event[32] = {0};
+        char msg[1024]={0};
+        time_t t = time(NULL);
+        //struct tm local;
+        //localtime_r(&t,&local);
+        //ret = strftime(log,sizeof(log), "[%F %T]", &local);
+        //ret = snprintf(log,sizeof(log), "{{%s}}", "error");
+        vsnprintf(log+ret,sizeof(log)-ret,format,ap);
+        if(log[0] == '{')
+        {
+            sscanf(log,"{{%31[a-zA-Z0-9]}}%1023[^\n]",event,msg);
+        }
+        else
+        {
+            strcpy(event,"DeviceCommEvent");
+            strcpy(msg,"Other|");
+            sscanf(log,"%1010[^\n]",msg+strlen(msg));
+        }
+        aymonitor_get_uplog(t,event,msg,log,sizeof(log));
+        aydebug_write_cache(&psdk->debug.log_cache,log);
     }
 
     snprintf(debug_flag,sizeof(debug_flag), "%s/ay_debug", psdk->devinfo.rw_path);
 
     if(psdk->debug.log_fd != NULL)
     {
-	aydebug_get_time(timebuf,sizeof(timebuf));
-	fprintf(psdk->debug.log_fd, "%s>",timebuf);
-	ret = snprintf(log,sizeof(log),"%s>",timebuf);
-	if(ret>0)
-	{
-	    vsnprintf(log+ret,sizeof(log)-ret,format,ap);
-	    if(access(debug_flag,0)==0)
-	    {
-		fprintf(stderr,"%s",log);
-	    }
-	}
-	ret = vfprintf(psdk->debug.log_fd, format, ap);
+        aydebug_get_time(timebuf,sizeof(timebuf));
+        fprintf(psdk->debug.log_fd, "%s>",timebuf);
+        ret = snprintf(log,sizeof(log),"%s>",timebuf);
+        if(ret>0)
+        {
+            vsnprintf(log+ret,sizeof(log)-ret,format,ap);
+            if(access(debug_flag,0)==0)
+            {
+                fprintf(stderr,"%s",log);
+            }
+        }
+        ret = vfprintf(psdk->debug.log_fd, format, ap);
     }
 
     va_end(ap);

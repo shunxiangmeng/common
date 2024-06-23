@@ -366,7 +366,7 @@ int aydevice2_upload_log(const char *log)
 
     char url[128]={0};
     snprintf(url,sizeof(url),"http://%s/stat.html",AYDEVICE2_SERVER_LOG);
-    //printf("~~~~~~body:%s\n",log);
+    tracef("~~~~~~body:%s\n",log);
     ret = post_webserver_content(url,(char*)log,strlen(log));
 
     if(ret >= 0) 
@@ -387,91 +387,71 @@ static int get_dnslist_byjson(const char* in_content,int in_content_len,st_ay_ne
     ayJSON *pjson = NULL;
     ayJSON *pchild = NULL;
     ayJSON *pdata = NULL;
-
-    if(in_content == NULL)
-    {
-	return -1;
+    if (in_content == NULL) {
+        return -1;
     }
     DEBUGF("dnslist json: %s\n",in_content);
     pjson=ayJSON_Parse(in_content);
-    if (!pjson)
-    {
-	return -1;
+    if (!pjson) {
+        return -1;
     }
 
-    do{
-	pchild = ayJSON_GetObjectItem(pjson,"code");
-	if(!pchild)
-	{
-	    ERRORF("get dnslist json code fail!\n");
-	    break;
-	}
-	if(pchild->valueint!=0)
-	{
-	    ERRORF("dnslist json code = %d!\n",pchild->valueint);
-	    break;
-	}
+    do {
+        pchild = ayJSON_GetObjectItem(pjson,"code");
+        if (!pchild) {
+            ERRORF("get dnslist json code fail!\n");
+            break;
+        }
+        if (pchild->valueint != 0) {
+            ERRORF("dnslist json code = %d!\n", pchild->valueint);
+            break;
+        }
 
-	pchild = ayJSON_GetObjectItem(pjson,"msg");
-	if(!pchild)
-	{
-	    ERRORF("get dnslist json message fail!\n");
-	    break;
-	}
+        pchild = ayJSON_GetObjectItem(pjson, "msg");
+        if (!pchild) {
+            ERRORF("get dnslist json message fail!\n");
+            break;
+        }
 
-	pdata = ayJSON_GetObjectItem(pjson,"data");
-	if(!pdata)
-	{
-	    ERRORF("get json data fail!\n");
-	    break;
-	}
+        pdata = ayJSON_GetObjectItem(pjson, "data");
+        if (!pdata) {
+            ERRORF("get json data fail!\n");
+            break;
+        }
 
-	if(pdata->valuestring) 
-	{// Base64Decode
-	    int len;
-	    char data[1024] = {0};
-	    len = ay_base64_decode(pdata->valuestring,(uint8*)data);
-	    if(len > 0)
-	    {
-		DEBUGF("data:%s\n",data);
-		ayJSON *pitem = ayJSON_Parse(data);
-		int num = 0,i = 0;
-		if(pitem && (num=ayJSON_GetArraySize(pitem))>0)
-		{
-		    for(i=0;i<num&&i<max;i++)
-		    {
-			pchild = ayJSON_GetArrayItem(pitem,i);
-			if(pchild && pchild->valuestring)
-			{
-			    DEBUGF("ip[%d]:%s\n",i,pchild->valuestring);
-			    if(strstr(pchild->valuestring,":")) 
-			    {
-				sscanf(pchild->valuestring,"%[0-9.]:%hu",ips[i].ipstr,&ips[i].port);
-			    }
-			    else 
-			    {
-				strcpy(ips[i].ipstr,pchild->valuestring);
-				ips[i].port = 80;
-			    }
-			}
-		    }
-		    ayJSON_Delete(pitem);
-		}
-		else
-		{
-		    ERRORF("dnslist json parse:%s fail!\n",data);
-		    break;
-		}
+        if (pdata->valuestring) {
+            int len;
+            char data[1024] = {0};
+            len = ay_base64_decode(pdata->valuestring, (uint8*)data);
+            if (len > 0) {
+                tracef("data:%s\n", data);
+                ayJSON *pitem = ayJSON_Parse(data);
+                int num = 0;
+                if (pitem && (num = ayJSON_GetArraySize(pitem)) > 0) {
+                    for (int i = 0; i < num && i < max; i++) {
+                        pchild = ayJSON_GetArrayItem(pitem,i);
+                        if (pchild && pchild->valuestring) {
+                            tracef("ip[%d]:%s\n", i,pchild->valuestring);
+                            if (strstr(pchild->valuestring,":"))  {
+                                sscanf(pchild->valuestring, "%[0-9.]:%hu", ips[i].ipstr, &ips[i].port);
+                            } else  {
+                                strcpy(ips[i].ipstr,pchild->valuestring);
+                                ips[i].port = 80;
+                            }
+                        }
+                    }
+                    ayJSON_Delete(pitem);
+                } else {
+                    ERRORF("dnslist json parse:%s fail!\n",data);
+                    break;
+                }
+            } else {
+                ERRORF("dnslist base64decode fail!\n");
+                break;
+            }
 	    }
-	    else
-	    {
-		ERRORF("dnslist base64decode fail!\n");
-		break;
-	    }
-	}
-
-	ayJSON_Delete(pjson);
-	return 0;
+        ayJSON_Delete(pjson);
+        return 0;
     } while (0);
     ayJSON_Delete(pjson);
     return -1;
@@ -479,7 +459,7 @@ static int get_dnslist_byjson(const char* in_content,int in_content_len,st_ay_ne
 
 void aydevice2_query_dnslit(int arg)
 {
-    int json_len = 0,fail_flag = 0;
+    int json_len = 0, fail_flag = 0;
     char url[1024]={0};
     char fname[256]={0};
     char *pJonsContent = NULL;
@@ -487,67 +467,64 @@ void aydevice2_query_dnslit(int arg)
     st_ay_net_addr ip;
     st_ay_dns_ctrl *pdnsctrl = &sdk_get_handle(0)->dnsctrl;
 
-    snprintf(fname,sizeof(fname),"%s/ay_dns",sdk_get_handle(0)->devinfo.rw_path);
+    snprintf(fname, sizeof(fname), "%s/ay_dns", sdk_get_handle(0)->devinfo.rw_path);
     snprintf(url, sizeof(url), "http://%s:%hu/dnslist?sdk_version=%d", AYDEVICE2_SERVER_DNSLIST, 80, Ulu_SDK_Get_Version());
     DEBUGF("dns url:%s\n",url);
-    pJonsContent = request_webserver_content(url, &json_len,NULL);
-    if (pJonsContent == NULL)
-    {
-	ERRORF("{{DeviceCommEvent}}GetDNSList_FAIL|request_webserver_content:%s fail\n",url);
-	fail_flag = 1;
-    }
-    else if(get_dnslist_byjson(pJonsContent, json_len, pdnsctrl->dnsips,AY_MAX_DNSIP_NUM) == -1)
-    {
-	free(pJonsContent);
-	ERRORF("{{DeviceCommEvent}}GetDNSList_FAIL|get dnslist from json fail!\n");
-	fail_flag = 1;;
-    }
-    else
-    {
-	free(pJonsContent);
-	memcpy(&pdnsctrl->dnsok,&pdnsctrl->dnsips[0],sizeof(st_ay_net_addr));
-	ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path,"ay_dns",(const char *)pdnsctrl,sizeof(st_ay_dns_ctrl));
+    pJonsContent = request_webserver_content(url, &json_len, NULL);
+    if (pJonsContent == NULL) {
+        ERRORF("GetDNSList_FAIL|request_webserver_content:%s fail\n",url);
+        fail_flag = 1;
+    } else if (get_dnslist_byjson(pJonsContent, json_len, pdnsctrl->dnsips, AY_MAX_DNSIP_NUM) == -1) {
+        free(pJonsContent);
+        ERRORF("GetDNSList_FAIL|get dnslist from json fail!\n");
+        fail_flag = 1;
+    } else {
+        free(pJonsContent);
+        memcpy(&pdnsctrl->dnsok, &pdnsctrl->dnsips[0], sizeof(st_ay_net_addr));
+        ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path, "ay_dns", (const char *)pdnsctrl, sizeof(st_ay_dns_ctrl));
     }
 
-    if(fail_flag)
+    if (fail_flag)
     {
-	if(ayutil_read_file(sdk_get_handle(0)->devinfo.rw_path,"ay_dns",(char*)pdnsctrl,sizeof(st_ay_dns_ctrl)) < 0)
-	{
-	    strcpy(pdnsctrl->dnsips[0].ipstr,"139.224.20.59"); // Ali shanghai
-	    pdnsctrl->dnsips[0].port = 80;
-	    strcpy(pdnsctrl->dnsips[1].ipstr,"101.201.61.249"); // Ali beijing
-	    pdnsctrl->dnsips[1].port = 80;
-	    strcpy(pdnsctrl->dnsips[2].ipstr,"203.195.145.109");// QQ guangzhou
-	    pdnsctrl->dnsips[2].port = 80;
-	}
-	for(i=0;i<AY_MAX_DNSIP_NUM;i++)
-	{
-	    start = (start+i)%AY_MAX_DNSIP_NUM;
-	    if(strlen(pdnsctrl->dnsips[start].ipstr)>0)
-	    {
-		snprintf(url, sizeof(url), "http://%s:%hu/dnslist?sdk_version=%d", 
-			pdnsctrl->dnsips[start].ipstr,pdnsctrl->dnsips[start].port,Ulu_SDK_Get_Version());
-		pJonsContent = request_webserver_content(url, &json_len,NULL);
-		if (pJonsContent == NULL)
-		{
-		    ERRORF("{{DeviceCommEvent}}GetDNSList_FAIL|request_webserver_content:%s fail\n",url);
-		    continue;
-		}
-		if(get_dnslist_byjson(pJonsContent, json_len, pdnsctrl->dnsips,AY_MAX_DNSIP_NUM) == -1)
-		{
-		    free(pJonsContent);
-		    ERRORF("{{DeviceCommEvent}}GetDNSList_FAIL|get dnslist from json fail!\n");
-		    continue;
-		}
-		free(pJonsContent);
-		memcpy(&pdnsctrl->dnsok,&pdnsctrl->dnsips[start],sizeof(st_ay_net_addr));
-		ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path,"ay_dns",(const char *)pdnsctrl,sizeof(st_ay_dns_ctrl));
-		fail_flag = 0;
-		break;
-	    }
-	}
+        if (ayutil_read_file(sdk_get_handle(0)->devinfo.rw_path, "ay_dns", (char*)pdnsctrl, sizeof(st_ay_dns_ctrl)) < 0)
+        {
+            strcpy(pdnsctrl->dnsips[0].ipstr,"139.224.20.59");  // Ali shanghai
+            pdnsctrl->dnsips[0].port = 80;
+            strcpy(pdnsctrl->dnsips[1].ipstr,"101.201.61.249"); // Ali beijing
+            pdnsctrl->dnsips[1].port = 80;
+            strcpy(pdnsctrl->dnsips[2].ipstr,"203.195.145.109");// QQ guangzhou
+            pdnsctrl->dnsips[2].port = 80;
+        }
+        for (i = 0; i < AY_MAX_DNSIP_NUM; i++)
+        {
+            start = (start+i)%AY_MAX_DNSIP_NUM;
+            if (strlen(pdnsctrl->dnsips[start].ipstr) > 0)
+            {
+                snprintf(url, sizeof(url), "http://%s:%hu/dnslist?sdk_version=%d", 
+                    pdnsctrl->dnsips[start].ipstr, pdnsctrl->dnsips[start].port, Ulu_SDK_Get_Version());
+                pJonsContent = request_webserver_content(url, &json_len,NULL);
+                if (pJonsContent == NULL)
+                {
+                    ERRORF("GetDNSList_FAIL|request_webserver_content:%s fail\n", url);
+                    continue;
+                }
+                if (get_dnslist_byjson(pJonsContent, json_len, pdnsctrl->dnsips, AY_MAX_DNSIP_NUM) == -1)
+                {
+                    free(pJonsContent);
+                    ERRORF("GetDNSList_FAIL|get dnslist from json fail!\n");
+                    continue;
+                }
+                free(pJonsContent);
+                memcpy(&pdnsctrl->dnsok, &pdnsctrl->dnsips[start], sizeof(st_ay_net_addr));
+                ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path, "ay_dns", (const char *)pdnsctrl, sizeof(st_ay_dns_ctrl));
+                fail_flag = 0;
+                break;
+            }
+        }
     }
-    if(fail_flag) return ;
+    if (fail_flag) {
+        return ;
+    }
 #if 0
     printf("====== ulu dns ok ip:%s,%hu ======\n",pdnsctrl->dnsok.ipstr,pdnsctrl->dnsok.port);
     if(aydevice2_nslookup_host(AYENTRY_SERVER_CONFIG,&ip)==0)
@@ -587,16 +564,16 @@ void aydevice2_query_dnslit(int arg)
 	ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path,"UPYunIP",(const char *)content,strlen(content));
     }
 #endif
-    if(aydevice2_nslookup_host(AYDEVICE2_SERVER_DEVENTRY,&ip)==0)
+    if (aydevice2_nslookup_host(AYDEVICE2_SERVER_DEVENTRY, &ip) == 0)
     {
-	char content[256]={0};
-	strcpy(pdnsctrl->host[4].name,AYDEVICE2_SERVER_DEVENTRY);
-	memcpy(&pdnsctrl->host[4].lastip,&ip,sizeof(ip));
-	//printf("--- name:%s,ip:%s ---\n",pdnsctrl->host[4].name,pdnsctrl->host[4].lastip.ipstr);
-	snprintf(content,sizeof(content),"%s:%hu",pdnsctrl->host[4].lastip.ipstr,pdnsctrl->host[4].lastip.port);
-	ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path,"EDServIP",(const char *)content,strlen(content));
+        char content[256]={0};
+        strcpy(pdnsctrl->host[4].name, AYDEVICE2_SERVER_DEVENTRY);
+        memcpy(&pdnsctrl->host[4].lastip, &ip, sizeof(ip));
+        tracef("--- name:%s,ip:%s ---\n",pdnsctrl->host[4].name,pdnsctrl->host[4].lastip.ipstr);
+        snprintf(content, sizeof(content), "%s:%hu", pdnsctrl->host[4].lastip.ipstr,pdnsctrl->host[4].lastip.port);
+        ayutil_save_file(sdk_get_handle(0)->devinfo.rw_path, "EDServIP", (const char *)content, strlen(content));
     }
-    return ;
+    return;
 }
 
 int aydevice2_nslookup_host(const char *host,st_ay_net_addr *ip)

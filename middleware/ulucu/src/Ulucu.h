@@ -1,25 +1,27 @@
 /************************************************************************
  * Copyright(c) 2024 shanghai ulucu technology
  * 
- * File        :  HttpClient.h
+ * File        :  Ulucu.h
  * Author      :  mengshunxiang 
- * Data        :  2024-06-18 11:23:32
+ * Data        :  2024-06-22 13:43:40
  * Description :  None
  * Note        : 
  ************************************************************************/
 #pragma once
-#include "http/include/IHttpClient.h"
-#define CURL_STATICLIB
-#include "prebuilts/include/curl/curl.h"
+#include "ulucu/include/IUlucu.h"
+#include "anyan/src/inc/Anyan_Device_SDK.h"
 
-class HttpClient : public IHttpClient {
+namespace ulucu {
+
+class Ulucu : public IUlucu {
 public:
-    HttpClient();
-    ~HttpClient();
+    Ulucu();
+    ~Ulucu();
 
     virtual bool init() override;
-
+    
 private:
-    CURL* curl_ = nullptr;
+
 };
 
+}

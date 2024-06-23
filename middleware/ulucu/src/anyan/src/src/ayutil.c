@@ -124,22 +124,19 @@ static int ay_set_socket_unblocking(int sock)
 #ifdef WIN32
     int iResult = 0;
     u_long iMode = 1;
-
     iResult = ioctlsocket(sock, FIONBIO, &iMode);
-    if(iResult != NO_ERROR)
-    {
-	ERRORF("ioctlsocket failed with error: %ld\n", iResult);
-	return -1;
+    if (iResult != NO_ERROR) {
+        ERRORF("ioctlsocket failed with error: %ld\n", iResult);
+        return -1;
     }
     return 0;
 #else
     int flags;
     flags = fcntl(sock, F_GETFL);
     flags |= O_NONBLOCK;
-    if(fcntl(sock,F_SETFL,flags) == -1)
-    {
-	ERRORF("fcntl fail to set noblock %s\n", strerror(errno));
-	return -1;
+    if (fcntl(sock,F_SETFL,flags) == -1) {
+        ERRORF("fcntl fail to set noblock %s\n", strerror(errno));
+        return -1;
     }
     return 0;
 #endif
@@ -225,29 +222,24 @@ unsigned int ayutil_get_local_ip(const char *first,const char *second)
 
 int ayutil_init_udp(int local_port)
 {
-    int sockfd;
-    struct sockaddr_in	addr;
-
-    sockfd = socket(AF_INET,SOCK_DGRAM,0);
-    if (sockfd < 0)
-    {
-	ERRORF("socket error:%s\n",strerror(errno));
-	return -1;
+    struct sockaddr_in addr;
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        ERRORF("socket error:%s\n", strerror(errno));
+        return -1;
     }
     memset(&addr,0,sizeof(struct sockaddr_in));
-    addr.sin_family=AF_INET;
-    addr.sin_port=htons(local_port);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(local_port);
     addr.sin_addr.s_addr = 0;
     bind(sockfd, (struct sockaddr *)&addr, sizeof(struct sockaddr));
 
-    if(ay_set_socket_unblocking(sockfd) < 0)
-    {
-	closesocket(sockfd);
-	return -1;
+    if (ay_set_socket_unblocking(sockfd) < 0) {
+        closesocket(sockfd);
+        return -1;
     }
-    if ( sockfd > 0 )
-    {
-	DEBUGF("udp bind ok, sockfd = %d\n",sockfd);
+    if (sockfd > 0 ) {
+        DEBUGF("udp bind port %d ok, sockfd = %d\n", local_port, sockfd);
     }
     return sockfd;
 }
@@ -352,35 +344,35 @@ int ayutil_getaddrinfo_bysockaddr(const char *host,unsigned short port,struct so
 #endif
 }
 
-int ayutil_tcp_client(char* host, unsigned short port,int timeout)
+int ayutil_tcp_client(char* host, unsigned short port, int timeout)
 {
     int sockfd;
     struct sockaddr_in server_addr;
 
-    if(ayutil_getaddrinfo_bysockaddr((const char *)host,(unsigned short)port,&server_addr)<0)
+    if (ayutil_getaddrinfo_bysockaddr((const char *)host,(unsigned short)port,&server_addr)<0)
     {
-	ERRORF("get %s addrinfo fail!\n",host);
-	return -1;
+        ERRORF("get %s addrinfo fail!\n",host);
+        return -1;
     }
-    if((sockfd=socket(AF_INET,SOCK_STREAM,0)) < 0)
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-	ERRORF("socket error:%s\n", strerror(errno));
-	return -1;
+        ERRORF("socket error:%s\n", strerror(errno));
+        return -1;
     }
-    if(timeout > 0)
+    if (timeout > 0)
     {
-	ay_set_socket_block(sockfd,timeout,40);
+        ay_set_socket_block(sockfd, timeout, 40);
     }
-    else if(ay_set_socket_unblocking(sockfd) < 0)
+    else if (ay_set_socket_unblocking(sockfd) < 0)
     {
-	closesocket(sockfd);
-	return -1;
+        closesocket(sockfd);
+        return -1;
     }
-    if(connect(sockfd, (struct sockaddr *)(&server_addr),sizeof(struct sockaddr)) != 0)
+    if (connect(sockfd, (struct sockaddr *)(&server_addr),sizeof(struct sockaddr)) != 0)
     {
-	ERRORF("connect %s:%hu err:%s\n",host,port,strerror(errno));
-	closesocket(sockfd);
-	return  -1;
+        ERRORF("connect %s:%hu err:%s\n",host,port,strerror(errno));
+        closesocket(sockfd);
+        return  -1;
     }
     return sockfd;
 }

@@ -93,7 +93,8 @@ int ayentry_get_entryserver(entry_server_list* pserver_list);
 int ayentry_register_device(char* pou_deviceid, Dev_SN_Info *param);
 int ay_request_reset_device(const char *devid, const char *dev_token);
 int ayentry_get_alarm_param(ayJSON *pjson,ULK_Alarm_Struct *palarm);
-char *request_webserver_content(const char *purl, int *pout_len,int (*handle)(const char *in,int inlen,char out[],int outlen));
+char *request_webserver_content(const char *purl, int *pout_len, int (*handle)(const char *in, int inlen, char out[], int outlen));
+char *request_webserver_content_v2(const char *purl, int *pout_len, int (*handle)(const char *in, int inlen, char out[], int outlen));
 
 #ifdef __cplusplus
 }

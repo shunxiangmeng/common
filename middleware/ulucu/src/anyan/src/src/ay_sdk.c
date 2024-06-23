@@ -217,50 +217,50 @@ int Ulu_SDK_ChannelStatus_Event(int channel, ULK_CHNL_STATUS_ENUM status)
 
 static void ay_set_oeminfo(Dev_SN_Info  *Oem_info)
 {
-    if(sdk_init_instace(0))
+    if (sdk_init_instace(0))
     {
 		int len , ret;
 		memset(&ay_psdk->devinfo.Sn_info, 0 ,sizeof(ay_psdk->devinfo.Sn_info));
 
 		len = sizeof(ay_psdk->devinfo.Sn_info.MAC);
 		ret = snprintf(ay_psdk->devinfo.Sn_info.MAC,len,"%s",Oem_info->MAC);
-		if(ret>0 && ret<len)
+		if (ret > 0 && ret < len)
 		{
-			if('\n'==ay_psdk->devinfo.Sn_info.MAC[ret-1]) 
-				ay_psdk->devinfo.Sn_info.MAC[ret-1] = '\0';
+			if ('\n' == ay_psdk->devinfo.Sn_info.MAC[ret - 1]) 
+				ay_psdk->devinfo.Sn_info.MAC[ret - 1] = '\0';
 		}
 		ay_psdk->devinfo.Sn_info.OEMID = Oem_info->OEMID;
 
 		len = sizeof(ay_psdk->devinfo.Sn_info.SN);
-		ret = snprintf(ay_psdk->devinfo.Sn_info.SN,len,"%s",Oem_info->SN);
-		if(ret>0 && ret<len)
+		ret = snprintf(ay_psdk->devinfo.Sn_info.SN,len, "%s", Oem_info->SN);
+		if (ret > 0 && ret < len)
 		{
-			if('\n'==ay_psdk->devinfo.Sn_info.SN[ret-1]) 
+			if('\n' == ay_psdk->devinfo.Sn_info.SN[ret-1]) 
 				ay_psdk->devinfo.Sn_info.SN[ret-1] = '\0';
 		}
 
 		len = sizeof(ay_psdk->devinfo.Sn_info.OEM_name);
-		ret = snprintf(ay_psdk->devinfo.Sn_info.OEM_name,len,"%s",Oem_info->OEM_name);
-		if(ret>0 && ret<len)
+		ret = snprintf(ay_psdk->devinfo.Sn_info.OEM_name, len, "%s", Oem_info->OEM_name);
+		if (ret > 0 && ret < len)
 		{
-			if('\n'==ay_psdk->devinfo.Sn_info.OEM_name[ret-1]) 
+			if ('\n' == ay_psdk->devinfo.Sn_info.OEM_name[ret - 1]) 
 				ay_psdk->devinfo.Sn_info.OEM_name[ret-1] = '\0';
 		}
 
 		len = sizeof(ay_psdk->devinfo.Sn_info.Model);
-		ret = snprintf(ay_psdk->devinfo.Sn_info.Model,len,"%s",Oem_info->Model);
-		if(ret>0 && ret<len)
+		ret = snprintf(ay_psdk->devinfo.Sn_info.Model, len, "%s", Oem_info->Model);
+		if (ret > 0 && ret < len)
 		{
 			if('\n'==ay_psdk->devinfo.Sn_info.Model[ret-1]) 
 				ay_psdk->devinfo.Sn_info.Model[ret-1] = '\0';
 		}
 
 		len = sizeof(ay_psdk->devinfo.Sn_info.Factory);
-		ret = snprintf(ay_psdk->devinfo.Sn_info.Factory,len,"%s",Oem_info->Factory);
-		if(ret>0 && ret<len)
+		ret = snprintf(ay_psdk->devinfo.Sn_info.Factory, len, "%s", Oem_info->Factory);
+		if (ret > 0 && ret < len)
 		{
-			if('\n'==ay_psdk->devinfo.Sn_info.Factory[ret-1]) 
-				ay_psdk->devinfo.Sn_info.Factory[ret-1] = '\0';
+			if ('\n' == ay_psdk->devinfo.Sn_info.Factory[ret - 1]) 
+				ay_psdk->devinfo.Sn_info.Factory[ret - 1] = '\0';
 		}
     }
 }
@@ -336,16 +336,14 @@ int Ulu_SDK_Get_Version(void)
 
 static int ay_init_sdk(Dev_Attribut_Struct  *attr)
 {
-    if(sdk_init_instace(0) == NULL)
-    {
-		fprintf(stderr,"Ulk SDK malloc Instance Failed!\n");
-		return -1;
+    if (sdk_init_instace(0) == NULL) {
+        fprintf(stderr,"Ulk SDK malloc Instance Failed!\n");
+        return -1;
     }
 
     ay_psdk->devinfo.dev_type = attr->dev_type;
     ay_psdk->devinfo.channelnum = attr->channel_num;
-    if(ay_psdk->devinfo.channelnum > MAX_CHANNEL_NUM)
-    {
+    if (ay_psdk->devinfo.channelnum > MAX_CHANNEL_NUM) {
         ay_psdk->devinfo.channelnum  = MAX_CHANNEL_NUM;
     }
     ay_psdk->devinfo.min_rate = attr->min_rate;
@@ -363,36 +361,31 @@ static int ay_init_sdk(Dev_Attribut_Struct  *attr)
     ay_psdk->devinfo.block_nums = attr->block_nums;
 	ay_psdk->devinfo.max_stream_num_per_chn = attr->Reserved[0]; // add by che
 	
-    if (attr->use_type < 3)
-    {
-		ay_psdk->devinfo.use_type = attr->use_type;
-    }else{
-		ay_psdk->devinfo.use_type = 0;
+    if (attr->use_type < 3) {
+        ay_psdk->devinfo.use_type = attr->use_type;
+    } else {
+        ay_psdk->devinfo.use_type = 0;
     }
-    if(attr->p_rw_path != NULL)
-    {
-		strncpy(ay_psdk->devinfo.rw_path, attr->p_rw_path,127);
-		int i = strlen(ay_psdk->devinfo.rw_path);
-		if(ay_psdk->devinfo.rw_path[ i - 1] == '/')
-		{
-			ay_psdk->devinfo.rw_path[ i - 1] = 0;
-		}
-    }
-    else
-    {
-		strcpy(ay_psdk->devinfo.rw_path, ".");
+    if (attr->p_rw_path != NULL) {
+        strncpy(ay_psdk->devinfo.rw_path, attr->p_rw_path, 127);
+        int i = strlen(ay_psdk->devinfo.rw_path);
+        if (ay_psdk->devinfo.rw_path[ i - 1] == '/') {
+            ay_psdk->devinfo.rw_path[ i - 1] = 0;
+        }
+    } else {
+        strcpy(ay_psdk->devinfo.rw_path, ".");
     }
 #ifdef WIN32
-	int err = network_init();
-	if (err != 0) {
-		printf("WSAStartup failed with error: %d\n", err);
-		return -1;
-	}
+    int err = network_init();
+    if (err != 0) {
+        printf("WSAStartup failed with error: %d\n", err);
+        return -1;
+    }
 #else
-	signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 #endif
     aydebug_vindicate_logfile();
-    DEBUGF("LIB MAKE TIME----->>%s %s\n",__DATE__ ,__TIME__);
+    DEBUGF("LIB MAKE TIME----->>%s %s\n", __DATE__ , __TIME__);
 #if AYDEVICE2_ENABLE
     TRACEF("[sdk api-use] new device2 api.\n");
 #endif
@@ -400,91 +393,81 @@ static int ay_init_sdk(Dev_Attribut_Struct  *attr)
     DEBUGF("[sdk api-use] gethostbyname .\n");
 #endif
 
-    if(ay_init_device_object(&ay_psdk->devobj[0],attr->block_nums,20,30,5)<0)
-    {
-		ERRORF("{{DeviceCommEvent}}Start|ay init device object fail!\n");
-		ay_deinit_device_object(&ay_psdk->devobj[0]);
-		pthread_mutex_destroy(&ay_psdk->frame_report_lock);
-		free(ay_psdk);
-		ay_psdk = NULL;
-		return -1;
+    if (ay_init_device_object(&ay_psdk->devobj[0], attr->block_nums, 20, 30, 5) < 0) {
+        ERRORF("Start|ay init device object fail!\n");
+        ay_deinit_device_object(&ay_psdk->devobj[0]);
+        pthread_mutex_destroy(&ay_psdk->frame_report_lock);
+        free(ay_psdk);
+        ay_psdk = NULL;
+        return -1;
     }
     ayutil_save_version(ay_psdk->devinfo.rw_path,"verinfo");
     trace_init_net_stat_info();
     share_mem_init(); 
     init_stream_env();
 
-    if(pool_init(3) < 0)
-    {
-		ERRORF("{{DeviceCommEvent}}Start|pool init 3 fail!\n");
-		goto init_fail;
+    if (pool_init(3) < 0) {
+        ERRORF("Start|pool init 3 fail!\n");
+        goto init_fail;
     }
     pool_add_worker(&aydevice2_query_dnslit, 0);
 
     st_ay_thread_ctrl *pthds = &ay_psdk->threads;
-    if(ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, log_process_thread, NULL))
-    {
-		ERRORF("{{DeviceCommEvent}}Start|log_process_thread thread error(%s)!\n", strerror (errno));
+    if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, log_process_thread, NULL)) {
+		ERRORF("{{DeviceCommEvent}}Start|log_process_thread thread error(%s)!\n", strerror(errno));
 		goto init_fail;
     }
     strcpy(pthds->tasks[pthds->num].name,"log_process_thread");
     pthds->num ++;
 
-    if(ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, Regist_thread_C3, NULL))
-    {
-		ERRORF("{{DeviceCommEvent}}Start|Regist_thread_C3 thread error(%s)!\n", strerror (errno));
+    if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, Regist_thread_C3, NULL)) {
+		ERRORF("{{DeviceCommEvent}}Start|Regist_thread_C3 thread error(%s)!\n", strerror(errno));
 		goto init_fail;
     }
     strcpy(pthds->tasks[pthds->num].name,"Regist_thread_C3");
     pthds->num ++;
-    if(ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, device_discovery_thread, NULL))
-    {
-		ERRORF("{{DeviceCommEvent}}Start|device_discovery_thread thread error(%s)!\n", strerror (errno));
+    if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, device_discovery_thread, NULL)) {
+		ERRORF("{{DeviceCommEvent}}Start|device_discovery_thread thread error(%s)!\n", strerror(errno));
 		goto init_fail;
     }
     strcpy(pthds->tasks[pthds->num].name,"device_discovery_thread");
     pthds->num ++;
-    if(ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, Interact_CallBack_Thread, NULL))
-    {
-		ERRORF("{{DeviceCommEvent}}Start|down cmd thread error(%s)!\n", strerror (errno));
+    if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, Interact_CallBack_Thread, NULL)) {
+		ERRORF("{{DeviceCommEvent}}Start|down cmd thread error(%s)!\n", strerror(errno));
 		goto init_fail;
     }
     strcpy(pthds->tasks[pthds->num].name,"Interact_CallBack_Thread");
     pthds->num ++;
 
-    if(	ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, aystream_recv_thread, NULL))
-    {
-        ERRORF("{{DeviceCommEvent}}Start|stream recv thread error(%s)!\n", strerror (errno));
+    if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, aystream_recv_thread, NULL)) {
+        ERRORF("{{DeviceCommEvent}}Start|stream recv thread error(%s)!\n", strerror(errno));
 		goto init_fail;
     }
     strcpy(pthds->tasks[pthds->num].name,"aystream_recv_thread");
     pthds->num ++;
-    if(ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, aystream_send_thread, NULL))
-    {
-        ERRORF("{{DeviceCommEvent}}Start|stream send thread error(%s)!\n", strerror (errno));
+    if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, aystream_send_thread, NULL)) {
+        ERRORF("{{DeviceCommEvent}}Start|stream send thread error(%s)!\n", strerror(errno));
 		goto init_fail;
     }
     strcpy(pthds->tasks[pthds->num].name,"aystream_send_thread");
     pthds->num ++;
 
-    if(attr->lan_disable)
-    {
+    if (attr->lan_disable) {
 		TRACEF("user disable lan feature,val = %d!\n",attr->lan_disable);
-    }else{
-		if(ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, lan_stream_thread, NULL))
-		{
-			ERRORF("{{DeviceCommEvent}}Start|lan thread error(%s)!\n", strerror (errno));
-			goto init_fail;
-		}
-		strcpy(pthds->tasks[pthds->num].name,"lan_stream_thread");
-		pthds->num ++;
+    } else {
+        if (ayutil_pthread_create(&(pthds->tasks[pthds->num].tid), NULL, lan_stream_thread, NULL)) {
+            ERRORF("{{DeviceCommEvent}}Start|lan thread error(%s)!\n", strerror(errno));
+            goto init_fail;
+        }
+        strcpy(pthds->tasks[pthds->num].name,"lan_stream_thread");
+        pthds->num ++;
     }
     TRACEF("{{DeviceCommEvent}}Start|build %d-%d-%d!\n",YEAT,MONTH,DAYS);
     return 0;
 
 init_fail:
     Ulu_SDK_DeInit();
-    TRACEF("{{DeviceCommEvent}}Failed|build %d-%d-%d!\n",YEAT,MONTH,DAYS);
+    ERRORF("Failed|build %d-%02d-%02d\n", YEAT, MONTH, DAYS);
     return -1;
 }
 
@@ -494,15 +477,13 @@ int Ulu_SDK_Init(Dev_Attribut_Struct  *attr)
     return ay_init_sdk(attr);
 }
 
-int Ulu_SDK_Init_All(Dev_SN_Info *oem_info,Dev_Attribut_Struct *devattr,const char *logfile)
+int Ulu_SDK_Init_All(Dev_SN_Info *oem_info, Dev_Attribut_Struct *devattr, const char *logfile)
 {
     if (oem_info == NULL || devattr == NULL) {
         return -1;
     }
-
     ay_enable_debug(logfile);
     ay_set_oeminfo(oem_info);
-
     return ay_init_sdk(devattr);
 }
 

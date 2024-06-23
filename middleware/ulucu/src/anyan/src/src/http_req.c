@@ -125,6 +125,7 @@ http_req_send(http_req *a_req, http_trans_conn *a_conn)
 			      a_req->resource,
 			      a_req->http_ver);
     }
+  printf("send:%s", l_request);
   /* set the request in the connection buffer */
   http_trans_append_data_to_buf(a_conn, l_request, l_request_len);
   /* free up the request - we don't need it anymore */

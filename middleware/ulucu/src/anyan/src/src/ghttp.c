@@ -11,6 +11,7 @@
 #include "http_date.h"
 #include "http_global.h"
 #include "http_base64.h"
+#include "define.h"
 
 struct _ghttp_request
 {
@@ -32,8 +33,7 @@ struct _ghttp_request
 
 static const char *basic_header = "Basic ";
 
-ghttp_request *
-ghttp_request_new(void)
+ghttp_request * ghttp_request_new(void)
 {
     struct _ghttp_request *l_return = NULL;
 
@@ -286,8 +286,7 @@ ghttp_set_sync(ghttp_request *a_request,
     return 0;
 }
 
-int
-ghttp_prepare(ghttp_request *a_request)
+int ghttp_prepare(ghttp_request *a_request)
 {
     /* only allow http requests if no proxy has been set */
     if (!a_request->proxy->host && a_request->uri->proto &&
@@ -350,98 +349,100 @@ ghttp_prepare(ghttp_request *a_request)
     return 0;
 }
 
-ghttp_status
-ghttp_process(ghttp_request *a_request)
+ghttp_status ghttp_process(ghttp_request *a_request)
 {
     int l_rv = 0;
 
-    if (a_request->proc == ghttp_proc_none)
+    if (a_request->proc == ghttp_proc_none) {
         a_request->proc = ghttp_proc_request;
-    if (a_request->proc == ghttp_proc_request)
-    {
-        if (a_request->connected == 0)
-        {
-            if (http_trans_connect(a_request->conn) < 0)
-            {
-                if (a_request->conn->error_type == http_trans_err_type_errno)
+    }
+    if (a_request->proc == ghttp_proc_request) {
+        if (a_request->connected == 0) {
+            if (http_trans_connect(a_request->conn) < 0) {
+                if (a_request->conn->error_type == http_trans_err_type_errno) {
                     a_request->errstr = strerror(a_request->conn->error);
-                else if(a_request->conn->error_type == http_trans_err_type_host)
-		{
+                } else if (a_request->conn->error_type == http_trans_err_type_host) {
 #if USE_GETHOSTBYNAME
                     a_request->errstr = http_trans_get_host_error(h_errno);
 #else
                     a_request->errstr = gai_strerror(a_request->conn->error);
 #endif
-		}
-		printf("http_trans_connect fail:%s!\n",a_request->errstr?a_request->errstr:"unknown");
+		        }
+		        errorf("http_trans_connect fail:%s!\n",a_request->errstr?a_request->errstr:"unknown");
                 return ghttp_error;
             }
             a_request->connected = 1;
         }
 		
         l_rv = http_req_send(a_request->req, a_request->conn);
-        if (l_rv == HTTP_TRANS_ERR)
-	{
-	    if(a_request->conn->errstr) a_request->errstr = a_request->conn->errstr;
-	    else a_request->errstr = "http_req_send err!";
-	    printf("http_req_send fail!\n");
+        if (l_rv == HTTP_TRANS_ERR) {
+            if (a_request->conn->errstr) {
+                a_request->errstr = a_request->conn->errstr;
+            } else {
+                a_request->errstr = "http_req_send err!";
+            }
+            errorf("http_req_send fail!\n");
             return ghttp_error;
-	}
-        if (l_rv == HTTP_TRANS_NOT_DONE)
+        }
+        if (l_rv == HTTP_TRANS_NOT_DONE) {
             return ghttp_not_done;
-        if (l_rv == HTTP_TRANS_DONE)
-        {
+        }
+        if (l_rv == HTTP_TRANS_DONE) {
             a_request->proc = ghttp_proc_response_hdrs;
-            if (a_request->conn->sync == HTTP_TRANS_ASYNC)
+            if (a_request->conn->sync == HTTP_TRANS_ASYNC) {
                 return ghttp_not_done;
+            }
         }
     }
-    if (a_request->proc == ghttp_proc_response_hdrs)
-    {
+    if (a_request->proc == ghttp_proc_response_hdrs) {
         l_rv = http_resp_read_headers(a_request->resp, a_request->conn);
-        if (l_rv == HTTP_TRANS_ERR)
-	{
-	    if(a_request->conn->errstr) a_request->errstr = a_request->conn->errstr;
-	    else a_request->errstr = "http_resp_read_headers err!";
-	    printf("http_resp_read_headers fail!\n");
+        if (l_rv == HTTP_TRANS_ERR) {
+            if (a_request->conn->errstr) {
+                a_request->errstr = a_request->conn->errstr;
+            } else {
+                a_request->errstr = "http_resp_read_headers err!";
+            }
+            errorf("http_resp_read_headers fail! %s\n", a_request->conn->errstr);
             return ghttp_error;
-	}
-        if (l_rv == HTTP_TRANS_NOT_DONE)
+        }
+        if (l_rv == HTTP_TRANS_NOT_DONE) {
             return ghttp_not_done;
-        if (l_rv == HTTP_TRANS_DONE)
-        {
+        }
+        if (l_rv == HTTP_TRANS_DONE) {
             a_request->proc = ghttp_proc_response;
-            if (a_request->conn->sync == HTTP_TRANS_ASYNC)
+            if (a_request->conn->sync == HTTP_TRANS_ASYNC) {
                 return ghttp_not_done;
+            }
         }
     }
-    if (a_request->proc == ghttp_proc_response)
-    {
-        l_rv = http_resp_read_body(a_request->resp,
-                                   a_request->req,
-                                   a_request->conn);
-        if (l_rv == HTTP_TRANS_ERR)
-        {
+    if (a_request->proc == ghttp_proc_response) {
+        l_rv = http_resp_read_body(a_request->resp, a_request->req, a_request->conn);
+        if (l_rv == HTTP_TRANS_ERR) {
             /* make sure that the connected flag is fixed and stuff */
-            if (a_request->conn->sock == -1)
+            if (a_request->conn->sock == -1) {
                 a_request->connected = 0;
-	    if(a_request->conn->errstr) a_request->errstr = a_request->conn->errstr;
-	    else a_request->errstr = "http_resp_read_body err!";
-	    printf("http_resp_read_body fail!\n");
+            }
+            if (a_request->conn->errstr) {
+                a_request->errstr = a_request->conn->errstr;
+            } else {
+                a_request->errstr = "http_resp_read_body err!";
+            }
+            errorf("http_resp_read_body fail!\n");
             return ghttp_error;
         }
-        if (l_rv == HTTP_TRANS_NOT_DONE)
+        if (l_rv == HTTP_TRANS_NOT_DONE) {
             return ghttp_not_done;
-        if (l_rv == HTTP_TRANS_DONE)
-        {
+        }
+        if (l_rv == HTTP_TRANS_DONE) {
             /* make sure that the connected flag is fixed and stuff */
-            if (a_request->conn->sock == -1)
+            if (a_request->conn->sock == -1) {
                 a_request->connected = 0;
+            }
             a_request->proc = ghttp_proc_none;
             return ghttp_done;
         }
     }
-    printf("a_request proc = %d\n",a_request->proc);
+    errorf("a_request proc = %d\n", a_request->proc);
     return ghttp_error;
 }
 

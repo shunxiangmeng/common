@@ -210,7 +210,7 @@ void Logger::printLog(LogLevel level, const char *file, int line, const char *fm
         }
 
         content += printTime();
-        content += std::string("[") + std::to_string(getCurrentThreadId()) + std::string("]");  //线程ID的hash值
+        content += std::string("[") + std::to_string(getCurrentThreadId()) + std::string("]");  /* 线程ID的hash值 */
         content += sLogLevelString[int(level)];
         content += std::string("[") + file_name + std::string(":") + std::to_string(line) + std::string("]");
         content += buffer;
@@ -221,9 +221,14 @@ void Logger::printLog(LogLevel level, const char *file, int line, const char *fm
 
 }  //namespace
 
-
 extern "C" {
 void printflog_for_c(int level, const char *file, int line, const char *fmt, ...) {
-    infra::Logger::instance().printLog((infra::LogLevel)level, file, line, fmt);
+    va_list ap;
+    va_start(ap, fmt);
+    char buffer[4096] = { 0 };
+    if (vsnprintf(buffer, sizeof(buffer), fmt, ap) > 0) {
+        infra::Logger::instance().printLog((infra::LogLevel)level, file, line, buffer);
+    }
+    va_end(ap);
 }
 }

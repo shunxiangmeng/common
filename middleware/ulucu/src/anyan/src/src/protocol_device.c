@@ -682,9 +682,8 @@ int Pack_MsgD2SNVRHistoryListNotify(char *buf, MsgD2SNVRHistoryListNotify *msg)
 
 int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
 {
-    if(buf == NULL || len< 8)
-    {
-	return	-1;
+    if (buf == NULL || len < 8) {
+        return	-1;
     }
 
     int ret = 0;
@@ -701,7 +700,7 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
     DEBUGF("mask=0x%x, flag=0x%x\n", mask, flag);
 
     //aydebug_printf("regist ack", buf, len);
-    if(mask & 0x0001)
+    if (mask & 0x0001)
     {
         DEBUGF("0x0001...\n");
         pos = Check_ID_Error(pos, len, &errcode);
@@ -719,13 +718,13 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
             //memset(pdevinfo->token.token_bin, 0, sizeof(pdevinfo->token.token_bin));
         }
 
-        if(pos == NULL)
+        if (pos == NULL)
         {     
             return -1;
         }
 
         temp16 = READ_2BYTE(pos);
-        if((temp16 >= 3) && (temp16 <= 600))
+        if ((temp16 >= 3) && (temp16 <= 600))
         {
             pdevinfo->expected_cycle = temp16;
             DEBUGF("entry expected cycle=%d\n", temp16);
@@ -733,7 +732,7 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
         pos += 2;
     }
 
-    if(mask & 0x0002)//public ip info
+    if (mask & 0x0002)//public ip info
     {
         DEBUGF("0x0002...\n");
         pdevinfo->public_net_ip = READ_4BYTE(pos);
@@ -741,9 +740,9 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
         pdevinfo->public_net_port = READ_2BYTE(pos);
         pos += 2;
     }
-    if(mask & 0x0004)//stream server info
+    if (mask & 0x0004)//stream server info
     {
-        DEBUGF("0x0004...\n");
+        DEBUGF("0x0004... stream server info\n");
 
         uint32 stream_serv_ip;
         uint16 stream_serv_port;

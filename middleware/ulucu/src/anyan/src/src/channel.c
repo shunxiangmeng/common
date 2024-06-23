@@ -203,18 +203,18 @@ int add_channel_cmd(uint32 cid, uint32 chnlnum, uint32 enable, uint32  rate,uint
     CMD_PARAM_STRUCT   cmd;
     Chnl_ctrl_table_struct *ptable = sdk_get_handle(0)->devobj[0].streamFilter;
 
-    switch(cmd_from)
+    switch (cmd_from)
     {
-	case CMD_FROM_CLIENT:fromstr = "client";break;
-	case CMD_FROM_SERVER:fromstr = "server";break;
-	case CMD_FROM_MDCLOUD:fromstr = "mdclout";break;
-	case CMD_FROM_HUMAN:fromstr = "mdhuman"; break;
-	default:fromstr = "unknown";break;
+        case CMD_FROM_CLIENT: fromstr = "client"; break;
+        case CMD_FROM_SERVER: fromstr = "server"; break;
+        case CMD_FROM_MDCLOUD: fromstr = "mdclout"; break;
+        case CMD_FROM_HUMAN: fromstr = "mdhuman"; break;
+        default: fromstr = "unknown"; break;
     }
 
-    if(cmd_from == CMD_FROM_CLIENT)
+    if (cmd_from == CMD_FROM_CLIENT)
     {
-	ptable = sdk_get_handle(0)->devobj[1].streamFilter;
+        ptable = sdk_get_handle(0)->devobj[1].streamFilter;
     }
 
     cmd.channel =  chnlnum;
@@ -241,38 +241,40 @@ int add_channel_cmd(uint32 cid, uint32 chnlnum, uint32 enable, uint32  rate,uint
 	    TRACEF("{{MediaEvent}}%d|%d|%s|Live|Audio|%s|from:%s\n",chnlnum,rate,inet_ntoa(ip),enable?"Start":"Stop",fromstr);
 	    break;
 	case HISTORY_STOP:
-	    if(chnlnum > 0)
-	    {
-		ret = 1;
-		ptable[chnlnum - 1].bit_his_r = 0;
-		TRACEF("{{MediaEvent}}%d|%d|%s|Playback|All|%s|from:%s\n",chnlnum,rate,inet_ntoa(ip),enable?"Start":"Stop",fromstr);
-	    }
-	    DEBUGF("[clr hist]ch=%d,en=%d,rate=%d\n", chnlnum, enable, rate);
-	    break;
-	default:
-	    return -1;
+        if (chnlnum > 0)
+        {
+            ret = 1;
+            ptable[chnlnum - 1].bit_his_r = 0;
+            TRACEF("{{MediaEvent}}%d|%d|%s|Playback|All|%s|from:%s\n",chnlnum,rate,inet_ntoa(ip),enable?"Start":"Stop",fromstr);
+        }
+        DEBUGF("[clr hist]ch=%d,en=%d,rate=%d\n", chnlnum, enable, rate);
+        break;
+    default:
+        return -1;
     }
 
 	DEBUGF("ret = %d enable = %d,then query_chnl_status\n",ret,enable);
 
-    if(ret && !enable) // close we need think of another devobj
+    if (ret && !enable) // close we need think of another devobj
     {
-	if(cmd_from == CMD_FROM_CLIENT &&
-		query_chnl_status(sdk_get_handle(0)->devobj[0].streamFilter,cid,chnlnum,rate))
-	{// WAN still open
-	    DEBUGF("WAN still open..chn[%d],rate[%d]\n",chnlnum,rate);
-	    ret = 0;
-	}
-	else if(query_chnl_status(sdk_get_handle(0)->devobj[1].streamFilter,cid,chnlnum,rate))
-	{// LAN still open
-	    DEBUGF("LAN still open..chn[%d],rate[%d]\n",chnlnum,rate);
-	    ret = 0;
-	}
+        if (cmd_from == CMD_FROM_CLIENT &&
+            query_chnl_status(sdk_get_handle(0)->devobj[0].streamFilter,cid,chnlnum,rate))
+        {// WAN still open
+            DEBUGF("WAN still open..chn[%d],rate[%d]\n",chnlnum,rate);
+            ret = 0;
+        }
+        else if (query_chnl_status(sdk_get_handle(0)->devobj[1].streamFilter,cid,chnlnum,rate))
+        {// LAN still open
+            DEBUGF("LAN still open..chn[%d],rate[%d]\n",chnlnum,rate);
+            ret = 0;
+        }
     }
 
-	DEBUGF("ret = %d then Msg_Cmd_Add_down_queue\n",ret);
+    DEBUGF("ret = %d then Msg_Cmd_Add_down_queue\n",ret);
 
-    if(ret) Msg_Cmd_Add_down_queue((char*)&cmd, sizeof(CMD_PARAM_STRUCT));
+    if (ret) {
+        Msg_Cmd_Add_down_queue((char*)&cmd, sizeof(CMD_PARAM_STRUCT));
+    }
     return 0;
 }
 
