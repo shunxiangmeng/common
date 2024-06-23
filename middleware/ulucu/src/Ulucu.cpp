@@ -10,24 +10,39 @@
 #include "Ulucu.h"
 #include "anyan/src/inc/Anyan_Device_SDK.h"
 #include "infra/include/Logger.h"
+#include "infra/include/thread/WorkThreadPool.h"
 
 namespace ulucu {
 
 IUlucu* IUlucu::instance() {
+    return Ulucu::instance();
+}
+
+Ulucu* Ulucu::instance() {
     static Ulucu s_ulucu;
     return &s_ulucu;
 }
 
 Ulucu::Ulucu() {
+    huidian_ = std::make_shared<Huidian>();
 }
 
 Ulucu::~Ulucu() {
 }
 
 static void anyan_interact_callback(CMD_PARAM_STRUCT *args) {
+    Ulucu::instance()->anyanInteractCallback((void*)args);
+}
+
+void Ulucu::anyanInteractCallback(void* data) {
+    CMD_PARAM_STRUCT *args = (CMD_PARAM_STRUCT*)data;
     warnf("anyan cmd: %d\n", args->cmd_id);
     switch (args->cmd_id) {
         case VIDEO_CTRL: break;
+        case EXT_DEVICE_ONLINE:
+            infof("anyan online\n");
+            initHuidian();
+            break;
         default:
             warnf("undefine cmd [%d]\n", args->cmd_id);
             break; 
@@ -39,6 +54,7 @@ bool Ulucu::init() {
     Dev_SN_Info oem_info = {0};
     oem_info.OEMID = 100002;
     char *SN = "Ub0000000123456444NN";
+    device_sn_ = SN;
     //char* SN = "0000000123456444";
     memcpy(oem_info.MAC, "0A0027000004", sizeof("0A0027000004"));
     memcpy(oem_info.SN, SN, strlen(SN));
@@ -62,7 +78,7 @@ bool Ulucu::init() {
     attr.audio_chnl = 1;
     attr.audio_smaple_rt = 8000;
     attr.audio_bit_width = 16;
-    attr.use_type = 0; //设备使用类型 0：对外销售设备，1：测试设备，2：演示设备。 默认0。
+    attr.use_type = 0;      //设备使用类型 0：对外销售设备，1：测试设备，2：演示设备。 默认0
     attr.max_rate = UPLOAD_RATE_4;
     attr.max_rate = UPLOAD_RATE_3;
 
@@ -72,6 +88,11 @@ bool Ulucu::init() {
     return true;
 }
 
-
+void Ulucu::initHuidian() {
+    infra::WorkThreadPool::instance()->async([this]() {
+        huidian_->init(device_sn_.data());
+    });
+    
+}
 
 }

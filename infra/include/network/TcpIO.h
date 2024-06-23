@@ -8,24 +8,33 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <mutex>
 #include <functional>
 #include "infra/include/network/TcpSocket.h"
 #include "infra/include/network/SocketHandler.h"
+#include "infra/include/Buffer.h"
 
 namespace infra {
-using AsyncReadCallback = std::function<void(int32_t)>;
+using AsyncReadCallback = std::function<void(infra::Buffer&)>;
+using ExceptionCallback = std::function<void(int32_t)>;
 
 class TcpIO : public TcpSocket, public SocketHandler {
 public:
     TcpIO();
     virtual ~TcpIO();
 
-    bool asyncReadSome(char* buffer, int32_t size, AsyncReadCallback callback);
+    bool setCallback(AsyncReadCallback callback, ExceptionCallback exception_callback);
     bool stop();
 private:
     virtual int32_t onRead(int32_t fd) override;
     virtual int32_t onException(int32_t fd) override;
 
+    bool ensureRead(int32_t &readed_size);
+
     AsyncReadCallback read_callback_;
+    ExceptionCallback exception_callback_;
+
+    infra::Buffer buffer_;
+    std::recursive_mutex mutex_;
 };
 }

@@ -65,7 +65,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
 
     #ifdef _WIN32
     if (WSAGetLastError() != WSAEWOULDBLOCK) {
-        errorf("connect failed! errno: %d\n", WSAGetLastError());
+        errorf("connect %s:%d failed! errno: %d\n", remote_ip.data(), remote_port, WSAGetLastError());
         close(fd_);
         fd_ = -1;
         return false;
