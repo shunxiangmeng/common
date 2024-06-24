@@ -22,35 +22,29 @@ ay_sdk_handle ay_psdk = NULL;
 
 static int Get_Alarm_Permission(ULK_Alarm_Struct *pctrl, struct timespec last_alarm_time)
 {
-    int i;
     struct tm  *local, curtm;
-    time_t  t;
     uint32  time_tmp;
     struct timespec now;
 
-    if (pctrl->alarm_flag == 0)
-    {
-		//errorf("alarm is forbid\n");
-		return -1;
+    if (pctrl->alarm_flag == 0) {
+        errorf("alarm is forbid\n");
+        return -1;
     }
     clock_gettime(CLOCK_MONOTONIC,&now);
-    if (ayutil_cost_mseconds(last_alarm_time,now) <= pctrl->alarm_interval_mix*1000)
-    {
-		DEBUGF("alarm too fast,interval mix = %d\n",pctrl->alarm_interval_mix);
-		return  -3;
+    if (ayutil_cost_mseconds(last_alarm_time,now) <= pctrl->alarm_interval_mix * 1000) {
+        DEBUGF("alarm too fast,interval mix = %d\n",pctrl->alarm_interval_mix);
+        return  -3;
     }
 
-    t = time(NULL); 
+    time_t t = time(NULL); 
     local = localtime_r(&t,&curtm); 
 
-    time_tmp = local->tm_hour * 3600 + local->tm_min*60 + local->tm_sec;
-    DEBUGF("localtime time = %u\n",time_tmp);
-    for (i = 0 ; i < pctrl->alarm_time_table_num; i++)
-    {
-		if ( time_tmp <= pctrl->alarm_time_table[i].end && time_tmp >= pctrl->alarm_time_table[i].start)
-		{
-			return 0;
-		}
+    time_tmp = local->tm_hour * 3600 + local->tm_min * 60 + local->tm_sec;
+    DEBUGF("localtime time = %u\n", time_tmp);
+    for (int i = 0 ; i < pctrl->alarm_time_table_num; i++) {
+        if (time_tmp <= pctrl->alarm_time_table[i].end && time_tmp >= pctrl->alarm_time_table[i].start) {
+            return 0;
+        }
     }
     DEBUGF("alarm time is not allow\n");
     return -2;
@@ -58,19 +52,17 @@ static int Get_Alarm_Permission(ULK_Alarm_Struct *pctrl, struct timespec last_al
 
 ay_sdk_handle sdk_init_instace(int id)
 {
-    if(ay_psdk == NULL)
-    {
-		ay_psdk = (ay_sdk_handle)malloc(sizeof(st_ay_sdk_instance));
-		if(ay_psdk!=NULL) 
-		{
-			memset(ay_psdk,0,sizeof(st_ay_sdk_instance));
-			pthread_mutex_init(&ay_psdk->frame_report_lock,NULL);
-			pthread_mutexattr_t attr;
-			pthread_mutexattr_init(&attr);
-			pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
-			pthread_mutex_init(&ay_psdk->stream_flag_lock, &attr);
-			pthread_mutexattr_destroy(&attr);
-		}
+    if (ay_psdk == NULL) {
+        ay_psdk = (ay_sdk_handle)malloc(sizeof(st_ay_sdk_instance));
+        if (ay_psdk != NULL) {
+            memset(ay_psdk, 0, sizeof(st_ay_sdk_instance));
+            pthread_mutex_init(&ay_psdk->frame_report_lock, NULL);
+            pthread_mutexattr_t attr;
+            pthread_mutexattr_init(&attr);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+            pthread_mutex_init(&ay_psdk->stream_flag_lock, &attr);
+            pthread_mutexattr_destroy(&attr);
+        }
     }
     return ay_psdk;
 }
@@ -80,7 +72,7 @@ ay_sdk_handle sdk_get_handle(int id)
     return ay_psdk;
 }
 
-void  notify_alarm_config_update(ULK_Alarm_Struct *palarm,int num)
+void notify_alarm_config_update(ULK_Alarm_Struct *palarm,int num)
 {
     CMD_PARAM_STRUCT	cmd;
     AY_Alarm_Struct	ay_alarm;
@@ -90,57 +82,52 @@ void  notify_alarm_config_update(ULK_Alarm_Struct *palarm,int num)
     cmd.cmd_args_len = num*sizeof(AY_Alarm_Struct);
     memset(cmd.cmd_args, 0, sizeof(cmd.cmd_args));
 
-    int i = 0,j = 0;
-    for(i=0;i<num;i++)
-    {
-		memset(&ay_alarm,0,sizeof(ay_alarm));
-		ay_alarm.alarm_flag = palarm[i].alarm_flag;
-		ay_alarm.alarm_time_table_num = palarm[i].alarm_time_table_num;
-		ay_alarm.alarm_interval_mix = palarm[i].alarm_interval_mix;
-		for(j=0;j<ay_alarm.alarm_time_table_num;j++)
-		{
-			ay_alarm.alarm_time_table[j].start = palarm[i].alarm_time_table[j].start;
-			ay_alarm.alarm_time_table[j].end = palarm[i].alarm_time_table[j].end;
-		}
-		memcpy(cmd.cmd_args + i*sizeof(AY_Alarm_Struct),&ay_alarm,sizeof(AY_Alarm_Struct));
+    for (int i = 0; i < num; i++) {
+        memset(&ay_alarm, 0, sizeof(ay_alarm));
+        ay_alarm.alarm_flag = palarm[i].alarm_flag;
+        ay_alarm.alarm_time_table_num = palarm[i].alarm_time_table_num;
+        ay_alarm.alarm_interval_mix = palarm[i].alarm_interval_mix;
+        for (int j = 0; j < ay_alarm.alarm_time_table_num; j++) {
+            ay_alarm.alarm_time_table[j].start = palarm[i].alarm_time_table[j].start;
+            ay_alarm.alarm_time_table[j].end = palarm[i].alarm_time_table[j].end;
+        }
+        memcpy(cmd.cmd_args + i * sizeof(AY_Alarm_Struct), &ay_alarm, sizeof(AY_Alarm_Struct));
     }
 
     Msg_Cmd_Add_down_queue((char*)&cmd, sizeof(CMD_PARAM_STRUCT));
 }
 
 /* msg 最大1024个字符 */
-void  call_back_error_info(char *msg)
+void call_back_error_info(char *msg)
 {
-    int len;
-    CMD_PARAM_STRUCT   err;
+    CMD_PARAM_STRUCT err;
     err.channel = 0;
     err.cmd_id = ERROR_INFO;
-    len = strlen(msg);
+    int len = strlen(msg);
     memset(err.cmd_args, 0, sizeof(err.cmd_args));
 
-    if ( len >= sizeof(err.cmd_args) - 1 )
+    if (len >= sizeof(err.cmd_args) - 1)
     {
-		memcpy(err.cmd_args, msg, sizeof(err.cmd_args) - 1);			
+        memcpy(err.cmd_args, msg, sizeof(err.cmd_args) - 1);			
     }else{
-		strcpy(err.cmd_args, msg);
+        strcpy(err.cmd_args, msg);
     }
     Msg_Cmd_Add_down_queue((char*)&err, sizeof(CMD_PARAM_STRUCT));
 }
  
-int  Computer_Net_UploadSpeed(uint32 tlen)
+int Computer_Net_UploadSpeed(uint32 tlen)
 {
-    if(tlen > 0)
-    {
-		struct net_statistic_info netinfo;
-		char  buf[256]={0};
+    if (tlen > 0) {
+        struct net_statistic_info netinfo;
+        char  buf[256]={0};
 
-		trace_get_net_stat_info(&netinfo);
-		snprintf(buf, 256, "need %7.2fkB/s,real %7.2fkB/s,stream %7.2fKB/s\n", 
-			netinfo.want_send_speed[1],netinfo.real_send_speed[1],sdk_get_handle(0)->net_stream_upload_bytes*1.0/(1024*tlen));
-		DEBUGF("%s", buf);
+        trace_get_net_stat_info(&netinfo);
+        snprintf(buf, 256, "need %7.2fkB/s,real %7.2fkB/s,stream %7.2fKB/s\n", 
+            netinfo.want_send_speed[1], netinfo.real_send_speed[1], sdk_get_handle(0)->net_stream_upload_bytes*1.0 / (1024 * tlen));
+        DEBUGF("%s", buf);
 
-		sdk_get_handle(0)->net_stream_upload_bytes = 0;
-		call_back_error_info(buf);
+        sdk_get_handle(0)->net_stream_upload_bytes = 0;
+        call_back_error_info(buf);
     }
     return 0;
 }
@@ -175,12 +162,11 @@ int ay_deinit_device_object(st_ay_device_object *pdevobj)
 
 static void ay_enable_debug(const char *log_file_full_name)
 {
-    if(sdk_init_instace(0) && log_file_full_name)
-    {
-		ay_sdk_handle psdk = ay_psdk;
-		snprintf(psdk->debug.pathfile, sizeof(psdk->debug.pathfile),"%s",log_file_full_name);
-		psdk->debug.en_flag = 1;	
-		psdk->debug.max_fsize = 50*1024;
+    if (sdk_init_instace(0) && log_file_full_name) {
+        ay_sdk_handle psdk = ay_psdk;
+        snprintf(psdk->debug.pathfile, sizeof(psdk->debug.pathfile), "%s", log_file_full_name);
+        psdk->debug.en_flag = 1;	
+        psdk->debug.max_fsize = 50 * 1024;
     }
 }
 
@@ -191,27 +177,21 @@ void Ulu_SDK_Enable_Debug(const char *log_file_full_name)
 
 int Ulu_SDK_ChannelStatus_Event(int channel, ULK_CHNL_STATUS_ENUM status)
 {
-    int t, j;
-    uint8 mask = 0;
-
-    t = (channel-1) / 8;
-    j = (channel-1) % 8;
-
-    if(sdk_init_instace(0))
-    {
-		mask = ay_psdk->devinfo.channel_mask[t]&(1<<(7-j));
-		if ( (status==ULK_OFFLINE) && mask )
-		{// online -> offline
-			ay_psdk->devinfo.channel_mask[t] &= ~(1<<(7-j));
-			ay_psdk->devinfo.devstatus_update_flag = 1;
-		}
-		else if((status==ULK_ONLINE) && !mask)
-		{// offline -> online
-			ay_psdk->devinfo.channel_mask[t] |= 1<<(7-j);
-			ay_psdk->devinfo.devstatus_update_flag = 1;
-		}
+    int t = (channel-1) / 8;
+    int j = (channel-1) % 8;
+    if (sdk_init_instace(0)) {
+        uint8 mask = ay_psdk->devinfo.channel_mask[t]&(1<<(7-j));
+        if ( (status==ULK_OFFLINE) && mask )
+        {// online -> offline
+            ay_psdk->devinfo.channel_mask[t] &= ~(1<<(7-j));
+            ay_psdk->devinfo.devstatus_update_flag = 1;
+        }
+        else if((status==ULK_ONLINE) && !mask)
+        {// offline -> online
+            ay_psdk->devinfo.channel_mask[t] |= 1<<(7-j);
+            ay_psdk->devinfo.devstatus_update_flag = 1;
+        }
     }
-    
     return 0;
 }
 
@@ -1222,11 +1202,9 @@ int Ulu_SDK_Reset_Device(void)
 
 int Ulu_SDK_Set_20SN(const char *sn20)
 {
-    if(ay_psdk && sn20 && strlen(sn20)>=20)
-    {
-		ayutil_save_file(ay_psdk->devinfo.rw_path,"SN_ulk",sn20,strlen(sn20));
-		return 0;
+    if (ay_psdk && sn20 && strlen(sn20) >= 20) {
+        ayutil_save_file(ay_psdk->devinfo.rw_path, "SN_ulk", sn20, strlen(sn20));
+        return 0;
     }
     return -1;
 }
-

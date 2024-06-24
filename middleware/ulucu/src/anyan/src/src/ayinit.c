@@ -87,28 +87,28 @@ static int send_query_device_status_rsp(int fd, struct sockaddr_in* addr)
     unsigned int mylip = ayutil_get_local_ip("ra0","wlan0");
     unsigned int gap1 = 0,gap2 = 0;
 
-    encode_query_device_rsp(&rsp,&sdk_get_handle(0)->devinfo);
-    if(mylip > 0 && mylip!=rsp.ip)
+    encode_query_device_rsp(&rsp, &sdk_get_handle(0)->devinfo);
+    if (mylip > 0 && mylip != rsp.ip)
     {
-		gap1 = htonl(mylip) > htonl(rmtip)?htonl(mylip) - htonl(rmtip):htonl(rmtip) - htonl(mylip);
-		gap2 = htonl(rsp.ip) > htonl(rmtip)?htonl(rsp.ip) - htonl(rmtip):htonl(rmtip) - htonl(rsp.ip);
-		//DEBUG("remoteip = %s,rmtip = %u,raip = %u,ethip = %u,gap1 = %u,gap2 = %u\n",
-		//	inet_ntoa(addr->sin_addr),htonl(rmtip),htonl(mylip),htonl(rsp.ip),gap1,gap2);
-		if(gap1 < gap2)
-		{
-			DEBUGF("use ra0 ip = %u\n",htonl(mylip));
-			rsp.ip = mylip;
-		}
+        gap1 = htonl(mylip) > htonl(rmtip) ? htonl(mylip) - htonl(rmtip) : htonl(rmtip) - htonl(mylip);
+        gap2 = htonl(rsp.ip) > htonl(rmtip) ? htonl(rsp.ip) - htonl(rmtip) : htonl(rmtip) - htonl(rsp.ip);
+        //DEBUG("remoteip = %s,rmtip = %u,raip = %u,ethip = %u,gap1 = %u,gap2 = %u\n",
+        //	inet_ntoa(addr->sin_addr),htonl(rmtip),htonl(mylip),htonl(rsp.ip),gap1,gap2);
+        if (gap1 < gap2)
+        {
+            DEBUGF("use ra0 ip = %u\n",htonl(mylip));
+            rsp.ip = mylip;
+        }
     }
 
     msglen = Pack_MsgDeviceStatusQueryResponse((char*)msgbuf, &rsp);
 
     cipher_len = sizeof(cipher_buf);
 
-    if( DES_Encrypt(msgbuf+2, msglen-2, (unsigned char*)_ANYAN_DEFAULT_KEY, 8, cipher_buf+2, cipher_len-2, &cipher_len) < 0)
+    if (DES_Encrypt(msgbuf+2, msglen-2, (unsigned char*)_ANYAN_DEFAULT_KEY, 8, cipher_buf+2, cipher_len-2, &cipher_len) < 0)
     {
-		DEBUGF("send query device response to [%s:%d] fail, encypt error!",inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
-		return -1;
+        DEBUGF("send query device response to [%s:%d] fail, encypt error!",inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+        return -1;
     }
 
     len_pos = (unsigned short *)&cipher_buf[0];
@@ -117,7 +117,7 @@ static int send_query_device_status_rsp(int fd, struct sockaddr_in* addr)
 
     rc = sendto(fd, cipher_buf, cipher_len, 0, (struct sockaddr*)(addr), sizeof(struct sockaddr_in));
 
-    //DEBUG("send query device response to [%s:%d], msg len:%d.", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port), rc);
+    tracef("send query device response to [%s:%d], msg len:%d.", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port), rc);
 
     return rc;
 }
@@ -141,8 +141,8 @@ void* device_discovery_thread(void *arg)
     set_thread_name("ulk_dc");
 
     addrlen = sizeof(struct sockaddr_in);
-    memset(&localaddr,0, sizeof(struct sockaddr_in));
-    memset(&rmtaddr,0, sizeof(struct sockaddr_in));
+    memset(&localaddr, 0, sizeof(struct sockaddr_in));
+    memset(&rmtaddr, 0, sizeof(struct sockaddr_in));
 
     localaddr.sin_family = AF_INET;
     localaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -209,11 +209,12 @@ void* device_discovery_thread(void *arg)
                 }
                 #endif
             } else {
+                tracef("dc recv ret:%d\n", iRet);
                 // sizeof is unsigned int type,so ensure iRet >= 0 when compare !!!
                 if (iRet < (sizeof(MSG_HEADER_C3) + sizeof(MsgDeviceStatusQuery))) {
-                    //DEBUG("device_discovery_thread()-->receive msg: %d!\n",iRet);
+                    DEBUGF("device_discovery_thread()-->receive msg: %d!\n", iRet);
                 } else if (Unpack_MsgDeviceStatusQuery(recvdata) < 0) {
-                    //DEBUG("device_discovery_thread()-->receive incorrect msg!\n");
+                    DEBUGF("device_discovery_thread()-->receive incorrect msg!\n");
                 } else {
                     send_query_device_status_rsp(sockfd, &rmtaddr);
                 }
