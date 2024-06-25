@@ -43,12 +43,13 @@ int Huidian::getEDServIP(char *ip, int *port) {
 bool Huidian::deviceLoginLDB() {
     char server_ip[32] = {0};
     int server_port = 0;
-    if (getEDServIP(server_ip, &server_port) < 0) {
-        errorf("get EDServer error\n");
-        return false;
-    }
+    //if (getEDServIP(server_ip, &server_port) < 0) {
+    //    errorf("get EDServer error\n");
+    //    return false;
+    //}
+
     sock_ = std::make_shared<infra::TcpIO>();
-    if (!sock_->connect(server_ip, server_port, false)) {
+    if (!sock_->connect(HD_BLSERVER_NAME, HD_BLSERVER_PORT, false)) {
         errorf("tcp connect to %s:%d error\n", server_ip, server_port);
         return false;
     }
@@ -72,7 +73,8 @@ bool Huidian::deviceLoginLDB() {
 }
 
 void Huidian::onSocketRead(infra::Buffer& buffer) {
-
+    infof("onSocketRead+++\n");
+    tracef("%s", buffer.data());
 }
 
 infra::Buffer Huidian::makeHdRequest(const char* cmd, Json::Value &body, const char* serial) {
@@ -84,8 +86,10 @@ infra::Buffer Huidian::makeHdRequest(const char* cmd, Json::Value &body, const c
     Json::FastWriter writer;
     std::string str = writer.write(root);
     str += "\r\n\r\n";
-    infra::Buffer buffer(str.size());
+    infra::Buffer buffer(str.size() + 1);
     memcpy((char*)buffer.data(), str.c_str(), str.size());
+    buffer.resize(str.size());
+    buffer.data()[str.size()] = '\0';
     return buffer;
 }
 
@@ -107,6 +111,7 @@ std::shared_ptr<UlucuAsyncCallResult> Huidian::asyncRequest(const char* cmd, Jso
     }
 
     infra::Buffer buffer = makeHdRequest(cmd, body, serial.data());
+    tracef("send:%s", buffer.data());
     int32_t send_len = sock_->send((const char*)buffer.data(), buffer.size());
     if (send_len < 0) {
         ulucu::CallResult result;

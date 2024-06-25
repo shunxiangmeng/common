@@ -29,6 +29,72 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
         return false;
     }
 
+    bool is_ip = isIPAddress(remote_ip);
+    bool is_domain = isDomainName(remote_ip);
+
+    if ((is_ip && is_domain) || (!is_ip && !is_domain)) {
+        errorf("ip error: %s\n", remote_ip.data());
+        return false;
+    }
+
+    std::string real_remote_ip = remote_ip;
+    if (is_domain) {
+        tracef("query domain: %s\n", remote_ip.data());
+        struct addrinfo hints = {0}, * result;
+        int ret = getaddrinfo(remote_ip.data(), nullptr, &hints, &result);
+        if (ret != 0) {
+            errorf("getaddrinfo error:%d\n", ret);
+            return false;
+        }
+        struct sockaddr_in *sockaddr_ipv4;
+        int count = 0;
+        int ipbufferlength = 0;
+        for (struct addrinfo *ptr = result; ptr != nullptr; ptr = ptr->ai_next) {
+            tracef("getaddrinfo response %d\n", count++);
+            tracef("Flags: 0x%x\n", ptr->ai_flags);
+            switch (ptr->ai_family) {
+                case AF_UNSPEC:
+                    warnf("Unspecified\n");
+                    break;
+                case AF_INET:
+                    tracef("AF_INET (IPv4)\n");
+                    sockaddr_ipv4 = (struct sockaddr_in *) ptr->ai_addr;
+                    real_remote_ip = inet_ntoa(sockaddr_ipv4->sin_addr);
+                    tracef("IPv4 address: %s\n", inet_ntoa(sockaddr_ipv4->sin_addr));
+                    break;
+                case AF_INET6:
+                    tracef("AF_INET6 (IPv6)\n");
+                    return false;
+                    #if 0
+                    // the InetNtop function is available on Windows Vista and later
+                    // sockaddr_ipv6 = (struct sockaddr_in6 *) ptr->ai_addr;
+                    // printf("\tIPv6 address %s\n",
+                    //    InetNtop(AF_INET6, &sockaddr_ipv6->sin6_addr, ipstringbuffer, 46) );
+                    
+                    // We use WSAAddressToString since it is supported on Windows XP and later
+                    sockaddr_ip = (LPSOCKADDR) ptr->ai_addr;
+                    // The buffer length is changed by each call to WSAAddresstoString
+                    // So we need to set it for each iteration through the loop for safety
+                    ipbufferlength = 46;
+                    ret = WSAAddressToString(sockaddr_ip, (DWORD) ptr->ai_addrlen, NULL, ipstringbuffer, &ipbufferlength );
+                    if (ret) {
+                        errorf("WSAAddressToString failed with %u\n", WSAGetLastError());
+                    } else {    
+                        tracef("IPv6 address %s\n", ipstringbuffer);
+                    }
+                    #endif
+                    break;
+                case AF_NETBIOS:
+                    tracef("AF_NETBIOS (NetBIOS)\n");
+                    break;
+                default:
+                    warnf("Other %ld\n", ptr->ai_family);
+                    break;
+            }
+            freeaddrinfo(result);
+        }
+    }
+
     fd_ = (int32_t)::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (fd_ < 0) {
         errorf("create socket failed! fd:%d\n", fd_);
@@ -56,7 +122,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
     struct sockaddr_in remote_addr = {0};
     remote_addr.sin_family = AF_INET;
     remote_addr.sin_port = htons(remote_port);
-    remote_addr.sin_addr.s_addr = inet_addr(remote_ip.data());
+    remote_addr.sin_addr.s_addr = inet_addr(real_remote_ip.data());
     if (::connect(fd_, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr)) == 0) {
         //同步连接成功
         setConnectState(ConnectState::connected);
@@ -65,7 +131,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
 
     #ifdef _WIN32
     if (WSAGetLastError() != WSAEWOULDBLOCK) {
-        errorf("connect %s:%d failed! errno: %d\n", remote_ip.data(), remote_port, WSAGetLastError());
+        errorf("connect %s:%d failed! errno: %d\n", real_remote_ip.data(), remote_port, WSAGetLastError());
         close(fd_);
         fd_ = -1;
         return false;
@@ -78,7 +144,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
         return false;
     }
     #endif
-    remote_ip_ = remote_ip;
+    remote_ip_ = real_remote_ip;
     remote_port_ = remote_port;
     return true;
 }

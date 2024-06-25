@@ -17,6 +17,8 @@
 
 namespace ulucu {
 
+#define HD_BLSERVER_NAME "entry.device.serv.ulucu.com"
+#define HD_BLSERVER_PORT 29023
 #define HD_EDServIP_FILE "EDServIP"
 #define HD_PROTOCOL_VER	 "2.1.2"
 

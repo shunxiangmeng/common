@@ -7,6 +7,7 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
+#include <regex>
 #include "infra/include/network/Socket.h"
 #include "infra/include/Logger.h"
 #include "infra/include/network/Defines.h"
@@ -163,6 +164,26 @@ uint16_t Socket::getLocalPort() {
     }
     struct sockaddr_in* addr = (struct sockaddr_in*)&addr_store;
     return ntohs(addr->sin_port);
+}
+
+bool Socket::isIPAddress(const std::string& str) {
+    std::regex ipPattern(R"((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}))");
+    std::smatch match;
+    if (std::regex_match(str, match, ipPattern)) {
+        for (int i = 1; i <= 4; ++i) {
+            int num = std::stoi(match[i].str());
+            if (num < 0 || num > 255) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+ 
+bool Socket::isDomainName(const std::string& str) {
+    std::regex domainPattern(R"(^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$)");
+    return std::regex_match(str, domainPattern);
 }
 
 }

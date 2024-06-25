@@ -68,6 +68,9 @@ public:
     bool setNoblocked(bool noblock);
     bool setCloExec(bool on = true);
 
+    bool isDomainName(const std::string& str);
+    bool isIPAddress(const std::string& str);
+
 protected:
     int32_t         fd_;
 
