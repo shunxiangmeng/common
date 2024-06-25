@@ -66,20 +66,58 @@ bool Huidian::deviceLoginLDB() {
     data["protocol_version"] = HD_PROTOCOL_VER;
     CallResult result = syncRequest("device_login_ldb_req", data);
     if (result.error_code != UlucuErrorCode::SUCCESS) {
+        sock_->stop();
         return false;
+    } else {
+        Json::Value data = std::move(result.root);
+        std::string devmgr = data["data"]["devmgr"].asString();
+        (void)sscanf(devmgr.data(), "%[0-9.]:%hu", devmgr_server_ip_, &devmgr_server_port_);
+        tracef("devmgr: %s:%d\n", devmgr_server_ip_, devmgr_server_port_);
     }
-
+    sock_->stop();
     return true;
 }
 
 void Huidian::onSocketRead(infra::Buffer& buffer) {
     infof("onSocketRead+++\n");
-    tracef("%s", buffer.data());
+    std::string tmp(buffer.data(), buffer.size());
+    tracef("size:%d, %s", tmp.size(), tmp.data());
+    char* separator_pos = strstr(buffer.data(), "\r\n\r\n");
+    if (separator_pos) {
+        Json::Value root = Json::nullValue;
+        Json::String err;
+        Json::CharReaderBuilder readbuilder;
+        std::unique_ptr<Json::CharReader> jsonreader(readbuilder.newCharReader());
+        jsonreader->parse(buffer.data(), separator_pos, &root, &err);
+        if (root.empty()) {
+            return;
+        }
+
+        if (root.isMember("serial") && root["serial"].isString()) {
+            std::string serial = root["serial"].asString();
+            std::lock_guard<std::recursive_mutex> guard(future_map_mutex_);
+            auto it = future_map_.find(serial);
+            if (it != future_map_.end()) {
+                auto& promise = it->second;
+                ulucu::CallResult result;
+                result.error_code = UlucuErrorCode::SUCCESS;
+                result.root = std::move(root);
+                promise->set_value(std::move(result));
+            }
+        }
+        
+        int32_t used_len = separator_pos - buffer.data() + 4;
+        int32_t left_size = buffer.size() - used_len;
+        if (left_size) {
+            memmove(buffer.data(), buffer.data() + used_len, left_size);
+        }
+        buffer.resize(left_size);
+    }
 }
 
 infra::Buffer Huidian::makeHdRequest(const char* cmd, Json::Value &body, const char* serial) {
     Json::Value root;
-    root["serial"] = device_sn_ + serial;
+    root["serial"] = serial;
     root["cmd"] = cmd;
     root["data"] = body;
 

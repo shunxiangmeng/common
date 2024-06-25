@@ -17,6 +17,7 @@ TcpIO::TcpIO() : buffer_(4096) {
 }
 
 TcpIO::~TcpIO() {
+    tracef("%s\n", __FUNCTION__);
     stop();
 }
 

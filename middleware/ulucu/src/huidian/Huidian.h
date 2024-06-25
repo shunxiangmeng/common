@@ -58,6 +58,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<std::promise<ulucu::CallResult>>> future_map_;
 
     infra::Buffer recv_buffer_;
+    char devmgr_server_ip_[32];
+    uint16_t devmgr_server_port_;
 };
 
 }
