@@ -48,9 +48,9 @@ int Huidian::getEDServIP(char *ip, int *port) {
 }
 
 void Huidian::onSocketRead(infra::Buffer& buffer) {
-    infof("onSocketRead+++\n");
-    std::string tmp(buffer.data(), buffer.size());
-    tracef("size:%d, %s", tmp.size(), tmp.data());
+    //infof("onSocketRead+++\n");
+    //std::string tmp(buffer.data(), buffer.size());
+    //tracef("size:%d, %s", tmp.size(), tmp.data());
     char* separator_pos = strstr(buffer.data(), "\r\n\r\n");
     if (separator_pos) {
 
@@ -297,7 +297,6 @@ bool Huidian::device_login_mgr() {
 }
 
 void Huidian::device_keepalive_mgr() {
-    tracef("device_keepalive_mgr+++\n");
     Json::Value data = Json::objectValue;
     std::string serial = std::to_string(infra::getCurrentTimeUs());
     infra::Buffer buffer = makeHdRequest("device_keepalive_mgr_req", data, serial.data());

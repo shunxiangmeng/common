@@ -704,7 +704,7 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
     {
         DEBUGF("0x0001...\n");
         pos = Check_ID_Error(pos, len, &errcode);
-        if ( errcode == -1 )
+        if (errcode == -1)
         {
             ERRORF("entry token not available\n");
             return AY_ERROR_TOKEN;
@@ -727,20 +727,20 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
         if ((temp16 >= 3) && (temp16 <= 600))
         {
             pdevinfo->expected_cycle = temp16;
-            DEBUGF("entry expected cycle=%d\n", temp16);
+            DEBUGF("entry expected cycle = %d\n", temp16);
         }
         pos += 2;
     }
 
-    if (mask & 0x0002)//public ip info
+    if (mask & 0x0002) //public ip info
     {
-        DEBUGF("0x0002...\n");
+        DEBUGF("0x0002... public ip info\n");
         pdevinfo->public_net_ip = READ_4BYTE(pos);
         pos += 4;
         pdevinfo->public_net_port = READ_2BYTE(pos);
         pos += 2;
     }
-    if (mask & 0x0004)//stream server info
+    if (mask & 0x0004) //stream server info
     {
         DEBUGF("0x0004... stream server info\n");
 
@@ -755,21 +755,19 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
         token_len = READ_2BYTE(pos);
         pos += 2;
 
-        if(aystream_get_status()<0 || (flag&0x0001))
-        {// Firstly if don't connect 
-            TRACEF("{{CmdEvent}}%s|ForceReconnect|flag = %#x,token length = %d\n",
-            pdevinfo->now_ack_tracker_addr,flag,token_len);
+        if (aystream_get_status() < 0 || (flag & 0x0001))
+        {   // Firstly if don't connect 
+            TRACEF("{{CmdEvent}}%s|ForceReconnect|flag = %#x,token length = %d\n", pdevinfo->now_ack_tracker_addr, flag, token_len);
             memcpy(pdevinfo->token.token_bin, pos, token_len);
             pdevinfo->token.token_bin_length = token_len;
             pdevinfo->stream_serv_port = stream_serv_port; 
             pdevinfo->stream_serv_ip = stream_serv_ip;  // we keep ip changed at last
         }
-        else if((pdevinfo->stream_serv_ip == stream_serv_ip) && (pdevinfo->stream_serv_port == stream_serv_port))
-        {// Secondly if has connected, we just handle token-update request.
-            if(pdevinfo->token.token_bin_length==0 || memcmp(pdevinfo->token.token_bin, pos, token_len)!=0)
+        else if ((pdevinfo->stream_serv_ip == stream_serv_ip) && (pdevinfo->stream_serv_port == stream_serv_port))
+        {   // Secondly if has connected, we just handle token-update request.
+            if (pdevinfo->token.token_bin_length == 0 || memcmp(pdevinfo->token.token_bin, pos, token_len) != 0)
             {
-                TRACEF("{{CmdEvent}}%s|TokenUpdate|token len=%d,ip=%u, port=%u\n",
-                    pdevinfo->now_ack_tracker_addr,token_len, stream_serv_ip, stream_serv_port);
+                TRACEF("{{CmdEvent}}%s|TokenUpdate|token len=%d,ip=%u, port=%u\n", pdevinfo->now_ack_tracker_addr, token_len, stream_serv_ip, stream_serv_port);
                 memcpy(pdevinfo->token.token_bin, pos, token_len);
                 pdevinfo->token.token_bin_length = token_len;
                 pdevinfo->token_update_flag = 1;
@@ -793,10 +791,10 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
         pos += 4;
 
         DEBUGF("[TIME_SYN]update systime =%d\n", temp2);
-        Msg_Cmd_Add_down_queue((char*)&ts_cmd,sizeof(CMD_PARAM_STRUCT));
+        Msg_Cmd_Add_down_queue((char*)&ts_cmd, sizeof(CMD_PARAM_STRUCT));
     }
 
-    if(mask & 0x0020)
+    if (mask & 0x0020)
     {/* upgrade */
         version_t new_ver;
         memcpy(&new_ver, pos, sizeof(version_t));
@@ -883,14 +881,14 @@ int Unpack_MsgDeviceLoginResponse(char *buf, uint16 len)
 
 int Unpack_MsgStreamFrameDataRequest(int skfd, char *buf, uint16 len)
 {
-    if(buf == NULL || len< 8)
+    if (buf == NULL || len< 8)
     {
-	return	-1;
+        return	-1;
     }
 
     uint8 *pos = (uint8 *)buf;
-    uint32   mask, flag;
-    uint16   temp16;
+    uint32 mask, flag;
+    uint16 temp16;
 
     mask = READ_4BYTE(pos);
     pos += 4;
@@ -899,16 +897,16 @@ int Unpack_MsgStreamFrameDataRequest(int skfd, char *buf, uint16 len)
 
     flag = flag; /*去掉警告 */
 
-    if(mask & 0x0001)
+    if (mask & 0x0001)
     {
-	//DEBUGF("0x0001...\n");
-	temp16 = READ_2BYTE(pos);
-	if((temp16 >= 3) && (temp16 <= 60))
-	{
-	    sdk_get_handle(0)->devinfo.expt_cycle_strm = temp16;
-	    DEBUGF("expt_cycle_strm=%d\n", temp16);
-	}
-	pos += 2;
+        //DEBUGF("0x0001...\n");
+        temp16 = READ_2BYTE(pos);
+        if ((temp16 >= 3) && (temp16 <= 60))
+        {
+            sdk_get_handle(0)->devinfo.expt_cycle_strm = temp16;
+            DEBUGF("expt_cycle_strm=%d\n", temp16);
+        }
+        pos += 2;
     }
 
     return (uint16)(pos - pos);
@@ -1697,29 +1695,33 @@ int Unpack_MsgC2DActionNotify(int skfd, char *buf, uint16 len)
 
 int Unpack_Msg(int skfd, char *pbuf, int len)
 {
-    MSG_HEADER_C3 	*temphd;
-    int  		rslt;
+    MSG_HEADER_C3 *temphd;
+    int rslt;
 
-    if(len < sizeof(MSG_HEADER_C3))
+    if (len < sizeof(MSG_HEADER_C3))
     {
-	ERRORF("msglen is too short:%d\n", len);
-	return -1;
+        ERRORF("msglen is too short:%d\n", len);
+        return -1;
     }
     temphd = (MSG_HEADER_C3*)pbuf;
 
-    DEBUGF("msg.len=%d,%d\n", len, temphd->size);	
+    DEBUGF("msg.len=%d, %d\n", len, temphd->size);	
     if ( len < temphd->size )
     {		
-	return -1;
+        return -1;
     }
     if ( temphd->size > FRAME_RECV_SIZE + 512 )
     {
-	return -2;
+        return -2;
     }
-    if(temphd->msg_type == CID_DeviceRegisterResponse || CID_StatusReportRes==temphd->msg_type)
-	DEBUGF("size=%d, msgtype=0x%x\n", temphd->size, temphd->msg_type);
+    if (temphd->msg_type == CID_DeviceRegisterResponse || CID_StatusReportRes == temphd->msg_type)
+    {
+        DEBUGF("size=%d, msgtype=0x%x\n", temphd->size, temphd->msg_type);
+    }
     else
-	TRACEF("size=%d, msgtype=0x%x\n", temphd->size, temphd->msg_type);
+    {
+        TRACEF("size=%d, msgtype=0x%x\n", temphd->size, temphd->msg_type);
+    }
 
     switch(temphd->msg_type)
     {
@@ -1747,7 +1749,6 @@ int Unpack_Msg(int skfd, char *pbuf, int len)
 	case CID_S2DNVRHistoryListQuery:
 	    rslt = Unpack_MsgS2DNVRHistoryListQuery(skfd, pbuf + 6, len - 6);
 	    break;
-
 	case CID_C2DLoginRequest:
 	    rslt = Unpack_MsgC2DLoginRequest(skfd, pbuf + 6, len - 6);
 	    break;
@@ -1757,12 +1758,11 @@ int Unpack_Msg(int skfd, char *pbuf, int len)
 	case CID_C2DStatusReportRes:
 	    rslt = Unpack_MsgC2DStatusReportRes(skfd, pbuf + 6, len - 6);
 	    break;
-
 	default:
 	    rslt = AY_ERROR_MSGTYPE;
 	    break;
     }
-    return (rslt<0)?rslt:temphd->size;
+    return (rslt < 0) ? rslt : temphd->size;
 }
 
 //--------------------------------------------------------------------------------------------------------

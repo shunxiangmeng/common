@@ -12,51 +12,55 @@
 static int open_chn_rate(Chnl_ctrl_table_struct *ptable,int channel_index, int  upload_rate, int av)
 {
     int index = ayutil_query_rate_index(upload_rate);
-    int bit = av&0x03; // video and audio
-    printf("open_chn_rate bit = %d channel_index = %d index = %d\n",bit,channel_index,index);
+    int bit = av & 0x03; // video and audio
+    tracef("open_chn_rate bit = %d channel_index = %d index = %d\n",bit,channel_index,index);
 
     // FIX me: we cannot distinguish different client's different video or audio request.
-    if(!(bit & ptable[channel_index - 1].bit_r[index]))
+    if (!(bit & ptable[channel_index - 1].bit_r[index]))
     {/* only when channel status change */
         ptable[channel_index - 1].bit_r[index] |= bit;
-        if(0x01 == av) ptable[channel_index - 1].frm_id[index].first_I_frame_required = 1; // only video
+        if (0x01 == av) 
+        {
+            ptable[channel_index - 1].frm_id[index].first_I_frame_required = 1; // only video
+        }
     }
     bit = av&0xff00; // cmd_from 
-    if(!(bit & ptable[channel_index - 1].bit_r[index]))
+    if (!(bit & ptable[channel_index - 1].bit_r[index]))
     {
         ptable[channel_index - 1].bit_r[index] |= bit;
     }
-    printf("open_chn_rate bit = %d\n",bit);
+    tracef("open_chn_rate bit = %d\n", bit);
     return 1;
 }
+
 static int close_chn_rate(Chnl_ctrl_table_struct *ptable,int channel_index, int  upload_rate,int av)
 {
     int index = ayutil_query_rate_index(upload_rate);
-    int bit = av&0xff00;
-	printf("close_chn_rate bit = %d channel_index = %d index = %d\n",bit,channel_index,index);
+    int bit = av & 0xff00;
+	tracef("close_chn_rate bit = %d channel_index = %d index = %d\n",bit,channel_index,index);
 
     // FIX me: we cannot distinguish different client's different video or audio request.
-    if(bit & ptable[channel_index - 1].bit_r[index])
+    if (bit & ptable[channel_index - 1].bit_r[index])
     {
-	ptable[channel_index - 1].bit_r[index] &= ~bit;
-	printf("bit_r = %d\n",ptable[channel_index - 1].bit_r[index]);
+        ptable[channel_index - 1].bit_r[index] &= ~bit;
+        tracef("bit_r = %d\n",ptable[channel_index - 1].bit_r[index]);
     }
-    if(ptable[channel_index - 1].bit_r[index] & 0xff00)
+    if (ptable[channel_index - 1].bit_r[index] & 0xff00)
     {// has another request-client need the channel stream
-	return 0;
+        return 0;
     }
 
     bit = av&0x03;
-    if(bit & ptable[channel_index - 1].bit_r[index])
+    if (bit & ptable[channel_index - 1].bit_r[index])
     {/* only when channel status change */
-	ptable[channel_index - 1].bit_r[index] &= ~bit;
-	if(0x01==av)
-	{
-	    ptable[channel_index - 1].frm_id[index].last_time_stamp = 0;
-	    ptable[channel_index - 1].frm_id[index].time_ms_ref = 0;
-	    ptable[channel_index - 1].frm_id[index].time_second_ms_base= 0;
-	    ptable[channel_index - 1].frm_id[index].first_I_frame_required = 0;
-	}
+        ptable[channel_index - 1].bit_r[index] &= ~bit;
+        if (0x01 == av)
+        {
+            ptable[channel_index - 1].frm_id[index].last_time_stamp = 0;
+            ptable[channel_index - 1].frm_id[index].time_ms_ref = 0;
+            ptable[channel_index - 1].frm_id[index].time_second_ms_base = 0;
+            ptable[channel_index - 1].frm_id[index].first_I_frame_required = 0;
+        }
     }
 	if (0x01 == av)
 	{
@@ -131,32 +135,28 @@ static int  Set_Channel_ctrl_Table(Chnl_ctrl_table_struct *ptable,int channel_in
 
 void Clean_All_Chnl_Second_Base(Chnl_ctrl_table_struct *ptable)
 {
-    int  i;
-    for ( i = 0 ; i < MAX_CHANNEL_NUM; i++ )
+    for (int i = 0; i < MAX_CHANNEL_NUM; i++)
     {
-	ptable[i].frm_id[0].time_second_ms_base = 0;
-	ptable[i].frm_id[1].time_second_ms_base = 0;
-	ptable[i].frm_id[2].time_second_ms_base = 0;
-	ptable[i].frm_id[3].time_second_ms_base = 0;
+        ptable[i].frm_id[0].time_second_ms_base = 0;
+        ptable[i].frm_id[1].time_second_ms_base = 0;
+        ptable[i].frm_id[2].time_second_ms_base = 0;
+        ptable[i].frm_id[3].time_second_ms_base = 0;
 
-	ptable[i].frm_id[0].time_second_ms_base_audio= 0;
-	ptable[i].frm_id[1].time_second_ms_base_audio = 0;
-	ptable[i].frm_id[2].time_second_ms_base_audio = 0;
-	ptable[i].frm_id[3].time_second_ms_base_audio = 0;
+        ptable[i].frm_id[0].time_second_ms_base_audio= 0;
+        ptable[i].frm_id[1].time_second_ms_base_audio = 0;
+        ptable[i].frm_id[2].time_second_ms_base_audio = 0;
+        ptable[i].frm_id[3].time_second_ms_base_audio = 0;
     }
 }
 
 int Get_All_chnl_status(Chnl_ctrl_table_struct *ptable)
 {
-    int   i;
-
-    for ( i = 0 ; i < sdk_get_handle(0)->devinfo.channelnum; i++ )
+    for (int i = 0; i < sdk_get_handle(0)->devinfo.channelnum; i++ )
     {
-	if(ptable[i].bit_r[0] != 0 ||  ptable[i].bit_r[1] != 0
-		||  ptable[i].bit_r[2] != 0 ||  ptable[i].bit_r[3] != 0)
-	{
-	    return 1;
-	}
+        if (ptable[i].bit_r[0] != 0 ||  ptable[i].bit_r[1] != 0 ||  ptable[i].bit_r[2] != 0 ||  ptable[i].bit_r[3] != 0)
+        {
+            return 1;
+        }
     }
     return 0;
 }

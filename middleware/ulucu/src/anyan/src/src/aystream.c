@@ -324,70 +324,70 @@ int ay_recv_stream(int sockfd, data_recv_struct *p_fd_buf,char decry,int (*onFai
     size_t p_len;
     char *p_r;
 
-    if(sizeof(p_fd_buf->data_buf) <= p_fd_buf->data_len)
+    if (sizeof(p_fd_buf->data_buf) <= p_fd_buf->data_len)
     {
-	ERRORF("recv buf datalen err\n");
-	p_fd_buf->data_len = 0;
-	onFailDeal(sockfd); //Note:we must call at the last to ensure @p_fd_buf refrence memory is valid!!
-	return -1;
+        ERRORF("recv buf datalen err\n");
+        p_fd_buf->data_len = 0;
+        onFailDeal(sockfd); //Note:we must call at the last to ensure @p_fd_buf refrence memory is valid!!
+        return -1;
     }
 
     p_r = (char*)(p_fd_buf->data_buf + p_fd_buf->data_len);
     p_len = sizeof(p_fd_buf->data_buf) - p_fd_buf->data_len;
     len = recv(sockfd, p_r, p_len, 0);
-    if(len == 0 )
+    if (len == 0 )
     {
-	ERRORF("len=0, recv err->[%d] %s\n",sockfd , strerror(errno));
-	p_fd_buf->data_len = 0;
-	onFailDeal(sockfd); 
-	ret = 0;
+        ERRORF("len=0, recv err->[%d] %s\n", sockfd , strerror(errno));
+        p_fd_buf->data_len = 0;
+        onFailDeal(sockfd); 
+        ret = 0;
     }
-    else if(len > 0)
+    else if (len > 0)
     {
-	ret = len;
-	DEBUGF("recv [%d] len %d.\n",sockfd,len);
-	p_fd_buf->data_len +=  len;
+        ret = len;
+        DEBUGF("anyan recv data len %d\n", len);
+        p_fd_buf->data_len +=  len;
 
 UNPACK_MSG:
-	if(p_fd_buf->data_len > sizeof(MSG_HEADER_C3))
-	{
-	    MSG_HEADER_C3  *temphd = (MSG_HEADER_C3*)p_fd_buf->data_buf;
-	    if (temphd->size > FRAME_RECV_SIZE + 512 )
-	    {
-		ERRORF("msg header size[%d] error!\n",temphd->size);
-		p_fd_buf->data_len = 0;
-		onFailDeal(sockfd);
-		ret = -1;
-	    }
-	    else if(temphd->size <= p_fd_buf->data_len)
-	    {
-		if(decry && decrypt_stream_buf(sockfd,(unsigned char *)p_fd_buf->data_buf, temphd->size)<0)
-		{// only size is not encrypted
-		    p_fd_buf->data_len = 0;
-		    onFailDeal(sockfd);
-		    ret = -1;
-		}
-		else if(Unpack_Msg(sockfd, p_fd_buf->data_buf, temphd->size)<0)
-		{
-		    p_fd_buf->data_len = 0;
-		    onFailDeal(sockfd);
-		    ret = -1;
-		}
-		else
-		{
-		    p_fd_buf->data_len = p_fd_buf->data_len - temphd->size;
-		    memmove(p_fd_buf->data_buf, p_fd_buf->data_buf + temphd->size, p_fd_buf->data_len);
-		    goto UNPACK_MSG;
-		}
-	    }
-	}
+        if (p_fd_buf->data_len > sizeof(MSG_HEADER_C3))
+        {
+            MSG_HEADER_C3 *temphd = (MSG_HEADER_C3*)p_fd_buf->data_buf;
+            if (temphd->size > FRAME_RECV_SIZE + 512)
+            {
+                ERRORF("msg header size[%d] error!\n", temphd->size);
+                p_fd_buf->data_len = 0;
+                onFailDeal(sockfd);
+                ret = -1;
+            }
+            else if (temphd->size <= p_fd_buf->data_len)
+            {
+                if (decry && decrypt_stream_buf(sockfd, (unsigned char *)p_fd_buf->data_buf, temphd->size) < 0)
+                {// only size is not encrypted
+                    p_fd_buf->data_len = 0;
+                    onFailDeal(sockfd);
+                    ret = -1;
+                }
+                else if (Unpack_Msg(sockfd, p_fd_buf->data_buf, temphd->size) < 0)
+                {
+                    p_fd_buf->data_len = 0;
+                    onFailDeal(sockfd);
+                    ret = -1;
+                }
+                else
+                {
+                    p_fd_buf->data_len = p_fd_buf->data_len - temphd->size;
+                    memmove(p_fd_buf->data_buf, p_fd_buf->data_buf + temphd->size, p_fd_buf->data_len);
+                    goto UNPACK_MSG;
+                }
+            }
+        }
     }
-    else if((errno != EAGAIN) && (errno!= EWOULDBLOCK))
+    else if ((errno != EAGAIN) && (errno!= EWOULDBLOCK))
     {
-	ERRORF("{{StreamConnEvent}}DisconnectPassive|len1=%d, recv err->[%d] %s\n", len, sockfd, strerror(errno));
-	p_fd_buf->data_len = 0;
-	onFailDeal(sockfd);
-	ret = -1;
+        ERRORF("{{StreamConnEvent}}DisconnectPassive|len1=%d, recv err->[%d] %s\n", len, sockfd, strerror(errno));
+        p_fd_buf->data_len = 0;
+        onFailDeal(sockfd);
+        ret = -1;
     }
     return ret;
 }

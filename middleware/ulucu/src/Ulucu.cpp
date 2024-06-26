@@ -38,7 +38,35 @@ void Ulucu::anyanInteractCallback(void* data) {
     CMD_PARAM_STRUCT *args = (CMD_PARAM_STRUCT*)data;
     warnf("anyan cmd: %d\n", args->cmd_id);
     switch (args->cmd_id) {
-        case VIDEO_CTRL: break;
+        case VIDEO_CTRL: {
+            tracef("anyan cmd video_ctl\n");
+            tracef("%s video channel:%d, rate:%d\n", args->cmd_args[0] ? "start" : "stop", args->channel, args->cmd_args[2] * 256 + (uint8_t)args->cmd_args[1]);
+            }
+            break;
+        case HISTORY_CTRL:
+            tracef("anyan cmd history_ctrl\n");
+            break;
+        case AUDIO_CTRL:
+            tracef("anyan cmd audio_ctrl\n");
+            break;
+        case TALKING_CTRL:
+            tracef("anyan cmd talking_ctrl\n");
+            break;
+        case PTZ_CTRL:
+            tracef("anyan cmd ptz_ctrl\n");
+            break;
+        case PTZ_SET_PRE_LOCAL:
+            tracef("anyan cmd ptz_set_pre_local\n");
+            break;
+        case PTZ_CALL_PRE_LOCAL:
+            tracef("anyan cmd ptz_call_pre_local\n");
+            break;
+        case ALARM_CTRL:
+            tracef("anyan cmd alarm_local\n");
+            break;
+        case TIME_SYN:
+            tracef("anyan cmd time_syn\n");
+            break;
         case EXT_DEVICE_ONLINE:
             infof("anyan online\n");
             break;
@@ -52,9 +80,9 @@ bool Ulucu::init() {
 
     Dev_SN_Info oem_info = {0};
     oem_info.OEMID = 100002;
-    char *SN = "Ub0000000123456444NN";
+    //char *SN = "Ub0000000123456444NN";
+    char* SN = "Ub0000000000614053dd";
     device_sn_ = SN;
-    //char* SN = "0000000123456444";
     memcpy(oem_info.MAC, "0A0027000004", sizeof("0A0027000004"));
     memcpy(oem_info.SN, SN, strlen(SN));
     strcpy(oem_info.OEM_name, "Ub");
