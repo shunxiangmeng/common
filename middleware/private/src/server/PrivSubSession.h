@@ -79,7 +79,7 @@ private:
      * @param index
      * @param frame
      */
-    void onData(MediaFrameType type, MediaFrame &frame);
+    void onData(int32_t chn, int32_t sub_chn, MediaFrameType type, MediaFrame &frame);
 
 private:
 

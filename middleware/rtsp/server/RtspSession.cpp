@@ -87,7 +87,7 @@ int32_t RtspSession::stopStreaming() {
     return 0;
 }
 
-void RtspSession::onMediaData(MediaFrameType type, MediaFrame &frame) {
+void RtspSession::onMediaData(int32_t chn, int32_t sub_chn, MediaFrameType type, MediaFrame &frame) {
     //tracef("onMediaData index:%d, size:%d\n", int32_t(type), frame.size());
     if (send_exception_) {
         return;

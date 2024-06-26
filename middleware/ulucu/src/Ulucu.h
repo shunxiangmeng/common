@@ -9,9 +9,11 @@
  ************************************************************************/
 #pragma once
 #include <memory>
+#include <vector>
 #include "ulucu/include/IUlucu.h"
 #include "huidian/huidian.h"
 #include "anyan/src/inc/Anyan_Device_SDK.h"
+#include "stream/mediasession/MediaSession.h"
 
 namespace ulucu {
 
@@ -27,10 +29,19 @@ public:
     void anyanInteractCallback(void* args);
 private:
     void initHuidian();
+    void playVideo(bool start, int32_t channel, int32_t bitrate);
+    void playAudio(bool start, int32_t channel);
+
+    int32_t bitrateToSubchannel(int32_t bitrate);
+    int32_t subchannelToBitrate(int32_t sub_channel);
+    void onMediaData(int32_t channel, int32_t sub_channel, MediaFrameType type, MediaFrame &frame);
 
 private:
     std::shared_ptr<Huidian> huidian_;
     std::string device_sn_;
+
+    std::shared_ptr<MediaSession> media_sessions_[3];
+
 };
 
 }

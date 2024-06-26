@@ -16,7 +16,7 @@
 
 class MediaSession {
 public:
-    typedef infra::TSignal<void, MediaFrameType, MediaFrame&> MediaSessionSignal;
+    typedef infra::TSignal<void, int32_t, int32_t, MediaFrameType, MediaFrame&> MediaSessionSignal;
     typedef MediaSessionSignal::Proc OnFrameProc;
 
     /**
