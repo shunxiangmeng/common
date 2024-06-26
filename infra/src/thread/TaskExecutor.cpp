@@ -14,7 +14,7 @@ static const int64_t s_max_wait_time = 10 * 1000;  //ms
 namespace infra {
 
 int64_t TaskExecutor::postDelayedTask(Task &&task, int64_t delay_time_ms) {
-    int64_t task_id = delay_time_ms + getCurrentTimeUs();
+    int64_t task_id = delay_time_ms + getCurrentTimeMs();
     std::lock_guard<decltype(delayed_task_queue_mutex_)> guard(delayed_task_queue_mutex_);
     delayed_task_queue_[task_id] = std::move(task);
     return task_id;

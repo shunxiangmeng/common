@@ -11,7 +11,7 @@
 #include <mutex>
 #include <unordered_map>
 #include "infra/include/network/TcpIO.h"
-#include "infra/include/Buffer.h"
+#include "infra/include/Timer.h"
 #include "jsoncpp/include/json.h"
 #include "Result.h"
 #include "HuidianHandler.h"
@@ -55,6 +55,7 @@ private:
     void responseToServer(std::string& cmd, std::string& serial, int32_t code, std::string &reason, Json::Value &body);
     infra::Buffer makeHdResponse(std::string& cmd, std::string& serial, int32_t code, std::string &reason, Json::Value &body);
 
+    void device_keepalive_mgr();
 
     void initHandlerList();
     int32_t call(std::string key, Json::Value& data, Json::Value& result, std::string& reason);
@@ -79,6 +80,8 @@ private:
     std::string token_;
     int32_t login_count_ = 0;
     bool connect_mgr_ = false;
+
+    infra::Timer keep_alive_timer_;
 
     HuidianHandler handler_;
     std::unordered_map<std::string, std::function<int32_t(Json::Value&, Json::Value&, std::string&)>> huidian_handlers_;

@@ -16,6 +16,7 @@ Huidian::Huidian() {
 }
 
 Huidian::~Huidian() {
+    keep_alive_timer_.stop();
 }
 
 bool Huidian::init(const char* sn) {
@@ -287,8 +288,22 @@ bool Huidian::device_login_mgr() {
     } else {
         connect_mgr_ = true;
         tracef("connect mgr %s:%d succ\n", devmgr_server_ip_, devmgr_server_port_);
+        keep_alive_timer_.start(30 * 1000, [this]() -> bool {
+            device_keepalive_mgr();
+            return true;
+        });
     }
     return true;
+}
+
+void Huidian::device_keepalive_mgr() {
+    tracef("device_keepalive_mgr+++\n");
+    Json::Value data = Json::objectValue;
+    std::string serial = std::to_string(infra::getCurrentTimeUs());
+    infra::Buffer buffer = makeHdRequest("device_keepalive_mgr_req", data, serial.data());
+    if (!buffer.empty()) {
+        sendData(buffer);
+    }
 }
 
 #define REGISTER_HUIDIAN_METHOND_FUNC(x) registerMethodFunc(#x, &HuidianHandler::x, &handler_)
