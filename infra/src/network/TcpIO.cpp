@@ -27,14 +27,18 @@ bool TcpIO::setCallback(AsyncReadCallback callback, ExceptionCallback exception_
         this->close();
         return false;
     }
+    attach_event_ = true;
     read_callback_ = callback;
     exception_callback_ = exception_callback;
     return true;
 }
 
 bool TcpIO::stop() {
-    NetworkThreadPool::instance()->delSocketEvent(getHandle(), shared_from_this());
-    this->close();
+    if (attach_event_) {
+        attach_event_ = false;
+        NetworkThreadPool::instance()->delSocketEvent(getHandle(), shared_from_this());
+        this->close();
+    }
     return true;
 }
 

@@ -41,7 +41,6 @@ void Ulucu::anyanInteractCallback(void* data) {
         case VIDEO_CTRL: break;
         case EXT_DEVICE_ONLINE:
             infof("anyan online\n");
-            initHuidian();
             break;
         default:
             warnf("undefine cmd [%d]\n", args->cmd_id);
@@ -84,6 +83,8 @@ bool Ulucu::init() {
 
     int ret = Ulu_SDK_Init_All(&oem_info, &attr, NULL);
     Ulu_SDK_Set_Interact_CallBack(anyan_interact_callback);
+
+    initHuidian();
 
     return true;
 }

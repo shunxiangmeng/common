@@ -36,5 +36,6 @@ private:
 
     infra::Buffer buffer_;
     std::recursive_mutex mutex_;
+    bool attach_event_ = false;
 };
 }
