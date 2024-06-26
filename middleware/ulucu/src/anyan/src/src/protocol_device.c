@@ -786,7 +786,7 @@ int Unpack_MsgDeviceRegisterRespons(char *buf, uint16 len)
         ts_cmd.cmd_args_len = 4;
         memcpy(ts_cmd.cmd_args,pos,4);
 
-        DEBUGF("0x0010\n");
+        DEBUGF("0x0010 time_syn\n");
         temp2 = READ_4BYTE(pos);
         pos += 4;
 

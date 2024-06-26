@@ -526,8 +526,8 @@ static int  login_stream_server(int sockfd,st_ay_dev_info *pdevinfo)
     msg_login.flag = 0x01;//new timestamp format
     if( pdevinfo->has_tfcard == 1)
     {
-	msg_login.flag |= 0x08; // TF card
-	DEBUGF("set tf card flag.\n");
+        msg_login.flag |= 0x08; // TF card
+        DEBUGF("set tf card flag.\n");
     }
 
     if ( pdevinfo->dev_type != 3)

@@ -40,7 +40,7 @@ void Ulucu::anyanInteractCallback(void* data) {
     switch (args->cmd_id) {
         case VIDEO_CTRL: {
             tracef("anyan cmd video_ctl\n");
-            tracef("%s video channel:%d, rate:%d\n", args->cmd_args[0] ? "start" : "stop", args->channel, args->cmd_args[2] * 256 + (uint8_t)args->cmd_args[1]);
+            tracef("%s video channel:%d, rate:%d\n", args->cmd_args[0] ? "start" : "stop", args->channel, (uint8_t)args->cmd_args[2] * 256 + (uint8_t)args->cmd_args[1]);
             }
             break;
         case HISTORY_CTRL:
@@ -92,8 +92,8 @@ bool Ulucu::init() {
     //检测网络连接 
     Dev_Attribut_Struct attr = {0};
     attr.block_nums = 200;  // 流缓冲区 200 * 8k
-    attr.channel_num = 1;   // 设备通道数
-    attr.hard_disk = 0;
+    attr.channel_num = 3;   // 设备通道数
+    attr.hard_disk = 1;
     attr.p_rw_path = (char*)".";  //可读写目录路径
     attr.lan_disable = 0;
     attr.ptz_ctrl = 3;
@@ -107,7 +107,7 @@ bool Ulucu::init() {
     attr.audio_bit_width = 16;
     attr.use_type = 0;      //设备使用类型 0：对外销售设备，1：测试设备，2：演示设备。 默认0
     attr.max_rate = UPLOAD_RATE_4;
-    attr.max_rate = UPLOAD_RATE_3;
+    attr.min_rate = UPLOAD_RATE_3;
 
     int ret = Ulu_SDK_Init_All(&oem_info, &attr, NULL);
     Ulu_SDK_Set_Interact_CallBack(anyan_interact_callback);
