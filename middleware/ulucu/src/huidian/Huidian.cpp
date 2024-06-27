@@ -103,6 +103,8 @@ void Huidian::onSocketRead(infra::Buffer& buffer) {
                 auto& promise = it->second;
                 ulucu::CallResult result;
                 result.error_code = UlucuErrorCode::SUCCESS;
+                result.code = code;
+                result.reason = reason;
                 result.root = std::move(root);
                 promise->set_value(std::move(result));
             }
@@ -247,14 +249,19 @@ bool Huidian::device_login_ldb() {
     data["sn"] = device_sn_;
     data["protocol_version"] = HD_PROTOCOL_VER;
     CallResult result = syncRequest("device_login_ldb_req", data);
-    if (result.error_code != UlucuErrorCode::SUCCESS) {
+    if (!result.success()) {
+        errorf("%s\n", result.root.toStyledString().data());
+        errorf("device_login_ldb failed, code:%d, reason:%s\n", result.code, result.reason.data());
         sock_->stop();
         return false;
     } else {
         Json::Value data = std::move(result.root);
         std::string devmgr = data["data"]["devmgr"].asString();
         token_ = data["data"]["token"].asString();
-        (void)sscanf(devmgr.data(), "%[0-9.]:%hu", devmgr_server_ip_, &devmgr_server_port_);
+        int ret = sscanf(devmgr.data(), "%[0-9.]:%hu", devmgr_server_ip_, &devmgr_server_port_);
+        if (ret != 2) {
+            errorf("get devmgr error, %s\n", data.toStyledString().data());
+        }
         tracef("devmgr: %s:%d\n", devmgr_server_ip_, devmgr_server_port_);
     }
     sock_->stop();

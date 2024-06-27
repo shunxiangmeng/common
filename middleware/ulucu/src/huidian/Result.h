@@ -32,6 +32,8 @@ public:
     CallResult& operator=(CallResult&& other) noexcept {
         if (this != &other) {
             error_code = std::move(other.error_code);
+            code = other.code;
+            reason = std::move(other.reason);
             data = std::move(other.data);
             root = std::move(other.root);
         }
@@ -39,7 +41,7 @@ public:
     }
 
     bool success() const {
-        return error_code == UlucuErrorCode::SUCCESS;
+        return error_code == UlucuErrorCode::SUCCESS && code == 0;
     }
 
 private:
@@ -48,6 +50,8 @@ private:
 
 public:
     UlucuErrorCode error_code = UlucuErrorCode::FAILED;
+    int32_t code;   /* 平台返回的错误码 */
+    std::string reason;
     std::string data;
     Json::Value root;
 };

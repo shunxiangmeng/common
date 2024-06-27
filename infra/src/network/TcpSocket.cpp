@@ -64,7 +64,6 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
                     break;
                 case AF_INET6:
                     tracef("AF_INET6 (IPv6)\n");
-                    return false;
                     #if 0
                     // the InetNtop function is available on Windows Vista and later
                     // sockaddr_ipv6 = (struct sockaddr_in6 *) ptr->ai_addr;
@@ -92,6 +91,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
                     break;
             }
             freeaddrinfo(result);
+            break;
         }
     }
 
