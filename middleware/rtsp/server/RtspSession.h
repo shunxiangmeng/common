@@ -37,7 +37,7 @@ private:
 
     virtual int32_t sendRtcp();
 
-    virtual void onMediaData(MediaFrameType type, MediaFrame &frame);
+    virtual void onMediaData(int32_t chn, int32_t sub_chn, MediaFrameType type, MediaFrame &frame);
 
     int32_t onMessage(int32_t channel, const char* data, int32_t dataLen);
 

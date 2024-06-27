@@ -28,7 +28,7 @@ class MediaSource {
 public:
     static MediaSource* instance();
 
-    typedef infra::TSignal<void, MediaFrameType, MediaFrame&> MediaSignal;
+    typedef infra::TSignal<void, int32_t, int32_t, MediaFrameType, MediaFrame&> MediaSignal;
     typedef MediaSignal::Proc OnFrameProc;
 
     bool start(int32_t channel, int32_t sub_channel, OnFrameProc onframe, StreamType type = LiveStream);

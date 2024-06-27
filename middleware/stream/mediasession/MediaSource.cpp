@@ -57,15 +57,15 @@ bool MediaSource::stop(int32_t channel, int32_t sub_channel, OnFrameProc onframe
 }
 
 void MediaSource::onLiveVideoFrame(int32_t channel, int32_t sub_channel, MediaFrame &frame) {
-    infra::WorkThreadPool::instance()->async([&, sub_channel, frame] () mutable {
-        live_media_signal_[sub_channel](Video, frame);
+    infra::WorkThreadPool::instance()->async([&, channel, sub_channel, frame] () mutable {
+        live_media_signal_[sub_channel](channel, sub_channel, Video, frame);
     });
 }
 
 void MediaSource::onLiveAudioFrame(MediaFrame &frame) {
     infra::WorkThreadPool::instance()->async([&, frame] () mutable {
         for (auto &signal : live_media_signal_) {
-            signal(Audio, frame);
+            signal(0, 0, Audio, frame);
         }
     });
 }
