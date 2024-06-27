@@ -35,7 +35,7 @@ public:
 
     int32_t attach(const Proc &proc) {
         if (isAttached(proc)) {
-            return -1;
+            return 0;
         }
         std::lock_guard<std::recursive_mutex> guard(mSlotMutex);
         Slot slot;

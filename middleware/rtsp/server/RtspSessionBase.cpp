@@ -335,7 +335,7 @@ bool RtspSessionBase::parseUrl(std::string &url) {
     }
 
     url_info_.content = url;
-    if (url.find("live")){
+    if (url.find("live")) {
         url_info_.sourceType = StreamSourceTypeLive;
     } else if (url.find("vod")) {
         warnf("not support vod yet!\n");
@@ -346,7 +346,7 @@ bool RtspSessionBase::parseUrl(std::string &url) {
     }
 
     char* pos = nullptr;
-    if ((pos = strstr((char*)url.c_str(), "channel=")) == nullptr){
+    if ((pos = strstr((char*)url.c_str(), "channel=")) == nullptr) {
         errorf("missing channel\n");
         return false;
     } else if (std::sscanf(pos, "channel=%d", &url_info_.channel) != 1) {
@@ -354,7 +354,7 @@ bool RtspSessionBase::parseUrl(std::string &url) {
         return false;
     }
 
-    if ((pos = strstr((char*)url.c_str(), "type=")) == nullptr){
+    if ((pos = strstr((char*)url.c_str(), "type=")) == nullptr) {
         errorf("missing type\n");
         return false;
     } else if (std::sscanf(pos, "type=%d", &url_info_.streamType) != 1) {

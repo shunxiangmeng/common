@@ -83,7 +83,8 @@ bool Ulucu::init() {
     Dev_SN_Info oem_info = {0};
     oem_info.OEMID = 100002;
     //char *SN = "Ub0000000123456444NN";
-    char* SN = "Ub0000000000614053dd";
+    //char* SN = "Ub0000000000614053dd";
+    char* SN = "Ub0000000000589849TD";
     device_sn_ = SN;
     memcpy(oem_info.MAC, "0A0027000004", sizeof("0A0027000004"));
     memcpy(oem_info.SN, SN, strlen(SN));
@@ -170,9 +171,15 @@ void Ulucu::playVideo(bool start, int32_t channel, int32_t bitrate) {
 }
 
 void Ulucu::onMediaData(int32_t channel, int32_t sub_channel, MediaFrameType type, MediaFrame &frame) {
+    if (type == Audio) {
+        return;
+    }
+    if (type == Video) {
+        frame.convertPlacementTypeToAnnexb();
+    }
+    //tracef("ondata sub_channel:%d, type:%d, size:%d\n", sub_channel, type, frame.size());
     Stream_Event_Struct stream_event = {0};
-
-    stream_event.channelnum = channel;
+    stream_event.channelnum = channel + 1;
     stream_event.bit_rate = subchannelToBitrate(sub_channel);
     if (type == Audio) {
         AudioFrameInfo info;

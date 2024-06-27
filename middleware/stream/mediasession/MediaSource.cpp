@@ -23,14 +23,21 @@ MediaSource::~MediaSource() {
 }
 
 bool MediaSource::start(int32_t channel, int32_t sub_channel, OnFrameProc onframe, StreamType type) {
-
-    if (live_media_signal_.size() < sub_channel + 1) {
+    {
         std::lock_guard<std::mutex> guard(mutex_);
-        live_media_signal_.push_back(MediaSignal());
+        int32_t size = live_media_signal_.size();
+        if (size < sub_channel + 1) {
+            for (int i = 0; i < sub_channel + 1 - size; i++) {
+                live_media_signal_.push_back(MediaSignal());
+            }
+        }
     }
 
     int ret = live_media_signal_[sub_channel].attach(onframe);
-    if (ret < 0) {
+    if (ret == 0) {
+        warnf("already attach media_signal\n");
+        return true;
+    } else if (ret < 0) {
         errorf("attach media_signal failed ret:%d\n", ret);
         return false;
     }
