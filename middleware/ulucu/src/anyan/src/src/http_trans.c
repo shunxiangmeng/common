@@ -237,9 +237,8 @@ int http_trans_read_into_buf(http_trans_conn *a_conn)
     }
     /* read in some data */
     if ((a_conn->last_read = l_read = recv(a_conn->sock, &a_conn->io_buf[a_conn->io_buf_alloc], l_bytes_to_read, 0)) < 0) {
-        int err = WSAGetLastError();
-        tracef("http read fd:%d, error to_read:%d, l_read:%d, errno:%d(%d),%s\n", 
-            a_conn->sock, l_bytes_to_read, l_read, errno, err, strerror(errno));
+        tracef("http read fd:%d, error to_read:%d, l_read:%d, errno:%d,%s\n", 
+            a_conn->sock, l_bytes_to_read, l_read, errno, strerror(errno));
         if (errno == EINTR) {
             EWOULDBLOCK;
             l_read = 0;

@@ -83,9 +83,6 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
                     }
                     #endif
                     break;
-                case AF_NETBIOS:
-                    tracef("AF_NETBIOS (NetBIOS)\n");
-                    break;
                 default:
                     warnf("Other %ld\n", ptr->ai_family);
                     break;

@@ -7,9 +7,9 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
-#include "huidian.h"
+#include "Huidian.h"
 #include "infra/include/Logger.h"
-#include "infra/include/timestamp.h"
+#include "infra/include/Timestamp.h"
 
 namespace ulucu {
 Huidian::Huidian() {

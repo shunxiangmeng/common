@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 #include "ulucu/include/IUlucu.h"
-#include "huidian/huidian.h"
+#include "huidian/Huidian.h"
 #include "anyan/src/inc/Anyan_Device_SDK.h"
 #include "stream/mediasession/MediaSession.h"
 

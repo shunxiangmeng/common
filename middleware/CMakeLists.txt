@@ -29,9 +29,12 @@ set(APP_SOURCE_HEADER_FILES ${APP_SOURCE_HEADER_FILES} ${LIVE_SOURCE_HEADER_FILE
 
 set(APP_INCLUDE_DIRS ${APP_INCLUDE_DIRS} 
     ${CMAKE_CURRENT_SOURCE_DIR}/ulucu/src/anyan/src/inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/ulucu/src/anyan/src/inc/pthreads-w
     ${CMAKE_CURRENT_SOURCE_DIR}/ulucu/src/anyan/src/devmng
     ${CMAKE_CURRENT_SOURCE_DIR}/ulucu/src/anyan/src/ulu_protocol
     PARENT_SCOPE)
+
+if(WIN32)
+set(APP_INCLUDE_DIRS ${APP_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/ulucu/src/anyan/src/inc/pthreads-w PARENT_SCOPE)
+endif()
 
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/ulucu/src/anyan/lib)
