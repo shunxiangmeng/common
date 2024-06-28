@@ -55,4 +55,6 @@ set(APP_INCLUDE_DIRS ${APP_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/freetype-2.13.0/include
     PARENT_SCOPE)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/Linklib.cmake)
+
 add_definitions(-DLOG_LIB_MODULE="thirdparty")
