@@ -113,7 +113,7 @@ static size_t curl_writedata_callback(void* contents, size_t size, size_t nmemb,
 	CURL_BODY_DATA* data = (CURL_BODY_DATA*)user;
 	int content_size = size * nmemb;
 	if (data->size + content_size < data->capacity) {
-		memcpy(data->data, contents, content_size);
+		memcpy(data->data + data->size, contents, content_size);
 		data->size += content_size;
 		return content_size;
 	} else {
