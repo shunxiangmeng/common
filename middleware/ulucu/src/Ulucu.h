@@ -9,6 +9,7 @@
  ************************************************************************/
 #pragma once
 #include <memory>
+#include <unordered_map>
 #include <vector>
 #include "ulucu/include/IUlucu.h"
 #include "huidian/Huidian.h"
@@ -28,7 +29,9 @@ public:
 
     void anyanInteractCallback(void* args);
 private:
+    void initAnyan(const char* sn);
     void initHuidian();
+    void parseServiceList(infra::Buffer& buffer);
     void playVideo(bool start, int32_t channel, int32_t bitrate);
     void playAudio(bool start, int32_t channel);
 
@@ -41,6 +44,9 @@ private:
     std::string device_sn_;
 
     std::shared_ptr<MediaSession> media_sessions_[3];
+
+    std::string domain_public_api_service_;
+    std::unordered_map<const char*, std::string> service_domain_map_;
 
 };
 

@@ -11,6 +11,8 @@
 #include "anyan/src/inc/Anyan_Device_SDK.h"
 #include "infra/include/Logger.h"
 #include "infra/include/thread/WorkThreadPool.h"
+#include "prebuilts/include/curl/curl.h"
+#include "infra/include/MD5.h"
 
 namespace ulucu {
 
@@ -84,7 +86,8 @@ bool Ulucu::init() {
     oem_info.OEMID = 100002;
     //char *SN = "Ub0000000123456444NN";
     //char* SN = "Ub0000000000614053dd";
-    char* SN = "Ub0000000000589849TD";
+    //char* SN = "Ub0000000000589849TD";
+    char* SN = "Sg35TQ7L3223000048PQ";
     device_sn_ = SN;
     memcpy(oem_info.MAC, "0A0027000004", sizeof("0A0027000004"));
     memcpy(oem_info.SN, SN, strlen(SN));
@@ -112,12 +115,104 @@ bool Ulucu::init() {
     attr.max_rate = UPLOAD_RATE_4;
     attr.min_rate = UPLOAD_RATE_3;
 
+    initAnyan(device_sn_.data());
+
     int ret = Ulu_SDK_Init_All(&oem_info, &attr, NULL);
     Ulu_SDK_Set_Interact_CallBack(anyan_interact_callback);
 
     initHuidian();
 
     return true;
+}
+
+static size_t curlWritedataCallback(void* contents, size_t size, size_t nmemb, void* user) {
+    infra::Buffer *buffer = (infra::Buffer*)user;
+    size_t content_size = size * nmemb;
+    if (content_size >= buffer->leftSize()) {
+        int32_t ensure_size = buffer->size() + content_size + 1;
+        if (!buffer->ensureCapacity(ensure_size)) {
+            errorf("curl buffer ensureCapacity size: %d error\n", ensure_size);
+            return -1;
+        } else {
+            tracef("curlWritedataCallback expand buffer to %d\n", buffer->capacity());
+        }
+    }
+    buffer->putData((const char*)contents, content_size);
+    return content_size;
+}
+
+void Ulucu::initAnyan(const char* sn) {
+
+    const char *domain_host = "api-service.ulucu.com";  //oversea
+    //const char *domain_host = "domain-service.ulucu.com";
+    const char *key = "af914788323be17b7a375c1063d11288";
+    char sign[512]= {0};
+    time_t now = time(NULL);
+    char url[256] = {0};
+    
+    infra::MD5_CTX md5ctx = {0};
+	MD5Init(&md5ctx);
+	MD5Update(&md5ctx, (unsigned char *)sn, strlen(sn));
+	MD5Update(&md5ctx, (unsigned char*)key, strlen(key));
+	MD5FinalHex(&md5ctx, sign);
+
+    snprintf(url, sizeof(url), "http://%s/domain/hw/get_list?sn=%s&rt=%ld&s=%s", domain_host, sn, (long)now, sign);
+
+    infra::Buffer buffer(1024);
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        return;
+    }
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWritedataCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+    CURLcode ret = curl_easy_perform(curl);
+    if (ret != CURLE_OK) {
+        curl_easy_cleanup(curl);
+        errorf("curl_easy_perform code:%d\n", ret);
+        return;
+    }
+    long http_code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+    if (http_code == 200) {
+        //tracef("response: %s\n", buffer.data());
+        parseServiceList(buffer);
+    }
+    curl_easy_cleanup(curl);
+}
+
+void Ulucu::parseServiceList(infra::Buffer& buffer) {
+    Json::Value root = Json::nullValue;
+    Json::String err;
+    Json::CharReaderBuilder readbuilder;
+    std::unique_ptr<Json::CharReader> jsonreader(readbuilder.newCharReader());
+    jsonreader->parse(buffer.data(), buffer.data() + buffer.size(), &root, &err);
+    if (root.empty()) {
+        return;
+    }
+
+    if (!root.isMember("code") || !root["code"].isInt() || root["code"].asInt() != 0) {
+        errorf("get service error\n");
+        return;
+    }
+    if (!root.isMember("data") || !root["data"].isArray()) {
+        errorf("get service data error\n");
+        return;
+    }
+
+    Json::Value &data = root["data"];
+    for (auto& it : data) {
+        std::string key = it["short_name"].asString();
+        std::string domain = it["domain"].asString();
+        size_t pos = domain.find("://");
+        if (pos != std::string::npos) {
+            domain = domain.substr(pos + 3, domain.size());
+        }
+        tracef("key-domain: {%s : %s}\n", key.data(), domain.data());
+        service_domain_map_.insert({ key.data(), domain});
+    }
 }
 
 void Ulucu::initHuidian() {

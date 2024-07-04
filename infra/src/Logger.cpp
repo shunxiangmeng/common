@@ -199,7 +199,7 @@ void Logger::printLog(LogLevel level, const char *file, int line, const char *fm
     }
     va_list ap;
     va_start(ap, fmt);
-    char buffer[1024] = { 0 };
+    char buffer[4096] = { 0 };
     if (vsnprintf(buffer, sizeof(buffer), fmt, ap) > 0) {
         std::string content;
         std::string file_name = file;
