@@ -1,4 +1,5 @@
 
+if(WIN32)
 set(APP_DEPEND_LIBS ${APP_DEPEND_LIBS} 
     Ws2_32.lib 
     Wldap32.lib 
@@ -6,6 +7,7 @@ set(APP_DEPEND_LIBS ${APP_DEPEND_LIBS}
     Normaliz.lib 
     libcurl.lib 
     PARENT_SCOPE)
+endif()
 
 set(APP_LIB_DIRS ${APP_LIB_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/prebuilts/lib/${ToolPlatform}

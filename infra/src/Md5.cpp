@@ -7,7 +7,8 @@
  * Description :  None
  * Note        : 
  ************************************************************************/
-#include "infra/include/Md5.h"
+#include <string.h>
+#include "infra/include/MD5.h"
 namespace infra {
 
 #define F(x, y, z) ((x & y) | (~x & z))
