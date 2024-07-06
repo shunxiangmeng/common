@@ -503,3 +503,15 @@ bool PrivClient::getVideoConfig(Json::Value &video_config) {
     tracef("%s\n", video_config.toStyledString().data());
     return true;
 }
+
+bool PrivClient::setVideoConfig(Json::Value &video_config) {
+    Json::Value root;
+    root["method"] = "set_video_config";
+    root["data"] = video_config;
+    CallResult result = syncRequest(root);
+    if (!result.success()) {
+        errorf("set_video_config failed\n");
+        return false;
+    }
+    return true;
+}

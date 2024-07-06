@@ -33,6 +33,7 @@ typedef PrivClientSignal::Proc OnFrameProc;
     virtual bool getVideoFormat(std::string &format) = 0;
     virtual bool setVideoFormat(std::string &format) = 0;
     virtual bool getVideoConfig(Json::Value &video_config) = 0;
+    virtual bool setVideoConfig(Json::Value &video_config) = 0;
 
     virtual bool subscribeEvent(const char* event, EventFunction event_callback) = 0;
 

@@ -48,6 +48,7 @@ public:
     virtual bool getVideoFormat(std::string &format) override;
     virtual bool setVideoFormat(std::string &format) override;
     virtual bool getVideoConfig(Json::Value &video_config) override;
+    virtual bool setVideoConfig(Json::Value &video_config) override;
 
     virtual bool testSyncCall() override;
 
