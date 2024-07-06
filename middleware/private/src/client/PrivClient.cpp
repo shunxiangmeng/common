@@ -13,6 +13,21 @@
 #include "infra/include/network/NetworkThreadPool.h"
 #include "../ulucuframe/UlucuPack.h"
 
+#define JSON_IS_TYPE(type) is##type()
+#define JSON_AS_TYPE(type) as##type()
+#define GET_AND_CHECK_PARAMETER(__result, data, x, type) \
+    {                                                    \
+        if (!data.isMember(x)) {                         \
+            errorf("missing parameter %s\n", x);         \
+            return false;                                \
+        }                                                \
+        if (!data[x].JSON_IS_TYPE(type)) {               \
+            errorf("%s wrong parameter type, need %s\n", x, #type); \
+            return false;                                \
+        }                                                \
+        __result = data[x].JSON_AS_TYPE(type);           \
+    }
+
 std::shared_ptr<IPrivClient> IPrivClient::create() {
     auto ptr = std::make_shared<PrivClient>();
     return ptr;
@@ -449,5 +464,42 @@ bool PrivClient::event(std::shared_ptr<Message>& message) {
     if (event_callback_) {
         event_callback_(message->data);
     }
+    return true;
+}
+
+bool PrivClient::getVideoFormat(std::string &format) {
+    Json::Value root;
+    root["method"] = "get_video_format";
+    CallResult result = syncRequest(root);
+    if (!result.success()) {
+        errorf("get_video_format failed\n");
+        return false;
+    }
+    GET_AND_CHECK_PARAMETER(format, result.data, "video_format", String);
+    return true;
+}
+
+bool PrivClient::setVideoFormat(std::string &format) {
+    Json::Value root;
+    root["method"] = "set_video_format";
+    root["data"]["video_format"] = format;
+    CallResult result = syncRequest(root);
+    if (!result.success()) {
+        errorf("set_video_format failed\n");
+        return false;
+    }
+    return true;
+}
+
+bool PrivClient::getVideoConfig(Json::Value &video_config) {
+    Json::Value root;
+    root["method"] = "get_video_config";
+    CallResult result = syncRequest(root);
+    if (!result.success()) {
+        errorf("get_video_config failed\n");
+        return false;
+    }
+    video_config = result.data;
+    tracef("%s\n", video_config.toStyledString().data());
     return true;
 }

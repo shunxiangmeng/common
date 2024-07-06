@@ -45,6 +45,9 @@ public:
     virtual bool startPreview(int32_t channel, int32_t sub_channel, OnFrameProc onframe) override;
     virtual bool stopPreview(OnFrameProc onframe) override;
     virtual bool subscribeEvent(const char* event, EventFunction event_callback) override;
+    virtual bool getVideoFormat(std::string &format) override;
+    virtual bool setVideoFormat(std::string &format) override;
+    virtual bool getVideoConfig(Json::Value &video_config) override;
 
     virtual bool testSyncCall() override;
 
