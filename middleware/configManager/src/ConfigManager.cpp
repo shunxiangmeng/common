@@ -179,11 +179,23 @@ std::string ConfigManager::getFirstGradeConfigName(const char* name) {
 }
 
 bool ConfigManager::onVerifyProc(const char* name, const Json::Value &table, ApplyResults &results) {
-    return true;
+    std::lock_guard<std::mutex> guard(mutex_);
+    auto it = config_verify_map_.find(name);
+    if (it == config_verify_map_.end()) {
+        return true;
+    }
+    (*it->second)(name, table, results);
+    return results == applySuccess ? true : false;
 }
 
 bool ConfigManager::onApplyProc(const char* name, const Json::Value &table, ApplyResults &results) {
-    return true;
+    std::lock_guard<std::mutex> guard(mutex_);
+    auto it = config_apply_map_.find(name);
+    if (it == config_apply_map_.end()) {
+        return true;
+    }
+    (*it->second)(name, table, results);
+    return results == applySuccess ? true : false;
 }
 
 bool ConfigManager::restore(std::vector<std::string>& members, ApplyResults& results) {

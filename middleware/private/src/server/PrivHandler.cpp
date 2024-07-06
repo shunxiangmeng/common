@@ -176,17 +176,6 @@ bool PrivHandler::get_video_config(MessagePtr &msg) {
     msg->data = data;
     return true;
 }
-#endif
-
-bool PrivHandler::get_video_config(MessagePtr &msg) {
-    Json::Value data = Json::objectValue;
-    if (IConfigManager::instance()->getConfig("video", data)) {
-        msg->data = data;
-        return true;
-    }
-    return false;
-}
-
 bool PrivHandler::set_video_config(MessagePtr &msg) {
     CHECK_PARAMETER(msg->data, "video_config", Array, msg);
     Json::Value &config = msg->data["video_config"];
@@ -242,4 +231,20 @@ bool PrivHandler::set_video_config(MessagePtr &msg) {
     }
 
     return true;
+}
+
+#endif
+
+bool PrivHandler::get_video_config(MessagePtr &msg) {
+    Json::Value data = Json::objectValue;
+    if (IConfigManager::instance()->getConfig("video", data)) {
+        msg->data = data;
+        return true;
+    }
+    return false;
+}
+
+bool PrivHandler::set_video_config(MessagePtr &msg) {
+    IConfigManager::ApplyResults results;
+    return IConfigManager::instance()->setConfig("video", msg->data, results);
 }
