@@ -97,7 +97,7 @@ bool TcpSocket::connect(const std::string& remote_ip, uint16_t remote_port, bool
         errorf("create socket failed! fd:%d\n", fd_);
         return false;
     }
-    infof("create socket fd:%d\n", fd_);
+    //infof("create socket fd:%d\n", fd_);
 
     if (local_ip != "") {
         struct sockaddr_in local_addr = {0};

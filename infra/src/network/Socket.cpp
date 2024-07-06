@@ -26,7 +26,7 @@ Socket::Socket(SocketType type, int32_t fd) : fd_(fd), type_(type), blocked_(fal
 
 Socket::~Socket() {
     if (fd_ > 0) {
-        infof("close socket fd %d\n", fd_);
+        //infof("close socket fd %d\n", fd_);
         close(fd_);
         fd_ = -1;
     }

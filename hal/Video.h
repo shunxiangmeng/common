@@ -49,6 +49,7 @@ public:
 
     virtual bool startStream(int32_t channel, int32_t sub_channel, VideoStreamProc proc) = 0;
     virtual bool stopStream(int32_t channel, int32_t sub_channel, VideoStreamProc proc) = 0;
+    virtual bool streamIsStarted(int32_t channel, int32_t sub_channel) = 0;
 
     // for alg
     typedef struct {

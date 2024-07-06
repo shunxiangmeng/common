@@ -18,6 +18,7 @@
 #include "jsoncpp/include/json.h"
 #include "PrivSubSession.h"
 #include "PrivSessionBase.h"
+#include "PrivHandler.h"
 #include "stream/mediasession/MediaSession.h"
 #include "infra/include/Timer.h"
 
@@ -154,4 +155,5 @@ private:
     void sendSmartEventProc(uint64_t arg);
 
     std::unordered_map<std::string, std::function<bool(MessagePtr &)>> map_invokers_;
+    PrivHandler privhandler_;
 };

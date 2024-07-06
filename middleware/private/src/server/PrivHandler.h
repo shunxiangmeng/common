@@ -1,21 +1,19 @@
 /************************************************************************
  * Copyright(c) 2024 shanghai ulucu technology
  * 
- * File        :  Image.h
+ * File        :  PrivHandler.h
  * Author      :  mengshunxiang 
- * Data        :  2024-07-06 10:42:55
+ * Data        :  2024-07-06 12:02:29
  * Description :  None
  * Note        : 
  ************************************************************************/
 #pragma once
-#include <stdint.h>
+#include "PrivSessionBase.h"
 
-namespace hal {
-class IImage {
+class PrivHandler {
 public:
-    static IImage* instance();
-
-    virtual bool setInputFramerate(int32_t channel, uint32_t fps) = 0;
-    virtual int getInputFramerate(int32_t channel)  = 0;
+    bool get_video_format(MessagePtr &msg);
+    bool set_video_format(MessagePtr &msg);
+    bool get_video_config(MessagePtr &msg);
+    bool set_video_config(MessagePtr &msg);
 };
-}

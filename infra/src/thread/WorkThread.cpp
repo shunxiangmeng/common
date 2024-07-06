@@ -45,7 +45,7 @@ void WorkThread::run() {
     if (!setPriority(priority_)) {
         errorf("setPriority error\n");
     } else {
-        debugf("setPriority %d success\n", int(priority_));
+        //debugf("setPriority %d success\n", int(priority_));
     }
 
     while (running_) {

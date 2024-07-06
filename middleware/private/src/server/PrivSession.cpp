@@ -43,11 +43,17 @@ bool PrivSession::initial(std::shared_ptr<infra::TcpSocket>& newSock, const char
 }
 
 #define REGISTER_METHOND_FUNC(x) registerMethodFunc(#x, &PrivSession::x, this)
+#define REGISTER_HANDLER_METHOND_FUNC(x) registerMethodFunc(#x, &PrivHandler::x, &privhandler_)
 void PrivSession::initMethodList() {
     REGISTER_METHOND_FUNC(login);
     REGISTER_METHOND_FUNC(start_preview);
     REGISTER_METHOND_FUNC(stop_preview);
     REGISTER_METHOND_FUNC(subscribe_event);
+
+    REGISTER_HANDLER_METHOND_FUNC(get_video_format);
+    REGISTER_HANDLER_METHOND_FUNC(set_video_format);
+    REGISTER_HANDLER_METHOND_FUNC(get_video_config);
+    REGISTER_HANDLER_METHOND_FUNC(set_video_config);
 }
 
 bool PrivSession::call(std::string key, MessagePtr &message) {
