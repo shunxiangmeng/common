@@ -44,6 +44,7 @@ bool MediaSource::start(int32_t channel, int32_t sub_channel, OnFrameProc onfram
     if (ret == 1) {
         bool v = hal::IVideo::instance()->startStream(channel, sub_channel, hal::IVideo::VideoStreamProc(&MediaSource::onLiveVideoFrame, this));
         bool a = hal::IAudio::instance()->startStream(hal::IAudio::AudioStreamProc(&MediaSource::onLiveAudioFrame, this));
+        hal::IVideo::instance()->requestIFrame(channel, sub_channel);
         return v && a;
     }
     return true;
