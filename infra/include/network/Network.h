@@ -8,8 +8,20 @@
  * Note        : 
  ************************************************************************/
 #pragma once
+#include <vector>
+#include <string>
 
 namespace infra {
 bool network_init();
 bool network_deinit();
+
+typedef struct {
+    std::string name;
+    std::string ip;
+    std::string netmask;
+    std::string broadaddr;
+    std::string mac;
+} Interface;
+
+std::vector<Interface> getInterfaceList();
 }

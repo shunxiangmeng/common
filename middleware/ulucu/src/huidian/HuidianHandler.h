@@ -18,6 +18,7 @@ public:
     ~HuidianHandler() = default;
 
     int32_t get_device_version_req(Json::Value& data, Json::Value& result, std::string& reason);
+    int32_t get_device_information_req(Json::Value& data, Json::Value& result, std::string& reason);
 };
 
 }

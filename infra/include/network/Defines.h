@@ -12,6 +12,8 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <ifaddrs.h>
+#include <sys/types.h>
 #endif
 #include "infra/include/Logger.h"
 

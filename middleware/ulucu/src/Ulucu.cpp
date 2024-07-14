@@ -86,8 +86,8 @@ bool Ulucu::init() {
     oem_info.OEMID = 100002;
     //char *SN = "Ub0000000123456444NN";
     //char* SN = "Ub0000000000614053dd";
-    //char* SN = "Ub0000000000589849TD";
-    char* SN = "Sg35TQ7L3223000048PQ";
+    char* SN = "Ub0000000000589849TD";
+    //char* SN = "Sg35TQ7L3223000048PQ";
     device_sn_ = SN;
     memcpy(oem_info.MAC, "0A0027000004", sizeof("0A0027000004"));
     memcpy(oem_info.SN, SN, strlen(SN));
@@ -143,8 +143,8 @@ static size_t curlWritedataCallback(void* contents, size_t size, size_t nmemb, v
 
 void Ulucu::initAnyan(const char* sn) {
 
-    const char *domain_host = "api-service.ulucu.com";  //oversea
-    //const char *domain_host = "domain-service.ulucu.com";
+    //const char *domain_host = "api-service.ulucu.com";  //oversea
+    const char *domain_host = "domain-service.ulucu.com";
     const char *key = "af914788323be17b7a375c1063d11288";
     char sign[512]= {0};
     time_t now = time(NULL);
@@ -192,7 +192,8 @@ void Ulucu::parseServiceList(infra::Buffer& buffer) {
     if (root.empty()) {
         return;
     }
-
+    tracef("get_ulucu_service_list_response:%s\n", root.toStyledString().data());
+    
     if (!root.isMember("code") || !root["code"].isInt() || root["code"].asInt() != 0) {
         errorf("get service error\n");
         return;

@@ -315,6 +315,7 @@ void Huidian::device_keepalive_mgr() {
 #define REGISTER_HUIDIAN_METHOND_FUNC(x) registerMethodFunc(#x, &HuidianHandler::x, &handler_)
 void Huidian::initHandlerList() {
     REGISTER_HUIDIAN_METHOND_FUNC(get_device_version_req);
+    REGISTER_HUIDIAN_METHOND_FUNC(get_device_information_req);
 }
 
 int32_t Huidian::call(std::string key, Json::Value& data, Json::Value& result, std::string& reason) {
