@@ -11,6 +11,11 @@
 #include <stdint.h>
 
 typedef enum {
+    pal = 0,           // vi input 25fps
+    ntsc               // vi input 30fps
+} VideoSampleFormat;
+
+typedef enum {
     InvalidFrameType = -1,
     Video = 0,         // video
     Audio,             // audio

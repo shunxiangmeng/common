@@ -40,8 +40,8 @@ bool OacServer::start(int32_t sub_channel, int32_t image_count) {
 
     info_.shared_memory_path = "/oac_shared_memory";
     info_.shared_image_sem_prefix = "/oac_shared_image_";
-    info_.width = *video_encode.width;
-    info_.height = *video_encode.height;
+    info_.width = video_encode.width;
+    info_.height = video_encode.height;
     info_.format = IMAGE_PIXEL_FORMAT_RGB_888;
     info_.count = image_count;
 

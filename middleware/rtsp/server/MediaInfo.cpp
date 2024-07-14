@@ -14,24 +14,17 @@
 bool MediaInfo::getVideoCodecInfo(std::shared_ptr<MediaSession> &session, int32_t &payload, std::string &name, int32_t &rate) {
     hal::VideoEncodeParams videoparams;
     session->getVideoEncoderParams(videoparams);
-    if (!videoparams.codec.has_value()) {
-        errorf("not get video codec type\n");
-        payload = 0;
-        name = "";
-        rate = 0;
-        return false;
-    }
 
-    if (*videoparams.codec == H264) {
+    if (videoparams.codec == H264) {
         payload = 96;
         name = "H264";
         rate = 90000;
-    } else if (*videoparams.codec == H265) {
+    } else if (videoparams.codec == H265) {
         payload = 96;
         name = "H265";
         rate = 90000;
     } else {
-        errorf("unknown video codec %d\n", *videoparams.codec);
+        errorf("unknown video codec %d\n", videoparams.codec);
         payload = 0;
         name = "";
         rate = 0;
@@ -43,13 +36,6 @@ bool MediaInfo::getVideoCodecInfo(std::shared_ptr<MediaSession> &session, int32_
 bool MediaInfo::getAudioCodecInfo(std::shared_ptr<MediaSession> &session, int32_t &payload, std::string &name, int32_t &rate, int32_t &channel) {
     hal::AudioEncodeParams audioparams;
     session->getAudioEncoderParams(audioparams);
-    if (!audioparams.codec.has_value() || !audioparams.sample_rate.has_value() || !audioparams.channel_count.has_value()) {
-        errorf("get audio encode info failed\n");
-        payload = 0;
-        name = "";
-        rate = 0;
-        return false;
-    }
     if (*audioparams.codec == AAC) {
         payload = 97;
         name = "mpeg4-generic";

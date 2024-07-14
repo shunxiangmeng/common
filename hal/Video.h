@@ -17,14 +17,18 @@
 
 namespace hal {
 
-typedef struct {
-    infra::optional<VideoCodecType> codec;  // 编码格式
-    infra::optional<int32_t> width;
-    infra::optional<int32_t> height;
-    infra::optional<int32_t> gop;           // I帧间隔
-    infra::optional<int32_t> bitrate;       // 码率
-    infra::optional<float> fps;             // 帧率
-    infra::optional<VideoEncodeRCMode> rc_mode;
+typedef struct VideoEncodeParams {
+    VideoCodecType codec;  // 编码格式
+    int32_t width;
+    int32_t height;
+    int32_t gop;           // I帧间隔
+    int32_t bitrate;       // 码率
+    float fps;             // 帧率
+    VideoEncodeRCMode rc_mode;
+    bool operator==(const VideoEncodeParams& other) {
+        return (codec == other.codec && width == other.width && height == other.height
+            && gop == other.gop && bitrate == other.bitrate && fps == other.fps && rc_mode == other.rc_mode);
+    }
 } VideoEncodeParams;
 
 class IVideo {
@@ -35,9 +39,10 @@ public:
 
     static IVideo* instance();
 
-    virtual bool initial(int32_t channel, std::vector<VideoEncodeParams> &video_encode_params) = 0;
+    virtual bool initial(int32_t channel, std::vector<VideoEncodeParams> &video_encode_params, int32_t fps = 25) = 0;
     virtual bool deInitial(int32_t channel = 0) = 0;
 
+    virtual bool setSampleFormat(int32_t channel, VideoSampleFormat sample_format) { return false; }
     /*
     channel: sensor 通道号，目前只支持一个sensor，只能是0
     stream_type: 0-主码流， 1-子码流，2-3码流
@@ -46,6 +51,8 @@ public:
     virtual bool getEncodeParams(int32_t channel, int32_t sub_channel, VideoEncodeParams &encode_params) = 0;
     // 强制 I 帧
     virtual bool requestIFrame(int32_t channel, int32_t sub_channel) = 0;
+
+    virtual bool setResolution(int32_t channel, int32_t sub_channel, int32_t width, int32_t height) { return false; }
 
     virtual bool startStream(int32_t channel, int32_t sub_channel, VideoStreamProc proc) = 0;
     virtual bool stopStream(int32_t channel, int32_t sub_channel, VideoStreamProc proc) = 0;

@@ -177,7 +177,7 @@ bool PrivSessionBase::response(MessagePtr &msg) {
     root["message"] = msg->message;
     root["method"]  = msg->method;
 
-    if (!msg->data.empty()){
+    if (!msg->data.empty() && msg->data != Json::nullValue) {
         root["data"] = msg->data;
     }
 

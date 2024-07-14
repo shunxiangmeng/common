@@ -101,6 +101,7 @@ bool ConfigManager::setConfig(const char* name, const Json::Value& table, ApplyR
     Json::Path config_path(name);
     //Json::Value cur_config = config_[config_path];
     Json::Value& config_ref = config_path.make(config_);
+    //tracef("old_config:%s\n", config_ref.toStyledString().data());
     if (config_ref == table) {
         return true;
     }
@@ -116,9 +117,11 @@ bool ConfigManager::setConfig(const char* name, const Json::Value& table, ApplyR
         errorf("Config: [%s] ApplyProc failed, result is: [%d].\n", config_name.c_str(), apply_results);
         return false;
     }
-
-    //config_[config_name].swap(cur_config[config_name]);
-    changed_ = true;
+    if (apply_results == applySuccess) {
+        config_[config_name] = table;
+        changed_ = true;
+        saveFile();
+    }
     return true;
 }
 

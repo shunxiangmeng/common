@@ -246,5 +246,7 @@ bool PrivHandler::get_video_config(MessagePtr &msg) {
 
 bool PrivHandler::set_video_config(MessagePtr &msg) {
     IConfigManager::ApplyResults results;
-    return IConfigManager::instance()->setConfig("video", msg->data, results);
+    bool r = IConfigManager::instance()->setConfig("video", msg->data, results);
+    msg->data = Json::nullValue;
+    return r;
 }
