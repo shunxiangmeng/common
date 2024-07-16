@@ -12,6 +12,7 @@
 #include <iostream>
 #include <time.h>
 #include <chrono>
+#include <cstdio>
 #include "infra/include/Logger.h"
 #include "infra/include/File.h"
 #include "infra/include/Utils.h"
@@ -78,19 +79,28 @@ void ConsoleLogChannel::write(const std::vector<std::shared_ptr<LogContent>> &co
 
 
 //文件日志输出
-FileLogChannel::FileLogChannel(const std::string &path, const std::string &name) : LogChannel(name), path_(path) {
+FileLogChannel::FileLogChannel(const std::string &path, const std::string &name) : LogChannel(name), 
+    path_(path), file_max_size_(4 * 1024 * 1024) {
     if (path_.empty() || path_ == "") {
         return;
     }
+    if (path_.at(path_.length() - 1) == '/') {
+        path_ = path_.substr(0, path_.length() - 1);
+    }
+    std::string log_file_name = getLogfileName(true);
     #ifndef _WIN32
         // 创建文件夹
-        File::createPath(path_.data(), S_IRWXO | S_IRWXG | S_IRWXU);
+        File::createPath(log_file_name.data(), S_IRWXO | S_IRWXG | S_IRWXU);
     #else
-        File::createPath(path_.data(), 0);
+        File::createPath(log_file_name.data(), 0);
     #endif
-    fstream_.open(path_.data(), std::ios::out | std::ios::app);
+    fstream_.open(log_file_name.data(), std::ios::out | std::ios::app);
     if (!fstream_.is_open()) {
-        printf("open log file %s error\n", path_.data());
+        printf("[%s:%d]open log file %s error\n", __FILE__, __LINE__, log_file_name.data());
+    } else {
+        std::string log_start_str = "\n............" + Logger::instance().printTime() + "............\n";
+        fstream_ << log_start_str;
+        fstream_.flush();
     }
 }
 
@@ -101,9 +111,51 @@ FileLogChannel::~FileLogChannel() {
 void FileLogChannel::write(const std::vector<std::shared_ptr<LogContent>> &content) {
     if (fstream_.is_open()) {
         for (size_t i = 0; i < content.size(); i++) {
+            if (!maybeSaveLogfile(content[i]->content.size())) {
+                return;
+            }
             fstream_ << content[i]->content;
         }
+        fstream_.flush();
     }
+}
+
+std::string FileLogChannel::getLogfileName(bool current) {
+    if (current) {
+        return path_ + "/current.log";
+    }
+
+    time_t now = time(NULL);
+    struct tm* local;
+    local = localtime(&now);
+    char time_str[64] = { 0 };
+    snprintf(time_str, sizeof(time_str), "/log%d-%02d-%02d_%02d_%02d_%02d.log", 
+        1900 + local->tm_year, 1 + local->tm_mon, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+    return path_ + time_str;
+}
+
+bool FileLogChannel::maybeSaveLogfile(int32_t next_size) {
+    int32_t size = fstream_.tellp();
+    if (size + next_size >= file_max_size_) {
+        fstream_.flush();
+        fstream_.close();
+
+        std::string current_log_file_name = getLogfileName(true);
+        (void)std::rename(current_log_file_name.data(), getLogfileName(false).data());
+
+        #ifndef _WIN32
+            // 创建文件夹
+            File::createPath(current_log_file_name.data(), S_IRWXO | S_IRWXG | S_IRWXU);
+        #else
+            File::createPath(current_log_file_name.data(), 0);
+        #endif
+        fstream_.open(current_log_file_name.data(), std::ios::out | std::ios::app);
+        if (!fstream_.is_open()) {
+            printf("[%s:%d]open log file %s error\n", __FILE__, __LINE__, current_log_file_name.data());
+            return false;
+        }
+    }
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

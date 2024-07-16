@@ -10,7 +10,6 @@
 #include "HuidianHandler.h"
 #include "infra/include/Logger.h"
 #include "infra/include/network/Network.h"
-#include <sys/statfs.h>
 
 namespace ulucu {
 
@@ -26,8 +25,6 @@ int32_t HuidianHandler::get_device_version_req(Json::Value& data, Json::Value& r
 }
 
 int32_t HuidianHandler::get_device_information_req(Json::Value& data, Json::Value& result, std::string& reason) {
-
-    struct statfs fs_info = {0};
 
     Json::Value interfaces = Json::arrayValue;
     std::vector<infra::Interface> interface_list = infra::getInterfaceList();

@@ -55,12 +55,16 @@ private:
 
 class FileLogChannel : public LogChannel {
 public:
-    FileLogChannel(const std::string &path, const std::string &name = "file");
+    FileLogChannel(const std::string &path = "./", const std::string& name = "file");
     virtual ~FileLogChannel() override;
     virtual void write(const std::vector<std::shared_ptr<LogContent>> &content) override;
 private:
+    std::string getLogfileName(bool current = false);
+    bool maybeSaveLogfile(int32_t next_size);
+private:
     std::string path_;
     std::ofstream fstream_;
+    int32_t file_max_size_;
 };
 
 
@@ -76,6 +80,7 @@ private:
     void run();
     void flush();
     void writeLog(LogLevel level, const std::string &content);
+    friend class FileLogChannel;
     std::string printTime();
 private:
     LogLevel level_;
