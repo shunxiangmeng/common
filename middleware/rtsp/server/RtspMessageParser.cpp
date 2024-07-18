@@ -336,7 +336,7 @@ void RtspMessageParser::makeSessionId(RtspMessage &message) {
         return;
     }
     char id[32] = {0};
-    snprintf(id, sizeof(id), "%lld", infra::getCurrentTimeMs());
+    snprintf(id, sizeof(id), "%ld", infra::getCurrentTimeMs());
     //message.common_.time_out = 60;
     message.common_.session_id = id;
 }
