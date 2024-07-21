@@ -39,6 +39,11 @@ public:
 
     static IVideo* instance();
 
+    // 设置为vsdp模式,暂不考虑同时支持正常模式和vdsp模式
+    virtual bool setVsdpMode() { return false; };
+    virtual bool initialVdsp(std::vector<VideoEncodeParams> &video_encode_params) { return false; };
+    virtual bool sendFrameVdsp(MediaFrame &frame) { return false; };
+
     virtual bool initial(int32_t channel, std::vector<VideoEncodeParams> &video_encode_params, int32_t fps = 25) = 0;
     virtual bool deInitial(int32_t channel = 0) = 0;
 
