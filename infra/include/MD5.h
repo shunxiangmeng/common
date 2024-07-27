@@ -12,6 +12,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 namespace infra {
 //////////////////////////////////////////////////////////////////////////////
@@ -235,5 +236,17 @@ void MD5Decode(unsigned int *output, unsigned char *input, unsigned int len);
 void MD5Sum(const char *in, int in_len, char *hexout);
 void MD5FinalHex(MD5_CTX *context, char hexdigest[]);
 void MD5SumFile(const char *file,char hexdigest[]);
+
+
+class MD5 {
+public:
+    MD5();
+    ~MD5() = default;
+    void update(std::string string);
+    void final(unsigned char* data, int32_t& length);
+    std::string finalHexString();
+private:
+    MD5_CTX ctx_;
+};
 
 }

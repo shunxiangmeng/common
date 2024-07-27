@@ -246,4 +246,24 @@ void MD5SumFile(const char *file,char hexdigest[]) {
     }
 }
 
+MD5::MD5() {
+    MD5Init(&ctx_);
+}
+
+void MD5::update(std::string string) {
+    MD5Update(&ctx_, (unsigned char *)string.data(), (unsigned int)string.length());
+}
+
+void MD5::final(unsigned char* data, int32_t& length) {
+    MD5Final(&ctx_, data);
+    length = 16;
+}
+
+std::string MD5::finalHexString() {
+    char hexdigest[32] = {0};
+    MD5FinalHex(&ctx_, hexdigest);
+    std::string hex = hexdigest;
+    return hex;
+}
+
 }
