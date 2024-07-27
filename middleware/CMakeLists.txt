@@ -9,7 +9,8 @@ file(GLOB_RECURSE LIVE_SOURCE_FILES
     configManager/*.cpp
     oac/*.cpp
     ulucu/*.cpp ulucu/*.c
-    vdsp/*.cpp)
+    vdsp/*.cpp
+    userManager/*.cpp)
 
 file(GLOB_RECURSE LIVE_SOURCE_HEADER_FILES 
     application/*.h 
@@ -21,7 +22,8 @@ file(GLOB_RECURSE LIVE_SOURCE_HEADER_FILES
     configManager/*.h
     oac/*.h
     ulucu/*.h
-    vdsp/*.h)
+    vdsp/*.h
+    userManager/*.h)
 
 file(GLOB_RECURSE ULU_PLATFORM_SOURCE_FILES platform/*.cpp platform/*.c)
 file(GLOB_RECURSE ULU_PLATFORM_HEADER_FILES platform/*.h)
