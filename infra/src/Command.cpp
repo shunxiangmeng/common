@@ -15,6 +15,9 @@
 namespace infra {
 
 std::string command(const char* cmd, ...) {
+#ifdef _WIN32
+    return std::string();
+#else
     va_list ap;
     va_start(ap, cmd);
     char buffer[1024] = { 0 };
@@ -37,6 +40,7 @@ std::string command(const char* cmd, ...) {
 
     pclose(fcmd);
     return result;
+#endif
 }
 
 }

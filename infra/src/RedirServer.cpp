@@ -9,13 +9,14 @@
  ************************************************************************/
 #include <assert.h>
 #include <thread>
-#include <assert.h>
+#ifndef _WIN32
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#endif
 #include "infra/include/RedirServer.h"
 #include "infra/include/Logger.h"
 
@@ -50,6 +51,9 @@ enum RedirFlag {
 };
 
 bool RedirServer::start() {
+#ifdef _WIN32
+    return false;
+#else
     int fd_out_bak = dup(STDOUT_FILENO);
     int fd_in_bak = dup(STDIN_FILENO);
     assert(fd_out_bak >= 0 && fd_in_bak >= 0);
@@ -103,6 +107,7 @@ bool RedirServer::start() {
         }
     }).detach();
     return true;
+#endif
 }
 
 bool RedirServer::stop() {
