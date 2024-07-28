@@ -70,6 +70,13 @@ static const ResponseText sResponseCodeStr[] = {
     { 0,   nullptr}
 };
 
+const char* RtspMessageParser::getMethodString(RtspMethod method) {
+    if (method >= rtspMethodMax) {
+        return nullptr;
+    }
+    return sRtspMethod[method];
+}
+
 RtspMessageParser::RtspMessageParser() {
 }
 
@@ -113,6 +120,8 @@ int32_t RtspMessageParser::parseRequest(const char* request, int32_t len, RtspMe
         }
     }
 
+    parseRequest_Authorization(request, len, message);
+
     switch (message.method_) {
         case rtspMethodOptions:
             parseRequest_Options(request, len, message);
@@ -148,6 +157,9 @@ int32_t RtspMessageParser::parseRequest(const char* request, int32_t len, RtspMe
 }
 
 std::shared_ptr<char> RtspMessageParser::getReply(uint32_t status_code, RtspMessage &message, const std::string &content) {
+    if (status_code == 401) {
+        return makeResponse_Authorization(status_code, message);
+    }
     RtspMethod method = message.method_;
     switch (method) {
         case rtspMethodOptions:
@@ -205,6 +217,64 @@ bool RtspMessageParser::parseSentence(const char *request, const char *key, std:
 
 bool RtspMessageParser::parseSentence(const char *request, const char *key, int32_t &value) {
     return parseSentence(request, key, (uint32_t&)(value));
+}
+
+#define SKIP_WHITESPACE(x) while (*x != '\0' && (*x == ' ' || *x == '\t')) ++x
+
+int32_t RtspMessageParser::parseRequest_Authorization(const char* request, int32_t len, RtspMessage &message) {
+    char* pos = std::strstr((char*)request, "Authorization: Digest ");
+    if (pos) {
+        char const* fields = pos + 22;
+        char parameter[32] = {0};
+        char value[256] = {0};
+        char *p = nullptr;
+        bool success = false;
+        do {
+            success = false;
+            // Parse: <parameter>="<value>"
+            parameter[0] = value[0] = '\0';
+            SKIP_WHITESPACE(fields);
+            for (p = parameter; *fields != '\0' && *fields != ' ' && *fields != '\t' && *fields != '='; ) {
+                *p++ = *fields++;
+            }
+            SKIP_WHITESPACE(fields);
+            if (*fields++ != '=') {
+                break; // parsing failed
+            }
+            *p = '\0'; // complete parsing <parameter>
+
+            SKIP_WHITESPACE(fields);
+            if (*fields++ != '"') {
+                break; // parsing failed
+            }
+            for (p = value; *fields != '\0' && *fields != '"'; ) {
+                *p++ = *fields++;
+            }
+            if (*fields++ != '"') {
+                break; // parsing failed
+            }
+            *p = '\0'; // complete parsing <value>
+            SKIP_WHITESPACE(fields);
+            success = true;
+
+            // Copy values for parameters that we understand:
+            if (strcmp(parameter, "username") == 0) {
+                message.common_.authorization.username = value;
+            } else if (strcmp(parameter, "realm") == 0) {
+                message.common_.authorization.realm = value;
+            } else if (strcmp(parameter, "nonce") == 0) {
+                message.common_.authorization.nonce = value;
+            } else if (strcmp(parameter, "uri") == 0) {
+                message.common_.authorization.uri = value;
+            } else if (strcmp(parameter, "response") == 0) {
+                message.common_.authorization.response = value;
+            }
+        } while (*fields++ == ',');
+        if (success) {
+            message.common_.authorization.type = "Digest";
+        }
+    }
+    return 0;
 }
 
 int32_t RtspMessageParser::parseRequest_Options(const char* request, int32_t len, RtspMessage &message) {
@@ -348,6 +418,23 @@ const char* RtspMessageParser::getResponseText(uint32_t code) {
         }
     }
     return nullptr;
+}
+
+std::shared_ptr<char> RtspMessageParser::makeResponse_Authorization(uint32_t status_code, RtspMessage &message) {
+    char buf[1024] = {0};
+    int32_t cmd_len = 0;
+    cmd_len += snprintf(buf + cmd_len, sizeof(buf) - cmd_len, "RTSP/1.0 %d %s\r\n", status_code, getResponseText(status_code));
+    cmd_len += snprintf(buf + cmd_len, sizeof(buf) - cmd_len, "CSeq: %d\r\n", message.common_.seq);
+    cmd_len += snprintf(buf + cmd_len, sizeof(buf) - cmd_len, "WWW-Authenticate: %s realm=\"%s\", nonce=\"%s\"\r\n\r\n", 
+        message.common_.authorization.type.data(), message.common_.authorization.realm.data(), message.common_.authorization.nonce.data());
+    
+    std::shared_ptr<char> res(new char[cmd_len + 1]);
+    if (res == nullptr) {
+        errorf("res.get() is nullptr\n");
+        return nullptr;
+    }
+    memcpy(res.get(), buf, cmd_len + 1);
+    return res;
 }
 
 std::shared_ptr<char> RtspMessageParser::makeResponse_Options(uint32_t status_code, RtspMessage &message) {

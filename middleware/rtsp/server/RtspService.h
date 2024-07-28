@@ -1,7 +1,7 @@
 /************************************************************************
  * Copyright(c) 2024 shanghai ulucu technology
  * 
- * File        :  RtspServiceImpl.h
+ * File        :  RtspService.h
  * Author      :  mengshunxiang 
  * Data        :  2024-03-31 22:00:46
  * Description :  None
@@ -9,29 +9,34 @@
  ************************************************************************/
 #pragma once
 #include <memory>
+#include "rtsp/include/IRtspService.h"
 #include "RtspSessionManager.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/AcceptSocket.h"
 
-class RtspServiceImpl : public infra::SocketHandler {
+class RtspService : public IRtspService, public infra::SocketHandler {
 public:
-    RtspServiceImpl();
-    virtual ~RtspServiceImpl();
+    RtspService();
+    virtual ~RtspService();
 
     /**
      * @brief 启动Rtsp服务
      * @param[in] port 服务监听端口号
      */
-    bool start(int32_t port = 554);
+    virtual bool start(int32_t port = 554) override;
     /**
      * @brief 停止Rtsp服务
      */
-    bool stop();
+    virtual bool stop() override;
     /**
      * @brief 重启Rtsp服务
      * @param[in] port 服务监听端口号
      */
-    bool restart(int32_t port = 554);
+    virtual bool restart(int32_t port = 554) override;
+    /**
+     * @brief 设置rtsp是否开启鉴权
+     */
+    virtual void setAuthority(bool authority) override;
     /**
      * @brief 打印session
      */

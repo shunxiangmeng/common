@@ -260,7 +260,7 @@ void MD5::final(unsigned char* data, int32_t& length) {
 }
 
 std::string MD5::finalHexString() {
-    char hexdigest[32] = {0};
+    char hexdigest[33] = {0};
     MD5FinalHex(&ctx_, hexdigest);
     std::string hex = hexdigest;
     return hex;

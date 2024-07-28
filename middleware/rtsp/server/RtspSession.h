@@ -12,14 +12,7 @@
 #include <memory>
 #include "RtspSessionBase.h"
 #include "stream/mediasession/MediaSession.h"
-
-class RtspSession;
-class IRtspSessionManager {
-public:
-    IRtspSessionManager() = default;
-    virtual ~IRtspSessionManager() {}
-    virtual int32_t remove(std::shared_ptr<RtspSession> session) = 0;
-};
+#include "RtspSessionManager.h"
 
 class RtspSession : public RtspSessionBase, public std::enable_shared_from_this<RtspSession> {
 public:
@@ -47,7 +40,6 @@ private:
 
     void onMediaDataDestroySession();
 private:
-    IRtspSessionManager* session_manager_;
     bool send_exception_;
     bool destroied_;
 };

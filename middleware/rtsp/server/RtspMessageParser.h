@@ -20,6 +20,8 @@ public:
 
     std::shared_ptr<char> getReply(uint32_t status_code, RtspMessage &message, const std::string &content = "");
 
+    static const char* getMethodString(RtspMethod method);
+
 private:
 
     const char* getResponseText(uint32_t code);
@@ -31,6 +33,7 @@ private:
     int32_t checkSessionId(const char* request, int32_t len, RtspMessage &message);
     void makeSessionId(RtspMessage &message);
 
+    int32_t parseRequest_Authorization(const char* request, int32_t len, RtspMessage &message);
     int32_t parseRequest_Options(const char* request, int32_t len, RtspMessage &message);
     int32_t parseRequest_Describe(const char* request, int32_t len, RtspMessage &message);
     int32_t parseRequest_Setup(const char* request, int32_t len, RtspMessage &message);
@@ -41,6 +44,7 @@ private:
     int32_t parseRequest_Announce(const char* request, int32_t len, RtspMessage &message);
     int32_t parseRequest_Record(const char* request, int32_t len, RtspMessage &message);
 
+    std::shared_ptr<char> makeResponse_Authorization(uint32_t status_code, RtspMessage &message);
     std::shared_ptr<char> makeResponse_Options(uint32_t status_code, RtspMessage &message);
     std::shared_ptr<char> makeResponse_Describe(uint32_t status_code, RtspMessage &message, const std::string &content);
     std::shared_ptr<char> makeResponse_Setup(uint32_t status_code, RtspMessage &message);

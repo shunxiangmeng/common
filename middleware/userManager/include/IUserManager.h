@@ -16,6 +16,7 @@ typedef struct {
     std::string username;
     std::string password;
     std::string authority_type;
+    std::string realm;
     std::string nonce;
     std::string password_type;
     std::string authority_info;

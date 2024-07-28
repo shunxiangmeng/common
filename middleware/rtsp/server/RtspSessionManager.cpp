@@ -9,6 +9,7 @@
  ************************************************************************/
 #include "RtspSessionManager.h"
 #include "infra/include/Logger.h"
+#include "RtspSession.h"
 
 RtspSessionManager::RtspSessionManager() : max_connect_(4), session_count_(0) { 
 }
@@ -143,4 +144,12 @@ int32_t RtspSessionManager::remove(std::shared_ptr<RtspSession> session) {
     session_list_.remove(session);
     session_list_mutex_.unlock();
     return 0;
+}
+
+void RtspSessionManager::setAuthority(bool authority) {
+    is_authority_ = authority;
+}
+
+bool RtspSessionManager::isAuthority() {
+    return is_authority_;
 }

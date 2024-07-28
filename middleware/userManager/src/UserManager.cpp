@@ -90,7 +90,7 @@ bool UserManager::checkPassword(const LoginInfo& login_info) {
     const std::string &authority_info = login_info.authority_info;
     
     if (!findUser(username)) {
-        warnf("username %s is not existed\n", username);
+        warnf("username %s is not existed\n", username.data());
         return false;
     }
 
@@ -124,10 +124,10 @@ std::string UserManager::md5Hexstr(const std::string& username, const std::strin
         md5.update(buffer);
         return md5.finalHexString();
     };
-    
+    // md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<url>))
     std::string realm = "Login to bronco";
     std::string A1(username + ":" + realm + ":" + orig_password);
-    std::string H1 = calculateMd5(A1.c_str());
+    std::string H1 = calculateMd5(A1);
     std::string calValue(H1 + ":" + nonce + ":" + authorization);
-    return calculateMd5(calValue.c_str());
+    return calculateMd5(calValue);
 }

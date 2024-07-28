@@ -20,6 +20,7 @@
 #include "rtp/RTPPack.h"
 #include "Transport/TransportChannelInterleave.h"
 #include "Transport/TransportChannelIndepent.h"
+#include "IRtspSessionManager.h"
 
 #define RTCP_INTERVEAD 2
 
@@ -43,7 +44,7 @@ struct StreamEventParameter {
 class RtspSessionBase {
 public:
 
-    RtspSessionBase();
+    RtspSessionBase(IRtspSessionManager* manager);
 
     ~RtspSessionBase();
 
@@ -70,6 +71,7 @@ protected:
     int32_t onStreamEvent(StreamEvent event, const StreamEventParameter& parameter);
 
 private:
+    bool checkAuthority(RtspMessage &message);
     int32_t dealDescribe(RtspMessage &message);
     int32_t dealAnnounce(RtspMessage &message);
     int32_t dealSetup(RtspMessage &message);
@@ -88,7 +90,7 @@ private:
     int32_t onRtcpMessage(int32_t channel, const char* data, int32_t dataLen);
 
 protected: 
-
+    IRtspSessionManager* session_manager_;
     std::shared_ptr<infra::TcpSocket> sock_;
 
     struct TransportInfo {

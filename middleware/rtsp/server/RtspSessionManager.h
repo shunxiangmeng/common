@@ -13,10 +13,10 @@
 #include <memory>
 #include <string.h>
 #include <mutex>
-#include "RtspSession.h"
 #include "infra/include/network/AcceptSocket.h"
 #include "infra/include/network/SocketHandler.h"
 #include "infra/include/network/TcpSocket.h"
+#include "IRtspSessionManager.h"
 
 class RtspSessionManager : public IRtspSessionManager, public infra::SocketHandler {
 public:
@@ -38,6 +38,10 @@ public:
      * @brief 打印所有会话信息
      */
     void dumpSessions();
+
+    void setAuthority(bool authority);
+
+    virtual bool isAuthority() override;
 
 private:
     /**
@@ -78,4 +82,6 @@ private:
 
     std::map<int32_t, std::shared_ptr<ConnectInfo>> connect_queue_;       ///< 新建连接队列(未确认请求类型(HTTP或者RTSP)的队列)
     std::mutex connect_queue_mutex_;
+
+    bool is_authority_ = true;  //默认需要鉴权
 };

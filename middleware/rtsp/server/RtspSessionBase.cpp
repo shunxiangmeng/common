@@ -8,13 +8,17 @@
  * Note        : 
  ************************************************************************/
 #include <math.h>
+#include "RtspMessageParser.h"
 #include "RtspSessionBase.h"
 #include "infra/include/Timestamp.h"
 #include "infra/include/Logger.h"
 #include "jsoncpp/include/json.h"
 #include "infra/include/network/UdpSocket.h"
+#include "RtspSessionManager.h"
+#include "userManager/include/ILogin.h"
+#include "infra/include/MD5.h"
 
-RtspSessionBase::RtspSessionBase() : session_start_(true) {
+RtspSessionBase::RtspSessionBase(IRtspSessionManager* manager) : session_manager_(manager), session_start_(true) {
     rtsp_message_ = std::shared_ptr<RtspMessage>(new RtspMessage());
     msg_parser_ = std::shared_ptr<RtspMessageParser>(new RtspMessageParser());
     memset(&transport_info_, 0x00, sizeof(transport_info_));
@@ -86,12 +90,51 @@ int32_t RtspSessionBase::parseAndProcess(const char *buffer, int32_t len) {
     return usedLen;
 }
 
+bool RtspSessionBase::checkAuthority(RtspMessage &message) {
+    if (session_manager_->isAuthority()) {
+        auto getLoginChallengeInfo = [](RtspMessage &msg) {
+            ILogin::LoginChallenge login_challenge;
+            ILogin::instance()->loginFirst(login_challenge);
+            msg.common_.authorization.type = login_challenge.authority_type;
+            msg.common_.authorization.realm = login_challenge.realm;
+            msg.common_.authorization.nonce = login_challenge.nonce;
+        };
+
+        if (message.common_.authorization.type == "") {
+            getLoginChallengeInfo(message);
+            sendResponse(message, 401);
+            return false;
+        } else {
+            LoginInfo login_info;
+            login_info.authority_type = message.common_.authorization.type;
+            login_info.username = message.common_.authorization.username;
+            login_info.password = message.common_.authorization.response;
+            login_info.realm = message.common_.authorization.realm;
+            login_info.nonce = message.common_.authorization.nonce;
+
+            infra::MD5 md5;
+            std::string to_cal_str(std::string(RtspMessageParser::getMethodString(message.method_)) + ":" + message.common_.authorization.uri);
+            md5.update(to_cal_str);
+            login_info.authority_info = md5.finalHexString();
+
+            if (!ILogin::instance()->loginAgain(login_info)) {
+                warnf("rtsp authority failed\n");
+                getLoginChallengeInfo(message);
+                sendResponse(message, 401);
+                return false;
+            }
+            return true;
+        }
+    }
+    return true;
+}
+
 int32_t RtspSessionBase::dealRequest(RtspMessage &message) {
     //tracef("dealRequest+++\n");
-
+    if (!checkAuthority(message)) {
+        return 0;
+    }
     RtspMethod method = message.method_;
-
-    // todo auth
     int32_t ret = -1;
 
     switch (method) {

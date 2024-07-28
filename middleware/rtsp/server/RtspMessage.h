@@ -59,11 +59,21 @@ public:
         std::string value;
     };
 
+    struct Authorization {
+        std::string type;
+        std::string username;
+        std::string realm;
+        std::string nonce;
+        std::string uri;
+        std::string response;
+    };
+
     struct common {
         uint32_t        seq;
         std::string     user_agent;
         std::string     url;
         std::string     session_id;
+        Authorization   authorization;
         HeadFieldList   headField;
         uint32_t        time_out;
     };

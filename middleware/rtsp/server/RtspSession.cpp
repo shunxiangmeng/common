@@ -14,7 +14,7 @@
 #include "infra/include/thread/WorkThreadPool.h"
 
 RtspSession::RtspSession(IRtspSessionManager* manager):
-    session_manager_(manager), 
+    RtspSessionBase(manager), 
     send_exception_(false), destroied_(false) {
     tracef("new rtsp session %p\n", this);
 }
