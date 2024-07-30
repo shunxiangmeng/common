@@ -10,6 +10,7 @@
 #pragma once
 #include <list>
 #include <string>
+#include <string.h>
 #include "RtspUtils.h"
 
 class RtspMessage {
