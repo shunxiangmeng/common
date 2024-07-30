@@ -51,7 +51,7 @@ bool ConfigManager::init(const char* path, const char* default_path) {
     bool has_default_config = readFile(config_default_file_path_, config_default_);
 
     if (!has_config && !has_default_config) {
-        errorf("there is no config file and defualt_config file\n");
+        errorf("there is no config file and default_config file\n");
         return false;
     }
 
