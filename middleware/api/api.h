@@ -11,14 +11,10 @@
 #include <string>
 #include <vector>
 #include "infra/include/Optional.h"
+#include "hal/Defines.h"
 
 bool apiInit();
 
-//@reflection@
-typedef struct {
-    double x;
-    double y;
-} Point;
 
 //@reflection@
 struct Response0 {
