@@ -1,6 +1,9 @@
 #include "infra/include/network/Network.h"
 #include "infra/include/network/Defines.h"
 #include <string.h>
+#ifndef _WIN32
+#include <signal.h>
+#endif
 
 namespace infra {
 
@@ -9,6 +12,8 @@ bool network_init() {
     WORD wVersionRequested = MAKEWORD(2, 2);
     WSADATA wsaData;
     WSAStartup(wVersionRequested, &wsaData);
+#else
+    signal(SIGPIPE, SIG_IGN);
 #endif
     return true;
 }
