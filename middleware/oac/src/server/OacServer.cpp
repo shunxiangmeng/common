@@ -61,6 +61,7 @@ bool OacServer::stop() {
 }
 
 void OacServer::run() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     infof("OacServer thread start...\n");
     while (running()) {
 
@@ -126,7 +127,7 @@ void OacServer::onDetectRegion(rpc_conn wptr, std::string detect_region) {
 }
 
 void OacServer::onCurrentDetectTarget(rpc_conn wptr, std::string json_data) {
-    //tracef("onCurrentDetectTarget:%s\n", json_data.data());
+    tracef("onCurrentDetectTarget:%s\n", json_data.data());
     IPrivServer::instance()->sendEvent("detect_target", json_data);
 }
 

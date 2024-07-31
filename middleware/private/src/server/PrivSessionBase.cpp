@@ -394,7 +394,8 @@ int32_t PrivSessionBase::sendRequest(Json::Value &body) {
         warnf("sendRequest timeout\n");
         return -1;
     }
-    std::string data = body.toStyledString();
+    Json::FastWriter writer;
+    std::string data = writer.write(body);
     uint32_t dataLen = (uint32_t)data.length();
     uint32_t bufferLen = (uint32_t)data.length() + sizeof(PrivateDataHead);
     std::shared_ptr<uint8_t> buffer(new uint8_t[bufferLen]);
