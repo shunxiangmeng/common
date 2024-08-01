@@ -21,6 +21,7 @@ Buffer::Buffer(int32_t capacity) {
     if (capacity) {
         internal_.reset(new BufferInternal(), [](BufferInternal* ptr) {
             BufferMemoryStatistic::instance()->decrease(ptr->real_capacity);
+            delete ptr;
         });
         internal_->capacity = capacity;
         internal_->real_capacity = (capacity + k_algin_size - 1) / k_algin_size * k_algin_size;
@@ -58,6 +59,7 @@ bool Buffer::ensureCapacity(int32_t capacity) {
 
         internal_.reset(new BufferInternal(), [](BufferInternal* ptr) {
             BufferMemoryStatistic::instance()->decrease(ptr->real_capacity);
+            delete ptr;
         });
         internal_->capacity = capacity;
         internal_->real_capacity = (capacity + k_algin_size - 1) / k_algin_size * k_algin_size;
