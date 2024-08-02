@@ -26,7 +26,7 @@ typedef enum {
 
 typedef enum {
     E_TargetShapType_rect,
-    E_TargetShapType_point_pose,
+    E_TargetShapType_rect_pose,
 } TargetShapType;
 
 typedef struct {

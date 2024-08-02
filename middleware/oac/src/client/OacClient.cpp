@@ -125,12 +125,24 @@ bool OacClient::pushCurrentDetectTarget(CurrentDetectResult& result) {
     root["timestamp"] = result.timestamp;
     for (auto &target: result.targets) {
         Json::Value item = Json::nullValue;
+        item["type"] = (int32_t)target.shap_type;
         item["type"] = (int32_t)target.type;
         item["id"] = target.id;
-        item["x"] = target.rect.x;
-        item["y"] = target.rect.y;
-        item["w"] = target.rect.w;
-        item["h"] = target.rect.h;
+
+        if (target.shap_type == E_TargetShapType_rect_pose || target.shap_type == E_TargetShapType_rect) {
+            item["rect"]["x"] = target.rect.x;
+            item["rect"]["y"] = target.rect.y;
+            item["rect"]["w"] = target.rect.w;
+            item["rect"]["h"] = target.rect.h;
+        }
+
+        for (auto &point : target.points) {
+            Json::Value p = Json::nullValue;
+            p["x"] = point.x;
+            p["y"] = point.y;
+            item["points"].append(p);
+        }
+
         root["targets"].append(item);
     }
 
