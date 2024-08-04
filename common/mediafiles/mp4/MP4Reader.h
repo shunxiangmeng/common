@@ -11,11 +11,15 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <list>
+#include <queue>
 #include "common/libmov/include/mp4-writer.h"
 #include "common/libmov/include/mov-writer.h"
 #include "common/libmov/include/mov-reader.h"
 #include "common/libmov/include/mov-buffer.h"
 #include "common/libmov/include/mov-format.h"
+#include "common/libmpeg/include/mpeg-ps.h"
+#include "common/libmpeg/include/mpeg-types.h"
 #include "common/mediaframe/MediaFrame.h"
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -64,19 +68,33 @@ private:
     int32_t nal_length_size_;
     int32_t all_ps_len_;
     void DecodeH264Extradata(const void *extra, size_t bytes, H26xParamSets&, int32_t& nal_length_size);
+
+    bool tryOpenMP4File();
+    bool tryOpenPSFile();
+    MediaFrame getFrameFromPS();
+
 private:
+    typedef enum {
+        FileMP4 = 0,
+        FilePS,
+    } FileType;
+
+    FileType file_type_;
     std::shared_ptr<FILE> fp_;
     std::shared_ptr<mov_reader_t> mov_reader_;
     int64_t duration_ms_;
     int32_t video_track_index_;
     int32_t audio_track_index_;
 
-    VideoFrameInfo video_info_;
-    AudioFrameInfo audio_info_;
-
     std::vector<uint8_t> video_extra_data_;
     std::vector<uint8_t> audio_extra_data_;
 
+    ps_demuxer_t* ps_demuxer_ = nullptr;
+    infra::Buffer ps_buffer_;
+public:
+    std::queue<MediaFrame> ps_mediaframe_list_;
+    VideoFrameInfo video_info_;
+    AudioFrameInfo audio_info_;
     int32_t video_sequence_;
     int32_t audio_sequence_;
 };

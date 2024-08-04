@@ -51,6 +51,9 @@ bool MediaSource::start(int32_t channel, int32_t sub_channel, OnFrameProc onfram
 }
 
 bool MediaSource::stop(int32_t channel, int32_t sub_channel, OnFrameProc onframe, StreamType type) {
+    if (live_media_signal_.size() < sub_channel + 1) {
+        return true;
+    }
     int ret = live_media_signal_[sub_channel].detach(onframe);
     if (ret < 0) {
         errorf("detach media_signal failed ret:%d\n", ret);

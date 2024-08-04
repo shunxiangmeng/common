@@ -32,7 +32,7 @@ static struct mov_buffer_t s_mov_buffer = {
     }
 };
 
-MP4Reader::MP4Reader() : video_track_index_(-1), audio_track_index_(-1) {
+MP4Reader::MP4Reader() : file_type_(FileMP4), video_track_index_(-1), audio_track_index_(-1) {
     video_sequence_ = 0;
     audio_sequence_ = 0;
 }
@@ -40,6 +40,7 @@ MP4Reader::MP4Reader() : video_track_index_(-1), audio_track_index_(-1) {
 MP4Reader::~MP4Reader() {
 }
 
+/*
 bool MP4Reader::open(std::string filename) {
     close();
     fp_.reset(fopen(filename.data(), "rb"), [](FILE *fp) {
@@ -63,9 +64,27 @@ bool MP4Reader::open(std::string filename) {
         return false;
     }
 
-    getAllTracks();
+    int tracks = getAllTracks();
     duration_ms_ = mov_reader_getduration(mov_reader_.get());
     return true;
+}
+*/
+
+bool MP4Reader::open(std::string filename) {
+    close();
+    fp_.reset(fopen(filename.data(), "rb"), [](FILE *fp) {
+        if (fp) {
+            fclose(fp);
+        }
+    });
+    if (!fp_) {
+        errorf("open file %s error\n", filename.data());
+        return false;
+    }
+
+    if (!tryOpenMP4File()) {
+        return tryOpenPSFile();
+    }
 }
 
 bool MP4Reader::open(const char* filename) {
@@ -74,7 +93,33 @@ bool MP4Reader::open(const char* filename) {
 
 void MP4Reader::close() {
     mov_reader_.reset();
+    if (ps_demuxer_) {
+        ps_demuxer_destroy(ps_demuxer_);
+        ps_demuxer_ = nullptr;
+    }
     fp_.reset();
+}
+
+bool MP4Reader::tryOpenMP4File() {
+    mov_reader_.reset(mov_reader_create(&s_mov_buffer, this), [](mov_reader_t *ptr) {
+        if (ptr) {
+            mov_reader_destroy(ptr);
+        }
+    });
+    if (!mov_reader_) {
+        errorf("create mov_reader error\n");
+        fp_.reset();
+        return false;
+    }
+
+    int track_count = getAllTracks();
+    if (track_count <= 0) {
+        warnf("maybe this file is not mp4 file\n");
+        mov_reader_.reset();
+        return false;
+    }
+    duration_ms_ = mov_reader_getduration(mov_reader_.get());
+    return true;
 }
 
 int MP4Reader::getAllTracks() {
@@ -93,7 +138,19 @@ int MP4Reader::getAllTracks() {
                 //onsubtitle, do nothing
             }
     };
-    return mov_reader_getinfo(mov_reader_.get(), &s_on_track, this);
+
+    int trace_count = 0;
+    video_track_index_ = -1;
+    audio_track_index_ = -1;
+    mov_reader_getinfo(mov_reader_.get(), &s_on_track, this);
+
+    if (video_track_index_ >= 0) {
+        trace_count++;
+    }
+    if (audio_track_index_ >= 0) {
+        trace_count++;
+    }
+    return trace_count;
 }
 
 void MP4Reader::onVideoTrack(int32_t track_id, uint8_t object, int width, int height, const void *extra, size_t bytes) {
@@ -255,6 +312,9 @@ void MP4Reader::addADTSHeader(uint8_t *buffer, int audio_object_type, int freque
 }
 
 MediaFrame MP4Reader::getFrame() {
+    if (file_type_ == FilePS) {
+        return getFrameFromPS();
+    }
     if (!mov_reader_) {
         return MediaFrame();
     }
@@ -389,4 +449,169 @@ void MP4Reader::getVideoInfo(VideoFrameInfo &videoinfo) {
 
 void MP4Reader::getAudioInfo(AudioFrameInfo &audioinfo) {
     audioinfo = audio_info_;
+}
+
+inline const char* ftimestamp(int64_t t, char* buf) {
+    if (PTS_NO_VALUE == t) {
+        sprintf(buf, "(null)");
+    } else {
+        t /= 90;
+        sprintf(buf, "%d:%02d:%02d.%03d", (int)(t / 3600000), (int)((t / 60000) % 60), (int)((t / 1000) % 60), (int)(t % 1000));
+    }
+    return buf;
+}
+
+static int onPSStreamPacket(void* param, int stream, int avtype, int flags, int64_t pts, int64_t dts, const void* data, size_t bytes) {
+    static std::map<int, std::pair<int64_t, int64_t>> s_streams;
+    static char s_pts[64], s_dts[64];
+
+    MP4Reader *thiz = (MP4Reader *)param;
+
+    auto it = s_streams.find(stream);
+    if (it == s_streams.end()) {
+        it = s_streams.insert(std::make_pair(stream, std::pair<int64_t, int64_t>(pts, dts))).first;
+    }
+
+    if (PTS_NO_VALUE == dts) {
+        dts = pts;
+    }
+
+    MediaFrame frame;
+    frame.ensureCapacity(bytes);
+    frame.setPts(pts / 90).setDts(dts / 90);
+    frame.putData((char*)data, bytes);
+
+    if (PSI_STREAM_AAC == avtype || PSI_STREAM_AUDIO_G711A == avtype || PSI_STREAM_AUDIO_G711U == avtype) {
+        AudioFrameInfo info;
+        info.sample_rate = 8000;
+        info.bit_per_sample = 16;
+        info.channel_count = 1;
+        info.channel = 0;
+        switch (avtype) {
+            case PSI_STREAM_AAC: info.codec = AAC; break;
+            case PSI_STREAM_AUDIO_G711A: info.codec = G711a; break;
+            case PSI_STREAM_AUDIO_G711U: info.codec = G711u; break;
+        }
+        frame.setAudioFrameInfo(info);
+        frame.setMediaFrameType(Audio);
+        frame.setSequence(thiz->audio_sequence_++);
+        thiz->ps_mediaframe_list_.push(frame);
+        if (thiz->audio_sequence_ == 1) {
+            thiz->audio_info_ = info;
+        }
+
+        //printf("[A] pts: %s(%lld), dts: %s(%lld), diff: %03d/%03d, size: %u\n", 
+        //    ftimestamp(pts, s_pts), pts, ftimestamp(dts, s_dts), dts, (int)(pts - it->second.first) / 90, (int)(dts - it->second.second) / 90, (unsigned int)bytes);
+    } else if (PSI_STREAM_H264 == avtype || PSI_STREAM_H265 == avtype || PSI_STREAM_VIDEO_SVAC == avtype) {
+        VideoFrameInfo info;
+        if (flags & MPEG_FLAG_IDR_FRAME) {
+            info.type = VideoFrame_I;
+        } else {
+            info.type = VideoFrame_P;
+        }
+        switch (avtype) {
+            case PSI_STREAM_H264: info.codec = H264; break;
+            case PSI_STREAM_H265: info.codec = H265; break;
+            case PSI_STREAM_VIDEO_SVAC: info.codec = H264; break;
+        }
+        frame.setVideoFrameInfo(info);
+        frame.setMediaFrameType(Video);
+        frame.setPlacementType(Annexb);
+        frame.setSequence(thiz->video_sequence_++);
+        thiz->ps_mediaframe_list_.push(frame);
+        if (thiz->video_sequence_ == 1) {
+            thiz->video_info_ = info;
+        }
+
+        //printf("[V] pts: %s(%lld), dts: %s(%lld), diff: %03d/%03d, size: %u%s\n", 
+        //    ftimestamp(pts, s_pts), pts, ftimestamp(dts, s_dts), dts, (int)(pts - it->second.first) / 90, (int)(dts - it->second.second) / 90, (unsigned int)bytes, (flags & MPEG_FLAG_IDR_FRAME) ? " [I]": "");
+    } else {
+        //printf("[X] pts: %s(%lld), dts: %s(%lld), diff: %03d/%03d\n", 
+        //    ftimestamp(pts, s_pts), pts, ftimestamp(dts, s_dts), dts, (int)(pts - it->second.first), (int)(dts - it->second.second));
+    }
+
+    it->second = std::make_pair(pts, dts);
+    return 0;
+}
+
+static void mpeg_ps_dec_onstream(void* param, int stream, int codecid, const void* extra, int bytes, int finish) {
+    tracef("stream %d, codecid: %d, finish: %s\n", stream, codecid, finish ? "true" : "false");
+}
+
+bool MP4Reader::tryOpenPSFile() {
+    ps_demuxer_ = ps_demuxer_create(onPSStreamPacket, this);
+    if (!ps_demuxer_) {
+        errorf("create mov_reader error\n");
+        fp_.reset();
+        return false;
+    }
+
+    struct ps_demuxer_notify_t notify = {
+        mpeg_ps_dec_onstream,
+    };
+    ps_demuxer_set_notify(ps_demuxer_, &notify, this);
+
+    fseek64(fp_.get(), 0, SEEK_SET);
+
+    ps_buffer_.ensureCapacity(1024 * 1024);
+    int32_t n = fread(ps_buffer_.data(), sizeof(char), ps_buffer_.capacity(), fp_.get());
+    if (n <= 0) {
+        errorf("ps demuxer fread error, errno:%d\n", errno);
+        return false;
+    }
+    ps_buffer_.setSize(n);
+
+    int r = ps_demuxer_input(ps_demuxer_, (uint8_t*)ps_buffer_.data(), n);
+    if (r < 0) {
+        return false;
+    }
+    if (r != n) {
+        memmove(ps_buffer_.data(), ps_buffer_.data() + r, n - r);
+    }
+    ps_buffer_.setSize(n - r);
+
+    if (ps_mediaframe_list_.size() > 0) {
+        file_type_ = FilePS;
+        infof("PS file\n");
+        return true;
+    }
+    return false;
+}
+
+MediaFrame MP4Reader::getFrameFromPS() {
+    if (ps_mediaframe_list_.size() > 0) {
+        MediaFrame frame = ps_mediaframe_list_.front();
+        ps_mediaframe_list_.pop();
+        return frame;
+    }
+
+    int32_t n = fread(ps_buffer_.data(), sizeof(char), ps_buffer_.capacity(), fp_.get());
+    if (n <= 0) {
+        warnf("ps file end\n");
+        fseek64(fp_.get(), 0, SEEK_SET);
+        n = fread(ps_buffer_.data(), sizeof(char), ps_buffer_.capacity(), fp_.get());
+        if (n <= 0) {
+            errorf("ps demuxer fread error\n");
+            return MediaFrame();
+        }
+    }
+    ps_buffer_.setSize(n);
+
+    int r = ps_demuxer_input(ps_demuxer_, (uint8_t*)ps_buffer_.data(), n);
+    if (r < 0) {
+        return MediaFrame();
+    }
+    if (r != n) {
+        memmove(ps_buffer_.data(), ps_buffer_.data() + r, n - r);
+    }
+    ps_buffer_.setSize(n - r);
+
+    if (ps_mediaframe_list_.size() > 0) {
+        MediaFrame frame = ps_mediaframe_list_.front();
+        ps_mediaframe_list_.pop();
+        return frame;
+    } else {
+        errorf("ps get frame error\n");
+        return MediaFrame();
+    }
 }
