@@ -74,6 +74,7 @@ private:
     MediaFrame getFrameFromPS();
 
 private:
+    std::string file_name_;
     typedef enum {
         FileMP4 = 0,
         FilePS,

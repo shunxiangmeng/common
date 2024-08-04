@@ -71,6 +71,7 @@ bool MP4Reader::open(std::string filename) {
 */
 
 bool MP4Reader::open(std::string filename) {
+    file_name_ = filename;
     close();
     fp_.reset(fopen(filename.data(), "rb"), [](FILE *fp) {
         if (fp) {
@@ -85,6 +86,7 @@ bool MP4Reader::open(std::string filename) {
     if (!tryOpenMP4File()) {
         return tryOpenPSFile();
     }
+    return false;
 }
 
 bool MP4Reader::open(const char* filename) {
@@ -348,6 +350,10 @@ MediaFrame MP4Reader::getFrame() {
         context->flags = flags;
 
         static int64_t pts_offset = infra::getCurrentTimeMs();
+        if (pts == 0) {
+            pts_offset = infra::getCurrentTimeMs();
+            tracef("reset pts offset\n");
+        }
         int32_t ps_len = 0;
         if (context->video_track_index == track_id) {
             if (flags & MOV_AV_FLAG_KEYFREAME) {
@@ -392,7 +398,8 @@ MediaFrame MP4Reader::getFrame() {
     auto ret = mov_reader_read2(mov_reader_.get(), mov_onalloc, &context);
     if (ret == 0) {
         //file eof
-        warnf("mp4 file end\n");
+        warnf("mp4 file end, reopen file\n");
+        open(file_name_);
         return MediaFrame();
     } else if (ret == 1) {
         if (context.track_id == video_track_index_) {
