@@ -50,7 +50,7 @@ typedef struct {
 } Target;
 
 typedef struct {
-    uint32_t timestamp;
+    int64_t timestamp;
     std::vector<Target> targets;
 } CurrentDetectResult;
 
