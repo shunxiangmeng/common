@@ -24,8 +24,8 @@ public:
     void pop_front();
     void pop_back();
 
-    int32_t size() const;
-    bool empty() const;
+    int32_t size();
+    bool empty();
 
     MediaFrame front();
     MediaFrame take_front();

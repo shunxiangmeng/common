@@ -38,11 +38,13 @@ void MediaFrameList::pop_back() {
     list_.pop_back();
 }
 
-int32_t MediaFrameList::size() const {
+int32_t MediaFrameList::size() {
+    std::lock_guard<std::mutex> guard(mutex_);
     return (int32_t)list_.size();
 }
 
-bool MediaFrameList::empty() const {
+bool MediaFrameList::empty() {
+    std::lock_guard<std::mutex> guard(mutex_);
     return list_.size() == 0;
 }
 
