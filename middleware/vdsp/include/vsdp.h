@@ -22,6 +22,8 @@ public:
     bool initial(const char* file_name);
     bool deInitial();
 
+    void getVideoInfo(VideoFrameInfo &videoinfo);
+
 private:
     virtual void run() override;
 

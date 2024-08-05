@@ -48,7 +48,7 @@ void VirtualDSP::run() {
             }
         }
 
-        if (video_frame_queue_.size() > 100) {
+        if (video_frame_queue_.size() > 50) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
@@ -69,4 +69,8 @@ void VirtualDSP::run() {
         }
     }
     warnf("VirtualDSP thread exit\n");
+}
+
+void VirtualDSP::getVideoInfo(VideoFrameInfo &videoinfo) {
+    return mp4_reader_.getVideoInfo(videoinfo);
 }
