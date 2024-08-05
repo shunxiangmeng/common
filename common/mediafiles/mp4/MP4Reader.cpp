@@ -349,11 +349,13 @@ MediaFrame MP4Reader::getFrame() {
         context->dts = dts;
         context->flags = flags;
 
+        static int64_t last_video_pts = 0;
         static int64_t pts_offset = infra::getCurrentTimeMs();
-        if (pts == 0) {
-            pts_offset = infra::getCurrentTimeMs();
-            tracef("reset pts offset\n");
+        if (pts == 0 && last_video_pts != 0 && track_id <= 1) {
+            pts_offset = last_video_pts + 40;
+            tracef("video reset pts offset\n");
         }
+
         int32_t ps_len = 0;
         if (context->video_track_index == track_id) {
             if (flags & MOV_AV_FLAG_KEYFREAME) {
@@ -370,7 +372,9 @@ MediaFrame MP4Reader::getFrame() {
             return nullptr;
         }
 
+        int64_t real_pts = pts_offset + pts;
         if (context->video_track_index == track_id) {
+            last_video_pts = real_pts;
             if (flags & MOV_AV_FLAG_KEYFREAME) {
                 auto write_special_nalu = [&](auto& nalu) {
                     uint32_t nalu_size = (uint32_t)nalu.size();
@@ -386,8 +390,7 @@ MediaFrame MP4Reader::getFrame() {
             }
         }
 
-        int64_t real_pts = pts_offset + pts;
-        //infof("get one frame track_id:%d, size:%d, pts:%lld, dts:%lld, flags:0x%x\n", track_id, bytes, real_pts, dts, flags);
+        infof("get one frame track_id:%d, size:%5d, pts:%lld, dts:%lld, flags:0x%x\n", track_id, bytes, real_pts, dts, flags);
         context->frame->setPts(real_pts).setDts(pts_offset + dts);
         context->frame->setSize(int32_t(ps_len + bytes));
         return context->frame->data() + ps_len;
