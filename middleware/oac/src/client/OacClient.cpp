@@ -12,6 +12,7 @@
 #include "OacClient.h"
 #include "infra/include/Logger.h"
 #include "jsoncpp/include/json.h"
+#include "infra/include/Timestamp.h"
 
 namespace oac {
 
@@ -113,7 +114,28 @@ bool OacClient::releaseImageFrame(ImageFrame& image) {
 }
 
 bool OacClient::pushDetectRegion(std::vector<DetectRegion>& detect_region) {
-    
+    if (detect_region.size() == 0) {
+        return false;
+    }
+    Json::Value root = Json::nullValue;
+    root["timestamp"] = infra::getCurrentTimeMs();
+    for (auto &region: detect_region) {
+        Json::Value item = Json::nullValue;
+        item["id"] = region.id;
+        item["color"] = region.color;
+        for (auto &point : region.points) {
+            Json::Value p = Json::nullValue;
+            p["x"] = point.x;
+            p["y"] = point.y;
+            item["points"].append(p);
+        }
+        root["regions"].append(item);
+    }
+
+    Json::FastWriter writer;
+    std::string str = writer.write(root);
+    //tracef("str:%d, regions:%s\n", str.size(), str.data());
+    rpc_client_.call("on_detect_region", std::move(str));
     return true;
 }
 

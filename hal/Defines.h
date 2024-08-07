@@ -10,6 +10,7 @@
 #pragma once
 #include <stdint.h>
 #include <vector>
+#include <string>
 
 typedef enum : int32_t {
     IMAGE_PIXEL_FORMAT_RGB_888 = 0,
@@ -55,6 +56,7 @@ typedef struct {
 } CurrentDetectResult;
 
 typedef struct {
+    std::string id;
     uint32_t color;  //rgb888
-    Rect rect;
+    std::vector<Point> points;
 } DetectRegion;

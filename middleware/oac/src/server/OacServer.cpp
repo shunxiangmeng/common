@@ -123,7 +123,8 @@ SharedImageInfo OacServer::sharedImageInfo(rpc_conn wptr) {
 }
 
 void OacServer::onDetectRegion(rpc_conn wptr, std::string detect_region) {
-    tracef("onDetectRegion:%s\n");
+    tracef("onCurrentDetectTarget:%s\n", detect_region.data());
+    IPrivServer::instance()->sendEvent("detect_region", detect_region);
 }
 
 void OacServer::onCurrentDetectTarget(rpc_conn wptr, std::string json_data) {
