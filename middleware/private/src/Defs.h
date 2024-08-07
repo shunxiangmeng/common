@@ -45,6 +45,7 @@ struct Message {
     uint32_t        code;             ///只有应答才有此字段
     std::string     message;
     std::string     method;           ///请求才有method
+    std::string     event_name;
     Json::Value     data;
     char*           mediaData;
     uint32_t        mediaDataLen;

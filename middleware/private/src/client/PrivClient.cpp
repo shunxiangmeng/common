@@ -456,13 +456,20 @@ bool PrivClient::subscribeEvent(const char* event, EventFunction event_callback)
         errorf("stop preview failed\n");
         return false;
     }
-    event_callback_ = event_callback;
+    std::lock_guard<std::mutex> lock(event_callbacks_map_mutex_);
+    auto it = event_callbacks_.find(event);
+    if (it == event_callbacks_.end()) {
+        event_callbacks_[event] = event_callback;
+    }
     return true;
 }
 
 bool PrivClient::event(std::shared_ptr<Message>& message) {
-    if (event_callback_) {
-        event_callback_(message->data);
+    std::lock_guard<std::mutex> lock(event_callbacks_map_mutex_);
+    auto it = event_callbacks_.find(message->event_name);
+    if (it != event_callbacks_.end()) {
+        it->second(message->data);
+    
     }
     return true;
 }

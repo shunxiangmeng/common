@@ -77,6 +77,7 @@ std::shared_ptr<Message> parseBuffer(const char* buffer, int32_t len, int32_t &u
         //infof("recv data content:\n%s", root.toStyledString().c_str());
         message->isResponse = root.isMember("code");
         message->method     = root.isMember("method") ? root["method"].asString() : "";
+        message->event_name = root.isMember("event") ? root["event"].asString() : "";
         message->data       = root.isMember("data") ? root["data"] : Json::nullValue;
     }
     return message;

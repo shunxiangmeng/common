@@ -120,5 +120,6 @@ private:
     int32_t preview_sub_channel_;
 
     std::unordered_map<std::string, std::function<bool(std::shared_ptr<Message>&)>> map_invokers_;
-    EventFunction event_callback_;
+    std::mutex event_callbacks_map_mutex_;
+    std::unordered_map<std::string, EventFunction> event_callbacks_;
 };
